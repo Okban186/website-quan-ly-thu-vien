@@ -1,0 +1,50 @@
+@model WebsiteQuanLyThuVien.ViewModels.ErrorViewModel
+
+@{
+   
+    ViewData["Title"] = $"{Model.StatusCode} - {Model.Title}";
+}
+
+<div class="min-h-screen bg-slate-50 flex items-center justify-center px-6">
+    <div class="w-full max-w-lg text-center">
+
+        <div class="mb-6">
+            <span class="text-7xl font-bold text-slate-300">
+                @Model.StatusCode
+            </span>
+        </div>
+
+        <h1 class="text-2xl font-semibold text-slate-800 mb-3">
+            @Model.Title
+        </h1>
+
+        <p class="text-slate-500 leading-relaxed mb-8">
+            @Model.Message
+        </p>
+
+        <div class="flex items-center justify-center gap-3">
+            <a asp-controller="Home" asp-action="Index" class="inline-flex items-center justify-center
+                rounded-lg bg-slate-800 px-5 py-2.5
+                text-sm font-medium text-white
+                hover:bg-slate-700 transition">
+                Về trang chủ
+            </a>
+
+            <button type="button" onclick="history.back()" class="inline-flex items-center justify-center
+                rounded-lg border border-slate-300
+                bg-white px-5 py-2.5
+                text-sm font-medium text-slate-700
+                hover:bg-slate-50 transition">
+                Quay lại
+            </button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.TraceId))
+        {
+            <p class="mt-8 text-xs text-slate-400">
+                Mã lỗi: @Model.TraceId
+            </p>
+        }
+
+    </div>
+</div>
