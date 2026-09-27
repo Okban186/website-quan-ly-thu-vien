@@ -21,16 +21,14 @@ public class GlobalExceptionHandler : IExceptionHandler
     /// <returns></returns>
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
     {
-        var isApiRequest =
-            httpContext.Request.Path.StartsWithSegments("/api");
+        var exceptionFeature = httpContext.Features.Get<IExceptionHandlerPathFeature>();
 
-        var acceptsJson =
-            httpContext.Request.Headers.Accept.Any(
-                value => value.Contains("application/json"));
+        var originalPath = exceptionFeature?.Path;
 
+        var isApiRequest = originalPath?.StartsWith("/api") == true;
         // MVC request → để UseExceptionHandler("/Error")
         // chuyển request sang ErrorController.
-        if (!isApiRequest && !acceptsJson)
+        if (!isApiRequest)
         {
             return false;
         }
