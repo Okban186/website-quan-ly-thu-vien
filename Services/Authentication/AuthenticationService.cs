@@ -28,12 +28,12 @@ public class AuthenticationService : IAuthenticationService
         var user = await _userRepository.GetByUsernameOrEmailAsync(identifier);
 
         if (user == null)
-            return null;
+            throw new BusinessException(Account.InvalidCredentials.Message, Account.InvalidCredentials.StatusCode);
 
-        if (String.Equals(user.Status, "LOCKED", StringComparison.OrdinalIgnoreCase))
+        if (String.Equals(user.Status.ToString(), "LOCKED", StringComparison.OrdinalIgnoreCase))
             throw new BusinessException(Account.UserLocked.Message, Account.UserLocked.StatusCode);
 
-        if (String.Equals(user.Status, "DISABLE", StringComparison.OrdinalIgnoreCase))
+        if (String.Equals(user.Status.ToString(), "DISABLE", StringComparison.OrdinalIgnoreCase))
             throw new BusinessException(Account.UserDisabled.Message, Account.UserDisabled.StatusCode);
 
         var passwordResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, password);
