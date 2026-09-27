@@ -16,33 +16,34 @@ public class MinioFileStorageService : IFileStorageService
     private readonly MinioOptions _options;
     private readonly IContentInspector _inspector;
 
+    private readonly HttpClient _httpClient;
+
     /// <summary>
     /// Hàm khởi tạo, nạp cấu hình kết nối MinIO và bộ quét tệp tin Mime-Detective từ hệ thống.
     /// </summary>
-    public MinioFileStorageService(IMinioClient minioClient, IOptions<MinioOptions> options, IContentInspector inspector)
+    public MinioFileStorageService(IMinioClient minioClient, IOptions<MinioOptions> options, IContentInspector inspector, HttpClient httpClient)
     {
         _minioClient = minioClient;
         _options = options.Value;
         _inspector = inspector;
+        _httpClient = httpClient;
     }
 
     /// <summary>
     /// Kiểm tra xem cái thùng chứa (Bucket) cấu hình trong hệ thống đã có trên MinIO chưa. 
     /// Nếu chưa có thì tự động tạo luôn một cái mới để tránh lỗi khi lưu file.
     /// </summary>
-    public async Task EnsureBucketExistsAsync()
+    public async Task EnsureBucketExistsAsync(CancellationToken cancellationToken = default)
     {
-        var existsArgs = new BucketExistsArgs()
-            .WithBucket(_options.BucketName);
+        var existsArgs = new BucketExistsArgs().WithBucket(_options.BucketName);
 
-        var exists = await _minioClient.BucketExistsAsync(existsArgs);
+        var exists = await _minioClient.BucketExistsAsync(existsArgs, cancellationToken);
 
         if (!exists)
         {
-            var makeBucketArgs = new MakeBucketArgs()
-                .WithBucket(_options.BucketName);
+            var makeBucketArgs = new MakeBucketArgs().WithBucket(_options.BucketName);
 
-            await _minioClient.MakeBucketAsync(makeBucketArgs);
+            await _minioClient.MakeBucketAsync(makeBucketArgs, cancellationToken);
         }
     }
 
@@ -55,15 +56,19 @@ public class MinioFileStorageService : IFileStorageService
     /// <param name="maxFileSize">Giới hạn dung lượng tối đa của file tính bằng byte.</param>
     /// <param name="expiration">Thời gian sống của cái link này, quá hạn là không upload được nữa.</param>
     /// <returns>Một Object chứa địa chỉ kho và bộ thông số form field đã được ký bảo mật. (Dạng Post)</returns>
-    public async Task<PresignedPostData> CreatePresignedPostAsync(string objectKey, string contentType, long maxFileSize, TimeSpan expiration)
+    public async Task<PresignedPostData> CreatePresignedPostAsync(string objectKey, string? contentType, long maxFileSize, TimeSpan expiration, CancellationToken cancellationToken = default)
     {
         var policy = new PostPolicy();
 
         policy.SetBucket(_options.BucketName);
         policy.SetKey(objectKey);
-        policy.SetContentType(contentType);
         policy.SetContentRange(1, maxFileSize);
         policy.SetExpires(DateTime.UtcNow.Add(expiration));
+
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            policy.SetContentType(contentType);
+        }
 
         var args = new PresignedPostPolicyArgs()
             .WithBucket(_options.BucketName)
@@ -84,7 +89,7 @@ public class MinioFileStorageService : IFileStorageService
     /// </summary>
     /// <param name="objectKey">Đường dẫn của file cần kiểm tra.</param>
     /// <returns>Trả về true nếu tìm thấy file, trả về false nếu file không tồn tại hoặc lỗi mạng.</returns>
-    public async Task<bool> ExistsAsync(string objectKey)
+    public async Task<bool> ExistsAsync(string objectKey, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -92,7 +97,7 @@ public class MinioFileStorageService : IFileStorageService
                 .WithBucket(_options.BucketName)
                 .WithObject(objectKey);
 
-            await _minioClient.StatObjectAsync(args);
+            await _minioClient.StatObjectAsync(args, cancellationToken);
 
             return true;
         }
@@ -108,13 +113,13 @@ public class MinioFileStorageService : IFileStorageService
     /// </summary>
     /// <param name="objectKey">Đường dẫn file cần lấy thông tin.</param>
     /// <returns>Một gói chứa thông tin kích thước và định dạng đăng ký của tệp tin.</returns>
-    public async Task<StorageObjectInfo> GetObjectInfoAsync(string objectKey)
+    public async Task<StorageObjectInfo> GetObjectInfoAsync(string objectKey, CancellationToken cancellationToken = default)
     {
         var args = new StatObjectArgs()
             .WithBucket(_options.BucketName)
             .WithObject(objectKey);
 
-        var result = await _minioClient.StatObjectAsync(args);
+        var result = await _minioClient.StatObjectAsync(args, cancellationToken);
 
         return new StorageObjectInfo
         {
@@ -129,19 +134,19 @@ public class MinioFileStorageService : IFileStorageService
     /// </summary>
     /// <param name="objectKey">Đường dẫn file muốn tải xuống.</param>
     /// <returns>Một luồng dữ liệu MemoryStream chứa ruột của file thô.</returns>
-    public async Task<Stream> DownloadAsync(string objectKey)
+    public async Task<Stream> DownloadAsync(string objectKey, CancellationToken cancellationToken = default)
     {
         var memoryStream = new MemoryStream();
 
         var args = new GetObjectArgs()
             .WithBucket(_options.BucketName)
             .WithObject(objectKey)
-            .WithCallbackStream(stream =>
+            .WithCallbackStream(async stream =>
             {
-                stream.CopyToAsync(memoryStream);
+                await stream.CopyToAsync(memoryStream);
             });
 
-        await _minioClient.GetObjectAsync(args);
+        await _minioClient.GetObjectAsync(args, cancellationToken);
 
         memoryStream.Position = 0;
 
@@ -152,13 +157,13 @@ public class MinioFileStorageService : IFileStorageService
     /// Xóa sổ hoàn toàn một file ra khỏi thùng chứa trên MinIO theo đường dẫn chỉ định.
     /// </summary>
     /// <param name="objectKey">Đường dẫn file cần xóa bỏ.</param>
-    public async Task DeleteAsync(string objectKey)
+    public async Task DeleteAsync(string objectKey, CancellationToken cancellationToken = default)
     {
         var args = new RemoveObjectArgs()
             .WithBucket(_options.BucketName)
             .WithObject(objectKey);
 
-        await _minioClient.RemoveObjectAsync(args);
+        await _minioClient.RemoveObjectAsync(args, cancellationToken);
     }
 
     /// <summary>
@@ -167,7 +172,7 @@ public class MinioFileStorageService : IFileStorageService
     /// </summary>
     /// <param name="sourceKey">Đường dẫn gốc hiện tại của file.</param>
     /// <param name="destinationKey">Đường dẫn mới muốn dịch chuyển file tới.</param>
-    public async Task MoveAsync(string sourceKey, string destinationKey)
+    public async Task MoveAsync(string sourceKey, string destinationKey, CancellationToken cancellationToken = default)
     {
         var copyArgs = new CopyObjectArgs()
             .WithBucket(_options.BucketName)
@@ -177,7 +182,7 @@ public class MinioFileStorageService : IFileStorageService
                     .WithBucket(_options.BucketName)
                     .WithObject(sourceKey));
 
-        await _minioClient.CopyObjectAsync(copyArgs);
+        await _minioClient.CopyObjectAsync(copyArgs, cancellationToken);
 
         await DeleteAsync(sourceKey);
     }
@@ -188,33 +193,36 @@ public class MinioFileStorageService : IFileStorageService
     /// </summary>
     /// <param name="objectKey">Đường dẫn file để kiểm tra định dạng thật.</param>
     /// <returns>Chuỗi định dạng Content-Type (Ví dụ: application/pdf), nếu không đoán được thì trả về dạng nhị phân thô.</returns>
-    public async Task<string> DetectRealContentTypeAsync(string objectKey)
+    public async Task<string> DetectRealContentTypeAsync(string objectKey, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            using var fileStream = await DownloadAsync(objectKey);
+        var url = await CreatePresignedGetUrlAsync(objectKey, TimeSpan.FromMinutes(1), cancellationToken);
 
-            if (fileStream == null || fileStream.Length == 0)
-            {
-                return "application/octet-stream";
-            }
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-            fileStream.Position = 0;
+        // Chỉ lấy 64 KB đầu tiên
+        request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(0, 64 * 1024 - 1);
 
-            var results = _inspector.Inspect(fileStream).ByMimeType();
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
-            var highestMatch = results.FirstOrDefault();
+        response.EnsureSuccessStatusCode();
 
-            if (highestMatch != null && !string.IsNullOrEmpty(highestMatch.MimeType))
-            {
-                return highestMatch.MimeType;
-            }
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
-            return "application/octet-stream";
-        }
-        catch
-        {
-            return "application/octet-stream";
-        }
+        var results = _inspector.Inspect(stream).ByMimeType();
+
+        var result = results.FirstOrDefault();
+
+        return result?.MimeType ?? "application/octet-stream";
+    }
+
+
+    public async Task<string> CreatePresignedGetUrlAsync(string objectKey, TimeSpan expiration, CancellationToken cancellationToken = default)
+    {
+        var args = new PresignedGetObjectArgs()
+            .WithBucket(_options.BucketName)
+            .WithObject(objectKey)
+            .WithExpiry((int)expiration.TotalSeconds);
+
+        return await _minioClient.PresignedGetObjectAsync(args);
     }
 }
