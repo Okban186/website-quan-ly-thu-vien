@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,21 +8,32 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MimeDetective;
 using Minio;
+using VNPAY;
+using VNPAY.Extensions.Options;
 using WebsiteQuanLyThuVien.Data;
 using WebsiteQuanLyThuVien.Exceptions;
+using WebsiteQuanLyThuVien.Middleware;
 using WebsiteQuanLyThuVien.Models;
 using WebsiteQuanLyThuVien.Models.Authentication;
 using WebsiteQuanLyThuVien.Repositories;
+using WebsiteQuanLyThuVien.Services;
 using WebsiteQuanLyThuVien.Services.Authentication;
 using WebsiteQuanLyThuVien.Services.Storage;
+using WebsiteQuanLyThuVien.Services.Uploads;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
 
+//Đăng ký vnpay
+builder.Services.Configure<VnpayConfiguration>(
+builder.Configuration.GetSection("Vnpay"));
 
+builder.Services.AddScoped<IVnpayClient, VnpayClient>();
 
 // Đăng ký dịch vụ băm mật khẩu của Microsoft cho Class User 
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
@@ -34,20 +46,54 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
+builder.Services.AddScoped<IHomeService, HomeService>();
+
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+
+builder.Services.AddScoped<IBookService, BookService>();
+
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+
+builder.Services.AddScoped<IPublisherService, PublisherService>();
+
+builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
+
+builder.Services.AddScoped<IUploadSessionService, UploadSessionService>();
+
+
 builder.Services.ConfigureApplicationCookie(options =>
 {
     // Ra lệnh cho hệ thống: Nếu chưa đăng nhập mà vào trang không được phép, hãy trả về đây
-    options.LoginPath = "/Account/Login";
+    options.LoginPath = "/";
 });
 
 //Đăng ký Repository
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
+builder.Services.AddScoped<IDocumenTypeRepository, DocumentTypeRepository>();
+builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
+builder.Services.AddScoped<IUploadSessionRepository, UploadSessionRepository>();
+builder.Services.AddScoped<ICardRegistrationRepository, CardRegistrationRepository>();
+builder.Services.AddScoped<IStorageFileRepository, StorageFileRepository>();
+
+
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("TestHtml", policy =>
+//     {
+//         policy
+//             .WithOrigins("http://localhost:5500")
+//             .AllowAnyHeader()
+//             .AllowAnyMethod();
+//     });
+// });
 
 //Đăng ký jwt
-builder.Services.Configure<JwtOptions>(
-    builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 
 
 builder.Services
@@ -127,11 +173,18 @@ builder.Services
             OnMessageReceived = context =>
             {
                 /// <summary>
-                /// Thay đổi nơi lấy Token: Đọc trực tiếp chuỗi JWT từ Cookie có tên "access_token" của trình duyệt,
+                /// Tìm xem có refreshed_access_token để người dùng trong trạng thái đăng nhập sau khi refresh
+                /// Thay đổi nơi lấy Trefreshoken: Đọc trực tiếp chuỗi JWT từ Cookie có tên "access_token" của trình duyệt,
                 /// thay vì tìm kiếm ở Header Authorization mặc định.
                 /// </summary>
-                context.Token =
-                    context.Request.Cookies["access_token"];
+                if (context.HttpContext.Items.TryGetValue("refreshed_access_token", out var value) && value is string refreshedToken && !string.IsNullOrEmpty(refreshedToken))
+                {
+                    context.Token = refreshedToken;
+                }
+                else
+                {
+                    context.Token = context.Request.Cookies["access_token"];
+                }
 
                 return Task.CompletedTask;
             },
@@ -187,7 +240,12 @@ builder.Services.AddAuthorization();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"));
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions =>
+        {
+            sqlOptions.UseQuerySplittingBehavior(
+                QuerySplittingBehavior.SplitQuery);
+        });
 });
 
 
@@ -218,9 +276,7 @@ builder.Services.AddSingleton<IMinioClient>(sp =>
     return client.Build();
 });
 
-builder.Services.AddScoped<
-    IFileStorageService,
-    MinioFileStorageService>();
+builder.Services.AddScoped<IFileStorageService, MinioFileStorageService>();
 
 
 //Minetype
@@ -246,12 +302,18 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
+
+
+
 app.UseExceptionHandler("/Error");
 
 app.UseHttpsRedirection();
 
 app.UseRouting();
 app.UseStaticFiles();
+
+app.UseMiddleware<RefreshTokenMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
