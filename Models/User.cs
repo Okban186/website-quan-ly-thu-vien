@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using WebsiteQuanLyThuVien.Enums;
 
 
 namespace WebsiteQuanLyThuVien.Models;
@@ -45,7 +46,7 @@ public class User
     [Required]
     [MaxLength(20)]
     [Column("status")]
-    public string Status { get; set; } = "ACTIVE";
+    public UserStatus Status { get; set; } = UserStatus.ACTIVE;
 
     [Column("last_login_at")]
     public DateTime? LastLoginAt { get; set; }
