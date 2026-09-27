@@ -21,7 +21,7 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .FirstOrDefaultAsync(u =>
                 u.Username == identifier ||
-                u.Email == identifier);
+                u.Email == identifier, cancellationToken);
     }
 
     public async Task<IReadOnlyList<string>> GetRolesAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -30,13 +30,12 @@ public class UserRepository : IUserRepository
             .AsNoTracking()
             .Where(ur => ur.UserId == userId)
             .Select(ur => ur.Role.Name)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
     }
 
     public async Task UpdateLastLoginAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
         if (user is null)
             return;
@@ -44,12 +43,12 @@ public class UserRepository : IUserRepository
         user.LastLoginAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<User?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
         if (user is null)
             throw new BusinessException(Account.UsernameAlreadyExists.Message, Account.UsernameAlreadyExists.StatusCode);
