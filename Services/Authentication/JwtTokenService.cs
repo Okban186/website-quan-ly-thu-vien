@@ -63,40 +63,24 @@ public class JwtTokenService : IJwtTokenService
     {
 
 
-        var jtiValue = httpContext.User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+       var jtiValue = httpContext.User.FindFirst(JwtRegisteredClaimNames.Jti)?.Value ?? httpContext.User.FindFirst("jti")?.Value;
 
-        var userIdValue = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var userIdValue = httpContext.User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value ?? httpContext.User.FindFirst("sub")?.Value;
 
+    if (!Guid.TryParse(jtiValue, out var jti))
+        return;
 
+    if (!Guid.TryParse(userIdValue, out var userId))
+        return;
 
-        if (!Guid.TryParse(jtiValue, out var jti))
+    var token = httpContext.Request.Cookies["access_token"];
+    if (string.IsNullOrEmpty(token))
+        return;
 
+    var handler = new JwtSecurityTokenHandler();
+    var jwt = handler.ReadJwtToken(token);
 
-            return;
-
-
-        if (!Guid.TryParse(userIdValue, out var userId))
-
-
-            return;
-
-
-        var token = httpContext.Request.Cookies["access_token"];
-
-
-
-        if (string.IsNullOrEmpty(token))
-
-
-            return;
-
-
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
-
-
-
-        await _tokenRepository.RevokeAsync(jti, userId, jwt.ValidTo.ToUniversalTime());
+    await _tokenRepository.RevokeAsync(jti, userId, jwt.ValidTo.ToUniversalTime(), cancellationToken);
 
 
     }

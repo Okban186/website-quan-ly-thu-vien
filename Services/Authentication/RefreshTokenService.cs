@@ -61,6 +61,9 @@ public class RefreshTokenService : IRefreshTokenService
         ///Token phát hiện bị hủy
         if (currentToken.RevokedAt.HasValue)
         {
+
+            if (currentToken.ReplacedByTokenId != null && currentToken.RevokedAt >= DateTime.UtcNow.AddSeconds(-5))
+                return null;
             ///Hủy tất cả các token khác trong cùng session
             await RevokeFamilyAsync(currentToken.FamilyId, cancellationToken);
 
@@ -72,24 +75,20 @@ public class RefreshTokenService : IRefreshTokenService
             return null;
 
         ///Tạo token mới
-        var newTokenBytes =
-            RandomNumberGenerator.GetBytes(64);
+        var newTokenBytes = RandomNumberGenerator.GetBytes(64);
 
-        var newToken =
-            Convert.ToBase64String(newTokenBytes);
+        var newToken = Convert.ToBase64String(newTokenBytes);
 
         var newRefreshToken = new RefreshToken
         {
             UserId = currentToken.UserId,
 
-            TokenHash =
-                HashToken(newToken),
+            TokenHash = HashToken(newToken),
 
             // Giữ nguyên session
             FamilyId = currentToken.FamilyId,
 
-            ExpiresAt =
-                DateTime.UtcNow.AddDays(30),
+            ExpiresAt = DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenDays),
 
             CreatedAt = DateTime.UtcNow
         };
@@ -97,15 +96,12 @@ public class RefreshTokenService : IRefreshTokenService
         _context.RefreshTokens.Add(newRefreshToken);
 
         ///revoke token cũ
-        currentToken.RevokedAt =
-            DateTime.UtcNow;
+        currentToken.RevokedAt = DateTime.UtcNow;
 
 
-        currentToken.ReplacedByToken =
-            newRefreshToken;
+        currentToken.ReplacedByToken = newRefreshToken;
 
-        await _context.SaveChangesAsync(
-            cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
 
         return new RefreshTokenResult
         {
@@ -128,8 +124,7 @@ public class RefreshTokenService : IRefreshTokenService
         if (refreshToken.RevokedAt.HasValue)
             return;
 
-        refreshToken.RevokedAt =
-            DateTime.UtcNow;
+        refreshToken.RevokedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
     }
