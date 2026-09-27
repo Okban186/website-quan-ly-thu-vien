@@ -1,0 +1,197 @@
+@{
+    ViewData["title"] = "Tìm kiếm nâng cao";
+}
+
+@section Scripts {
+    <script src="~/js/public/bookSearch.js" asp-append-version="true"></script>
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6 w-full box-border">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-1.5 text-xs text-slate-500 mb-4 flex-wrap">
+        <button type="button" data-action="home" class="hover:text-slate-800 cursor-pointer">Trang chủ</button>
+        <span class="text-slate-400">›</span>
+        <button type="button" data-action="reset-breadcrumb" class="text-slate-800 font-medium">Tra cứu tài
+            liệu</button>
+        </div>
+
+        <!-- Mobile Filter Toggle -->
+        <div class="flex items-center justify-between mb-4 min-[1150px]:hidden">
+            <button type="button" data-action="mobile-filter"
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-sm">
+                <span>☰</span><span>Bộ lọc</span>
+            </button>
+        </div>
+
+        <!-- Expression Filter Box -->
+        <div id="active-filters" class="mb-6 bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-sm space-y-3">
+            <div class="flex items-center gap-2 w-full">
+                <input id="filter-expression" type="text" autocomplete="off" placeholder="Nhập điều kiện lọc..."
+                       class="flex-1 px-3 py-2 text-xs text-slate-700 bg-slate-100 rounded-lg outline-none focus:ring-2 focus:ring-slate-200">
+                <button type="button" data-action="clear-all"
+                        class="text-xs font-semibold text-slate-500 hover:text-[#1e3a5f] hover:underline whitespace-nowrap">
+                    Xóa tất cả bộ lọc
+                </button>
+            </div>
+
+            <div class="text-xs leading-5 text-gray-500 pt-2 border-t border-slate-100">
+                <div>
+                    <span class="text-gray-400">Cú pháp:</span>
+                    <code class="text-gray-400">tên_trường:(giá_trị)</code>
+                </div>
+                <div>
+                    Trường hỗ trợ:
+                    <code class="text-gray-400">authors</code> (tác giả),
+                    <code class="text-gray-400">publishers</code> (nhà xuất bản),
+                    <code class="text-gray-400">categories</code> (thể loại),
+                    <code class="text-gray-400">document_types</code> (loại tài liệu).
+                </div>
+                <div>
+                    <code class="text-gray-400">&amp;</code> = <span class="text-gray-400">và</span>,
+                    <code class="text-gray-400">|</code> = <span class="text-gray-400">hoặc</span>.
+                    Dùng <code class="text-gray-400">()</code> để nhóm các điều kiện.
+                </div>
+                <div>
+                    Ví dụ:
+                    <code class="text-gray-400">
+                        categories:("Công nghệ" | "Kinh tế") &amp; authors:("Nguyễn Du")
+                    </code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid grid-cols-1 min-[1150px]:grid-cols-[28%_minmax(0,1fr)] gap-8 w-full">
+            <aside id="filter-sidebar" class="space-y-6 min-w-0">
+                <div class="bg-white rounded-xl border border-slate-200 p-5 space-y-6 shadow-sm">
+                    <section>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Từ khóa</label>
+                        <div class="relative">
+                            <input id="catalog-keyword-search" type="text" placeholder="Tên sách"
+                                   class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-[#1e3a5f]">
+                            <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <circle cx="11" cy="11" r="7"></circle>
+                                <path d="m20 20-3.5-3.5"></path>
+                            </svg>
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1.5">
+                            Ví dụ: <span class="text-slate-600 font-medium">Nguyễn Nhật Ánh</span> hoặc <span
+                            class="text-slate-600 font-medium">Kim Đồng</span>
+                        </p>
+                    </section>
+
+                    <section>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Loại tài
+                                liệu</label>
+                                <button type="button" data-action="doc-clear"
+                                        class="hidden text-[11px] text-[#1e3a5f] hover:underline font-medium">Bỏ chọn</button>
+                            </div>
+                            <div class="relative mb-2">
+                                <input id="catalog-doc-type-search" type="text" placeholder="Tìm loại tài liệu..."
+                                       class="w-full text-xs text-slate-800 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-[#1e3a5f]">
+                            </div>
+                            <div id="doc-type-list" class="space-y-1 max-h-48 overflow-y-auto pr-1"></div>
+                        </section>
+
+                        <section>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Tác giả</label>
+                                <button type="button" data-action="author-clear"
+                                        class="hidden text-[11px] text-[#1e3a5f] hover:underline font-medium">Bỏ chọn</button>
+                            </div>
+                            <div class="relative mb-2">
+                                <input id="catalog-author-search" type="text" placeholder="Tìm tác giả..."
+                                       class="w-full text-xs text-slate-800 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-[#1e3a5f]">
+                            </div>
+                            <div id="author-list" class="space-y-1 max-h-48 overflow-y-auto pr-1"></div>
+                        </section>
+
+                        <section>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Nhà xuất
+                                    bản</label>
+                                    <button type="button" data-action="publisher-clear"
+                                            class="hidden text-[11px] text-[#1e3a5f] hover:underline font-medium">Bỏ chọn</button>
+                                </div>
+                                <div class="relative mb-2">
+                                    <input id="catalog-publisher-search" type="text" placeholder="Tìm nhà xuất bản..."
+                                           class="w-full text-xs text-slate-800 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-[#1e3a5f]">
+                                </div>
+                                <div id="publisher-list" class="space-y-1 max-h-48 overflow-y-auto pr-1"></div>
+                            </section>
+
+                            <section>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Thể loại</label>
+                                    <button type="button" data-action="category-clear"
+                                            class="hidden text-[11px] text-[#1e3a5f] hover:underline font-medium">Bỏ chọn</button>
+                                </div>
+                                <div class="relative mb-2">
+                                    <input id="catalog-category-search" type="text" placeholder="Tìm thể loại..."
+                                           class="w-full text-xs text-slate-800 bg-slate-50 hover:bg-white border border-slate-200 rounded-lg pl-3 pr-7 py-1.5 focus:outline-none focus:border-[#1e3a5f]">
+                                </div>
+                                <div id="category-list" class="space-y-1 max-h-48 overflow-y-auto pr-1"></div>
+                            </section>
+
+                            <section>
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Năm xuất
+                                        bản</label>
+                                        <button type="button" data-action="year-clear"
+                                                class="hidden text-[11px] text-[#1e3a5f] hover:underline font-medium">Bỏ chọn</button>
+                                    </div>
+                                    <input id="catalog-year-filter" type="text" inputmode="numeric" maxlength="4"
+                                           placeholder="Nhập năm (VD: 2024)..."
+                                           class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-[#1e3a5f]">
+                                    <p class="text-[10px] text-slate-400 mt-1.5">
+                                        Chỉ nhập số (ví dụ: <span class="text-slate-600 font-medium">2024</span>) để lọc theo năm ấn
+                                        hành.
+                                    </p>
+                                </section>
+
+                                <section>
+                                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2"
+                                           for="catalog-status-filter">
+                                        Tình trạng
+                                    </label>
+                                    <select id="catalog-status-filter"
+                                            class="w-full text-xs text-slate-700 bg-white border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#1e3a5f] cursor-pointer">
+                                        <option value="all">Tất cả</option>
+                                        <option value="available">Có sẵn</option>
+                                        <option value="unavailable">Hết sách</option>
+                                    </select>
+                                </section>
+                            </div>
+                        </aside>
+
+                        <section class="space-y-4 min-w-0">
+                            <div
+                                class="bg-white rounded-xl border border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
+                                <span id="result-count" class="text-xs font-semibold text-slate-700">0 kết quả</span>
+                                <div class="flex items-center gap-3">
+                                    <select id="catalog-sort"
+                                            class="text-xs text-slate-700 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer">
+                                        <option value="relevance">Liên quan nhất</option>
+                                        <option value="year">Năm xuất bản mới nhất</option>
+                                        <option value="title">Tên sách A-Z</option>
+                                    </select>
+                                    <div class="hidden sm:flex items-center border border-slate-200 rounded-lg p-0.5 bg-slate-50">
+                                        <button type="button" data-view="list"
+                                                class="p-1.5 rounded-md bg-[#1e3a5f] text-white shadow-sm" aria-label="List View">☷</button>
+                                        <button type="button" data-view="grid"
+                                                class="p-1.5 rounded-md text-slate-500 hover:text-slate-800"
+                                                aria-label="Grid View">▦</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="book-results" class="grid grid-cols-1 gap-4 w-full"></div>
+
+                            <div id="pagination"
+                                 class="bg-white rounded-xl border border-slate-200 p-4 mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm text-xs text-slate-600 hidden">
+                            </div>
+                        </section>
+                    </div>
+                </div>
