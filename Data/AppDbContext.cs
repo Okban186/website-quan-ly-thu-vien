@@ -533,7 +533,7 @@ public class ApplicationDbContext : DbContext
                 .HasColumnName("status")
                 .HasConversion<string>()
                 .HasMaxLength(20)
-                .HasDefaultValue(CardRegistrationStatus.PENDING)
+                .HasDefaultValue(CardRegistrationStatus.WAITING_FOR_INFORMATION)
                 .IsRequired();
 
             entity.Property(x => x.SubmittedAt)
