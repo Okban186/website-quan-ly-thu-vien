@@ -1,0 +1,147 @@
+<footer class="bg-[#10233b] text-slate-300 pt-12 pb-8 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
+      
+            <!-- Col 1: Brand -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-9 h-9 rounded-lg bg-[#1e3a5f] border border-slate-700 flex items-center justify-center text-amber-400">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="block text-base font-bold text-white leading-none">
+                            Thư Viện Thành Phố
+                        </span>
+                        <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">
+                            CỔNG TRI THỨC THÀNH PHỐ
+                        </span>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Thư viện công cộng phục vụ cộng đồng với hàng nghìn đầu sách và tài liệu đa dạng, hiện đại, kết nối
+                    tri thức cho mọi người.
+                </p>
+            </div>
+
+            <!-- Col 2: Services -->
+            <div>
+                <h4 class="text-xs font-bold text-white tracking-wider uppercase mb-4">
+                    Dịch vụ
+                </h4>
+                <ul class="space-y-2.5 text-xs text-slate-400">
+                    <li>
+                        <a data-target="catalog" class="nav-footer-btn hover:text-white transition-colors text-left">
+                            Tra cứu sách
+                        </a>
+                    </li>
+                    <li>
+                        <a data-target="borrow-management"
+                           class="nav-footer-btn hover:text-white transition-colors text-left">
+                            Đặt mượn online
+                        </a>
+                    </li>
+                    <li>
+                        <a asp-controller="Account" asp-action="RegisterCard" data-target="register-card"
+                           class="nav-footer-btn hover:text-white transition-colors text-left">
+                            Đăng ký thẻ thư viện
+                        </a>
+                    </li>
+                    <li>
+                        <a data-target="fines" class="nav-footer-btn hover:text-white transition-colors text-left">
+                            Thanh toán tiền phạt
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Col 3: Information -->
+            <div>
+                <h4 class="text-xs font-bold text-white tracking-wider uppercase mb-4">
+                    Thông tin
+                </h4>
+                <ul class="space-y-2.5 text-xs text-slate-400">
+                    <li>
+                        <button data-target="home" class="nav-footer-btn hover:text-white transition-colors text-left">
+                            Giới thiệu
+                        </button>
+                    </li>
+                    <li>
+                        <span class="cursor-pointer hover:text-white transition-colors">
+                            Nội quy thư viện
+                        </span>
+                    </li>
+                    <li>
+                        <span class="cursor-pointer hover:text-white transition-colors">
+                            Hướng dẫn mượn sách
+                        </span>
+                    </li>
+                    <li>
+                        <span class="cursor-pointer hover:text-white transition-colors">
+                            Câu hỏi thường gặp
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Col 4: Contact -->
+            <div>
+                <h4 class="text-xs font-bold text-white tracking-wider uppercase mb-4">
+                    Liên hệ
+                </h4>
+                <ul class="space-y-2.5 text-xs text-slate-400">
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor"
+                             stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                            <circle cx="12" cy="10" r="3"></circle>
+                        </svg>
+                        <span>123 Đường Đinh Tiên Hoàng, Quận 1, TP.HCM</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor"
+                             stroke-width="2" viewBox="0 0 24 24">
+                            <path
+                                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                            </path>
+                        </svg>
+                        <span>(028) 3829 4567</span>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor"
+                             stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                        <span>lienhe@thuviennhandan.vn</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <svg class="w-3.5 h-3.5 mt-0.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor"
+                             stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <div>
+                            <p>T2–T6: 7:30–19:00</p>
+                            <p>T7–CN: 8:00–17:00</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+            <p>© 2026 Thư Viện Thành Phố. Tất cả quyền được bảo lưu.</p>
+            <div class="flex items-center gap-4">
+                <span class="hover:text-slate-400 cursor-pointer">Chính sách bảo mật</span>
+                <span>•</span>
+                <span class="hover:text-slate-400 cursor-pointer">Điều khoản sử dụng</span>
+            </div>
+        </div>
+    </div>
+</footer>
