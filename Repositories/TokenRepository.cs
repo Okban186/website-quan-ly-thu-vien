@@ -25,18 +25,21 @@ public class TokenRepository : ITokenRepository
             RevokedAt = DateTime.UtcNow
         };
 
+        //khi người dùng tắt trình duyệt hoặc mạng chậm thì tự động hủy request để tránh tiêu tốn thêm tài nguyeen để query
+        cancellationToken.ThrowIfCancellationRequested(); 
+
         _context.RevokedTokens.Add(token);
 
 
 
-        var affectedRows = await _context.SaveChangesAsync();
+        var affectedRows = await _context.SaveChangesAsync(cancellationToken);
 
 
     }
 
     public Task<bool> IsRevokedAsync(Guid jti, CancellationToken cancellationToken = default)
     {
-        return _context.RevokedTokens.AnyAsync(x => x.Jti == jti);
+        return _context.RevokedTokens.AnyAsync(x => x.Jti == jti, cancellationToken);
     }
 
 
