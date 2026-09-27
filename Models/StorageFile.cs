@@ -14,14 +14,6 @@ public class StorageFile
     [Column("file_key")]
     public string FileKey { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(255)]
-    [Column("file_name")]
-    public string FileName { get; set; } = string.Empty;
-
-    [Column("file_url")]
-    public string? FileUrl { get; set; }
-
     [MaxLength(100)]
     [Column("mime_type")]
     public string? MimeType { get; set; }
