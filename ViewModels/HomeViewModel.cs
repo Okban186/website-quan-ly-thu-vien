@@ -1,15 +1,14 @@
 
+using WebsiteQuanLyThuVien.Models;
+
 namespace WebsiteQuanLyThuVien.ViewModels;
 
 public class HomeViewModel
 {
-    public IReadOnlyList<CategoryViewModel> Categories { get; set; }
-        = [];
+    public IReadOnlyList<CategoryViewModel> Categories { get; set; } = [];
 
-    public IReadOnlyList<BookViewModel> FeaturedBooks { get; set; }
-        = [];
+    public IReadOnlyList<ResourceViewModel> FeaturedResources { get; set; } = [];
 
-    public IReadOnlyList<BookViewModel> LatestBooks { get; set; }
-        = [];
+    public IReadOnlyList<ResourceViewModel> LatestResources { get; set; } = [];
 }
 

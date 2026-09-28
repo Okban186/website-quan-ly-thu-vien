@@ -44,11 +44,11 @@ public class CategoryRepository : ICategoryRepository
                 break;
 
             case "bookCount-asc":
-                query = query.OrderBy(x => x.BookCategories.Count());
+                query = query.OrderBy(x => x.ResourceCategories.Count());
                 break;
 
             case "bookCount-desc":
-                query = query.OrderByDescending(x => x.BookCategories.Count());
+                query = query.OrderByDescending(x => x.ResourceCategories.Count());
                 break;
 
             default:
@@ -68,7 +68,7 @@ public class CategoryRepository : ICategoryRepository
             Description = x.Description,
             DisplayOrder = x.DisplayOrder,
 
-            BookCount = x.BookCategories.Count()
+            ResourceCount = x.ResourceCategories.Count()
         })
         .ToListAsync(cancellationToken);
 
@@ -80,8 +80,8 @@ public class CategoryRepository : ICategoryRepository
             TotalItems = totalItems
         };
     }
-    
-   public async Task<List<LookupResponse>> SearchAsync(string? name,int limit = 5,CancellationToken cancellationToken = default)
+
+    public async Task<List<LookupResponse>> SearchAsync(string? name, int limit = 5, CancellationToken cancellationToken = default)
     {
 
         var query = _context.Categories.AsNoTracking();

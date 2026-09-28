@@ -20,6 +20,8 @@ public sealed class UploadSession
 
     public DateTime CreatedAt { get; set; }
 
+    public DateTime UpdatedAt { get; set; }
+
     public DateTime? CompletedAt { get; set; }
 
 

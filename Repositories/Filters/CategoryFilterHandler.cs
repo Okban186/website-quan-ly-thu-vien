@@ -11,7 +11,7 @@ namespace WebsiteQuanLyThuVien.Repositories.Filters;
 /// Field:
 /// categories
 /// </summary>
-public sealed class CategoryFilterHandler : IBookFilterHandler
+public sealed class CategoryFilterHandler : IResourceFilterHandler
 {
     private readonly ApplicationDbContext _context;
 
@@ -23,12 +23,12 @@ public sealed class CategoryFilterHandler : IBookFilterHandler
     }
 
     /// <summary>
-    /// Xây điều kiện kiểm tra Book có thuộc category được chỉ định hay không.
+    /// Xây điều kiện kiểm tra resource có thuộc category được chỉ định hay không.
     ///
     /// Expression tương đương:
     ///
-    /// book => book.BookCategories.Any(
-    ///     bc => bc.CategoryId == categoryId)
+    /// resource => resource.resourceCategories.Any(
+    ///     rc => rc.CategoryId == categoryId)
     /// </summary>
     public async Task<Expression> BuildExpressionAsync(FilterCondition condition, ParameterExpression parameter, CancellationToken cancellationToken = default)
     {
@@ -47,23 +47,23 @@ public sealed class CategoryFilterHandler : IBookFilterHandler
             return Expression.Constant(false);
         }
 
-        var bookCategories = Expression.Property(parameter, nameof(Book.BookCategories));
+        var resourceCategories = Expression.Property(parameter, nameof(Resource.ResourceCategories));
 
-        var categoryParameter = Expression.Parameter(typeof(BookCategory), "bc");
+        var categoryParameter = Expression.Parameter(typeof(ResourceCategory), "bc");
 
-        var categoryIdProperty = Expression.Property(categoryParameter, nameof(BookCategory.CategoryId));
+        var categoryIdProperty = Expression.Property(categoryParameter, nameof(ResourceCategory.CategoryId));
 
         var equals = Expression.Equal(categoryIdProperty, Expression.Constant(categoryId.Value));
 
-        var predicate = Expression.Lambda<Func<BookCategory, bool>>(equals, categoryParameter);
+        var predicate = Expression.Lambda<Func<ResourceCategory, bool>>(equals, categoryParameter);
 
         var anyMethod = typeof(Enumerable)
             .GetMethods()
             .Single(method =>
                 method.Name == nameof(Enumerable.Any) &&
                 method.GetParameters().Length == 2)
-            .MakeGenericMethod(typeof(BookCategory));
+            .MakeGenericMethod(typeof(ResourceCategory));
 
-        return Expression.Call(anyMethod, bookCategories, predicate);
+        return Expression.Call(anyMethod, resourceCategories, predicate);
     }
 }

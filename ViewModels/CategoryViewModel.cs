@@ -6,8 +6,8 @@ public class CategoryViewModel
 
     public string Name { get; set; } = string.Empty;
 
-    public string Description {get;set;} = string.Empty;
+    public string Description { get; set; } = string.Empty;
 
-    public int BookCount {get;set;} = 0;
+    public int ResourceCount { get; set; } = 0;
 }
 

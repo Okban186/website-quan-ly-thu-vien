@@ -135,7 +135,7 @@
 
                 @foreach (var category in Model.Items)
                 {
-                    <a asp-controller="Book" asp-action="Index" asp-route-categoryId="@category.Id"
+                    <a 
                        class="category-card bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-slate-300 transition-all cursor-pointer group flex flex-col justify-between space-y-4 shadow-xs">
 
                         <div class="flex items-start gap-3.5">
@@ -150,7 +150,7 @@
                                 </h3>
 
                                 <p class="text-xs text-slate-400 font-medium font-mono tabular-nums">
-                                    @category.BookCount.ToString("N0") cuốn sách
+                                    @category.ResourceCount.ToString("N0") cuốn sách
                                 </p>
 
                             </div>

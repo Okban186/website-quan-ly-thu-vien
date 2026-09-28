@@ -43,31 +43,31 @@ public static class Account
         StatusCodes.Status403Forbidden);
 }
 
-// Phân hệ Nghiệp vụ Sách (Books)
-public static class Book
+// Phân hệ Nghiệp vụ Sách (Source)
+public static class Source
 {
     public static readonly Error NotFound = new(
-        "Book.NotFound",
-        "Cuốn sách bạn tìm kiếm không tồn tại trên hệ thống.",
+        "Source.NotFound",
+        "Tài liệu bạn tìm kiếm không tồn tại trên hệ thống.",
         StatusCodes.Status404NotFound);
 
     public static readonly Error OutOfStock = new(
-        "Book.OutOfStock",
-        "Sách này hiện tại đã được mượn hết trong kho.",
+        "Source.OutOfStock",
+        "Tài liệu này hiện tại đã được mượn hết trong kho.",
         StatusCodes.Status400BadRequest);
 }
 
 // Phân hệ Mượn Trả (Borrow / Return)
 public static class Borrow
 {
-    public static readonly Error MemberHasOverdueBooks = new(
+    public static readonly Error MemberHasOverdueResources = new(
         "Borrow.HasOverdue",
-        "Độc giả đang có sách quá hạn chưa trả, không thể mượn thêm.",
+        "Độc giả đang có tài liệu chưa trả, không thể mượn thêm.",
         StatusCodes.Status400BadRequest);
 
     public static readonly Error ExceededLimit = new(
         "Borrow.ExceededLimit",
-        "Độc giả đã mượn tối đa số lượng sách cho phép cùng một lúc.",
+        "Độc giả đã mượn tối đa số lượng tài liệu cho phép cùng một lúc.",
         StatusCodes.Status400BadRequest);
 }
 

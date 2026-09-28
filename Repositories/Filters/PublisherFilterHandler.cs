@@ -11,7 +11,7 @@ namespace WebsiteQuanLyThuVien.Repositories.Filters;
 /// Field:
 /// publishers
 /// </summary>
-public sealed class PublisherFilterHandler : IBookFilterHandler
+public sealed class PublisherFilterHandler : IResourceFilterHandler
 {
     private readonly ApplicationDbContext _context;
 
@@ -25,7 +25,7 @@ public sealed class PublisherFilterHandler : IBookFilterHandler
     /// <summary>
     /// Xây điều kiện:
     ///
-    /// book => book.PublisherId == publisherId
+    /// resource => resource.PublisherId == publisherId
     /// </summary>
     public async Task<Expression> BuildExpressionAsync(FilterCondition condition, ParameterExpression parameter, CancellationToken cancellationToken = default)
     {
@@ -44,7 +44,7 @@ public sealed class PublisherFilterHandler : IBookFilterHandler
             return Expression.Constant(false);
         }
 
-        var publisherIdProperty = Expression.Property(parameter, nameof(Book.PublisherId));
+        var publisherIdProperty = Expression.Property(parameter, nameof(Resource.PublisherId));
 
         var publisherIdValue = Expression.Constant(publisherId.Value, typeof(Guid?));
 
