@@ -14,7 +14,7 @@ public class BookService : IBookService
         _bookRepository = bookRepository;
     }
 
-    public async Task<PagedResult<BookSearchItemDto>> SearchAsync(BookSearchRequest request,CancellationToken cancellationToken)
+    public async Task<PagedResult<BookSearchItemDto>> AdvancedSearchAsync(ReaderBookSearchRequest request, CancellationToken cancellationToken)
     {
         request.Keyword = request.Keyword?.Trim();
 
@@ -26,7 +26,7 @@ public class BookService : IBookService
         request.PageSize = 12;
 
 
-        var result = await _bookRepository.SearchAsync(request,cancellationToken);
+        var result = await _bookRepository.AdvancedSearchAsync(request, cancellationToken);
 
         return result;
     }
