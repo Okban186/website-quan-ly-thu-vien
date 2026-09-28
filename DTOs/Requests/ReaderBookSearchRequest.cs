@@ -1,6 +1,6 @@
 namespace WebsiteQuanLyThuVien.DTOs.Requests;
 
-public class BookSearchRequest
+public class ReaderBookSearchRequest
 {
     public string? Keyword { get; set; }
 

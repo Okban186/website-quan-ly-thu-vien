@@ -16,6 +16,7 @@ using WebsiteQuanLyThuVien.Middleware;
 using WebsiteQuanLyThuVien.Models;
 using WebsiteQuanLyThuVien.Models.Authentication;
 using WebsiteQuanLyThuVien.Repositories;
+using WebsiteQuanLyThuVien.Repositories.Filters;
 using WebsiteQuanLyThuVien.Services;
 using WebsiteQuanLyThuVien.Services.Authentication;
 using WebsiteQuanLyThuVien.Services.Storage;
@@ -79,6 +80,17 @@ builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
 builder.Services.AddScoped<IUploadSessionRepository, UploadSessionRepository>();
 builder.Services.AddScoped<ICardRegistrationRepository, CardRegistrationRepository>();
 builder.Services.AddScoped<IStorageFileRepository, StorageFileRepository>();
+
+
+builder.Services.AddScoped<IBookFilterHandler, AuthorFilterHandler>();
+builder.Services.AddScoped<IBookFilterHandler, CategoryFilterHandler>();
+builder.Services.AddScoped<IBookFilterHandler, PublisherFilterHandler>();
+builder.Services.AddScoped<IBookFilterHandler, DocumentTypeFilterHandler>();
+
+builder.Services.AddSingleton<FilterExpressionTokenizer>();
+
+builder.Services.AddScoped<FilterHandlerRegistry>();
+builder.Services.AddScoped<BookFilterExpressionService>();
 
 
 // builder.Services.AddCors(options =>

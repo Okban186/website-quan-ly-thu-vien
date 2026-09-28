@@ -19,9 +19,9 @@ public class BookController : Controller
     [HttpPost]
     [Route("search")]
     [AllowAnonymous]
-    public async Task<IActionResult> BooksSearchAsync([FromBody] BookSearchRequest request)
+    public async Task<IActionResult> BooksSearchAsync([FromBody] ReaderBookSearchRequest request)
     {
-        var result = await _bookService.SearchAsync(request);
+        var result = await _bookService.AdvancedSearchAsync(request);
 
         return Ok(result);
     }

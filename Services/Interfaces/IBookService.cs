@@ -4,10 +4,10 @@ using WebsiteQuanLyThuVien.DTOs.Response;
 
 public interface IBookService
 {
-    Task<PagedResult<BookSearchItemDto>> SearchAsync(
-        BookSearchRequest request,
+    Task<PagedResult<BookSearchItemDto>> AdvancedSearchAsync(
+        ReaderBookSearchRequest request,
         CancellationToken cancellationToken = default);
 
-    
+
 }
 
