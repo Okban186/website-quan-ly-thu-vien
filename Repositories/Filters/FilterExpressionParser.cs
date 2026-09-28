@@ -18,7 +18,7 @@ public sealed class FilterExpressionParser
     /// <summary>
     /// Parse toàn bộ FilterExpression thành AST.
     /// </summary>
-    public BookFilterNode Parse()
+    public ResourceFilterNode Parse()
     {
         if (_tokens.Count == 0)
         {
@@ -44,7 +44,7 @@ public sealed class FilterExpressionParser
     ///
     /// A | (B & C)
     /// </summary>
-    private BookFilterNode ParseOr()
+    private ResourceFilterNode ParseOr()
     {
         var left = ParseAnd();
 
@@ -63,7 +63,7 @@ public sealed class FilterExpressionParser
     /// <summary>
     /// AND có precedence cao hơn OR.
     /// </summary>
-    private BookFilterNode ParseAnd()
+    private ResourceFilterNode ParseAnd()
     {
         var left = ParsePrimary();
 
@@ -87,7 +87,7 @@ public sealed class FilterExpressionParser
     /// hoặc:
     /// authors:(...)
     /// </summary>
-    private BookFilterNode ParsePrimary()
+    private ResourceFilterNode ParsePrimary()
     {
         if (CurrentType() == FilterTokenType.OpenParenthesis)
         {
@@ -110,7 +110,7 @@ public sealed class FilterExpressionParser
     ///
     /// authors:("Nguyễn Du" | "Nam Cao")
     /// </summary>
-    private BookFilterNode ParseFieldExpression()
+    private ResourceFilterNode ParseFieldExpression()
     {
         var field = Expect(FilterTokenType.Field);
 
@@ -128,7 +128,7 @@ public sealed class FilterExpressionParser
     /// <summary>
     /// Parse nhiều giá trị của cùng một field.
     /// </summary>
-    private BookFilterNode ParseFieldValues(string field)
+    private ResourceFilterNode ParseFieldValues(string field)
     {
         var left = ParseFieldValue(field);
 
@@ -153,7 +153,7 @@ public sealed class FilterExpressionParser
     /// <summary>
     /// Parse một giá trị đơn.
     /// </summary>
-    private BookFilterNode ParseFieldValue(string field)
+    private ResourceFilterNode ParseFieldValue(string field)
     {
         var value = Expect(FilterTokenType.Value);
 
@@ -205,22 +205,22 @@ public sealed class FilterExpressionParser
 /// <summary>
 /// Node cơ sở của AST.
 /// </summary>
-public abstract record BookFilterNode;
+public abstract record ResourceFilterNode;
 
 /// <summary>
 /// Node chứa một điều kiện filter đơn.
 /// </summary>
-public sealed record FilterConditionNode(FilterCondition Condition) : BookFilterNode;
+public sealed record FilterConditionNode(FilterCondition Condition) : ResourceFilterNode;
 
 /// <summary>
 /// Node AND.
 /// </summary>
-public sealed record FilterAnd(BookFilterNode Left, BookFilterNode Right) : BookFilterNode;
+public sealed record FilterAnd(ResourceFilterNode Left, ResourceFilterNode Right) : ResourceFilterNode;
 
 /// <summary>
 /// Node OR.
 /// </summary>
-public sealed record FilterOr(BookFilterNode Left, BookFilterNode Right) : BookFilterNode;
+public sealed record FilterOr(ResourceFilterNode Left, ResourceFilterNode Right) : ResourceFilterNode;
 
 /// <summary>
 /// Loại token trong FilterExpression.

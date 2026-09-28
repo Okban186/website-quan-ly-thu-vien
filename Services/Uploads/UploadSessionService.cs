@@ -116,8 +116,8 @@ public class UploadSessionService : IUploadSessionService
         var storageFile = new StorageFile
         {
             Id = Guid.NewGuid(),
-            FileKey = finalObjectKey,
-            MimeType = actualMimeType,
+            ObjectKey = finalObjectKey,
+            ContentType = actualMimeType,
             FileSize = objectInfo.Size,
             CreatedAt = DateTime.UtcNow
         };
@@ -143,11 +143,6 @@ public class UploadSessionService : IUploadSessionService
             if (registration.Status != CardRegistrationStatus.PENDING)
             {
                 throw new BusinessException("Đăng ký thẻ không còn ở trạng thái chờ xử lý.");
-            }
-
-            if (registration.ExpiresAt.HasValue && registration.ExpiresAt.Value <= DateTime.UtcNow)
-            {
-                throw new BusinessException("Đăng ký thẻ đã hết hạn.");
             }
         }
 

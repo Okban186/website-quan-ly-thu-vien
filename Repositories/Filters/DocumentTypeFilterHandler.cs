@@ -11,7 +11,7 @@ namespace WebsiteQuanLyThuVien.Repositories.Filters;
 /// Field:
 /// document_types
 /// </summary>
-public sealed class DocumentTypeFilterHandler : IBookFilterHandler
+public sealed class DocumentTypeFilterHandler : IResourceFilterHandler
 {
     private readonly ApplicationDbContext _context;
 
@@ -25,7 +25,7 @@ public sealed class DocumentTypeFilterHandler : IBookFilterHandler
     /// <summary>
     /// Xây điều kiện:
     ///
-    /// book => book.DocumentTypeId == documentTypeId
+    /// resource => resource.DocumentTypeId == documentTypeId
     /// </summary>
     public async Task<Expression> BuildExpressionAsync(FilterCondition condition, ParameterExpression parameter, CancellationToken cancellationToken = default)
     {
@@ -44,7 +44,7 @@ public sealed class DocumentTypeFilterHandler : IBookFilterHandler
             return Expression.Constant(false);
         }
 
-        var documentTypeIdProperty = Expression.Property(parameter, nameof(Book.DocumentTypeId));
+        var documentTypeIdProperty = Expression.Property(parameter, nameof(Resource.DocumentTypeId));
 
         var documentTypeIdValue = Expression.Constant(documentTypeId.Value, typeof(Guid?));
 

@@ -12,7 +12,7 @@ namespace WebsiteQuanLyThuVien.Repositories.Filters;
 /// Field:
 /// authors
 /// </summary>
-public sealed class AuthorFilterHandler : IBookFilterHandler
+public sealed class AuthorFilterHandler : IResourceFilterHandler
 {
     private readonly ApplicationDbContext _context;
 
@@ -24,12 +24,12 @@ public sealed class AuthorFilterHandler : IBookFilterHandler
     }
 
     /// <summary>
-    /// Xây điều kiện kiểm tra Book có tác giả được chỉ định hay không.
+    /// Xây điều kiện kiểm tra Resource có tác giả được chỉ định hay không.
     ///
     /// Expression tương đương:
     ///
-    /// book => book.BookAuthors.Any(
-    ///     ba => ba.AuthorId == authorId)
+    /// Resource => Resource.ResourceAuthors.Any(
+    ///     ra => ra.AuthorId == authorId)
     /// 
     /// 
     /// </summary>
@@ -52,34 +52,34 @@ public sealed class AuthorFilterHandler : IBookFilterHandler
             return Expression.Constant(false);
         }
 
-        // book.BookAuthors
-        var bookAuthors = Expression.Property(
+        // resource.ResourceAuthors
+        var resourceAuthors = Expression.Property(
             parameter,
-            nameof(Book.BookAuthors));
+            nameof(Resource.ResourceAuthors));
 
-        // ba (tên tắt thay cho book author)
-        var authorParameter = Expression.Parameter(typeof(BookAuthor), "ba");
+        // ra (tên tắt thay cho resource author)
+        var authorParameter = Expression.Parameter(typeof(ResourceAuthor), "ba");
 
-        // ba.AuthorId
-        var authorIdProperty = Expression.Property(authorParameter, nameof(BookAuthor.AuthorId));
+        // ra.AuthorId
+        var authorIdProperty = Expression.Property(authorParameter, nameof(ResourceAuthor.AuthorId));
 
-        // ba.AuthorId == authorId
+        // ra.AuthorId == authorId
         var equals = Expression.Equal(authorIdProperty, Expression.Constant(authorId.Value));
 
-        // ba => ba.AuthorId == authorId
-        var predicate = Expression.Lambda<Func<BookAuthor, bool>>(equals, authorParameter);
+        // ra => ra.AuthorId == authorId
+        var predicate = Expression.Lambda<Func<ResourceAuthor, bool>>(equals, authorParameter);
 
-        // book.BookAuthors.Any(...)
+        // resource.ResourceAuthors.Any(...)
         var anyMethod = typeof(Enumerable)
             .GetMethods()
             .Single(method =>
                 method.Name == nameof(Enumerable.Any) &&
                 method.GetParameters().Length == 2)
-            .MakeGenericMethod(typeof(BookAuthor));
+            .MakeGenericMethod(typeof(ResourceAuthor));
 
         return Expression.Call(
             anyMethod,
-            bookAuthors,
+            resourceAuthors,
             predicate);
     }
 }

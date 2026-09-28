@@ -5,7 +5,7 @@ public enum UploadType
     Avatar,
     IdentityFront,
     IdentityBack,
-    BookCover,
+    ResourceImage,
     Ebook,
     Audiobook,
     Document,

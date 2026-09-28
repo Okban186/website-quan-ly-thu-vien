@@ -12,7 +12,7 @@ public static class UploadTypeExtensions
             UploadType.Avatar => "members/avatars",
             UploadType.IdentityFront => "members/identity/front",
             UploadType.IdentityBack => "members/identity/back",
-            UploadType.BookCover => "books/covers",
+            UploadType.ResourceImage => "books/covers",
             UploadType.Ebook => "digital/ebooks",
             UploadType.Audiobook => "digital/audiobooks",
             UploadType.Document => "digital/documents",
@@ -30,7 +30,7 @@ public static class UploadTypeExtensions
             UploadType.Avatar => 2 * 1024 * 1024,
             UploadType.IdentityFront => 5 * 1024 * 1024,
             UploadType.IdentityBack => 5 * 1024 * 1024,
-            UploadType.BookCover => 10 * 1024 * 1024,
+            UploadType.ResourceImage => 10 * 1024 * 1024,
             UploadType.Ebook => 50 * 1024 * 1024,
             UploadType.Audiobook => 200 * 1024 * 1024,
             UploadType.Document => 50 * 1024 * 1024,
@@ -48,7 +48,7 @@ public static class UploadTypeExtensions
             UploadType.Avatar or
             UploadType.IdentityFront or
             UploadType.IdentityBack or
-            UploadType.BookCover => new HashSet<string>(
+            UploadType.ResourceImage => new HashSet<string>(
                     [
                         "image/jpeg",
                         "image/png",

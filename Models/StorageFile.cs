@@ -1,26 +1,24 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
 namespace WebsiteQuanLyThuVien.Models;
 
-[Table("storage_files")]
 public class StorageFile
 {
-    [Key]
-    [Column("id")]
     public Guid Id { get; set; }
-
-    [Required]
-    [Column("file_key")]
-    public string FileKey { get; set; } = string.Empty;
-
-    [MaxLength(100)]
-    [Column("mime_type")]
-    public string? MimeType { get; set; }
-
-    [Column("file_size")]
+    public string? ContentType { get; set; }
     public long? FileSize { get; set; }
+    public string ObjectKey { get; set; } = null!;
 
-    [Column("created_at")]
     public DateTime CreatedAt { get; set; }
+
+    public User? AvatarUser { get; set; }
+
+    public ICollection<CardRegistration> DocumentFrontRegistrations { get; set; } = new List<CardRegistration>();
+
+    public ICollection<CardRegistration> DocumentBackRegistrations { get; set; } = new List<CardRegistration>();
+
+    public ICollection<CardRegistration> AvatarRegistrations { get; set; } = new List<CardRegistration>();
+
+    public ICollection<ResourceImage> ResourceImages { get; set; } = new List<ResourceImage>();
+
+    public ICollection<DigitalResource> DigitalResources { get; set; } = new List<DigitalResource>();
+
 }

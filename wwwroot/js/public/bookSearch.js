@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEFAULT_PAGE_SIZE = 12;
 
     const API = {
-        searchBooks: '/api/books/search',
+        searchBooks: '/api/resources/search',
         searchAuthors: '/api/authors/search',
         searchPublishers: '/api/publishers/search',
         searchCategories: '/api/categories/search',

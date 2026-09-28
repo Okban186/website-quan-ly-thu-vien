@@ -10,12 +10,12 @@ namespace WebsiteQuanLyThuVien.Repositories.Filters;
 ///
 /// Service này điều phối tokenizer, parser và filter handlers.
 /// </summary>
-public sealed class BookFilterExpressionService
+public sealed class ResourceFilterExpressionService
 {
     private readonly FilterExpressionTokenizer _tokenizer;
     private readonly FilterHandlerRegistry _registry;
 
-    public BookFilterExpressionService(FilterExpressionTokenizer tokenizer, FilterHandlerRegistry registry)
+    public ResourceFilterExpressionService(FilterExpressionTokenizer tokenizer, FilterHandlerRegistry registry)
     {
         _tokenizer = tokenizer;
         _registry = registry;
@@ -25,7 +25,7 @@ public sealed class BookFilterExpressionService
     /// Chuyển FilterExpression thành Expression có thể sử dụng
     /// trong LINQ Where().
     /// </summary>
-    public async Task<Expression<Func<Book, bool>>> BuildAsync(string expression, CancellationToken cancellationToken = default)
+    public async Task<Expression<Func<Resource, bool>>> BuildAsync(string expression, CancellationToken cancellationToken = default)
     {
         var tokens = _tokenizer.Tokenize(expression);
 
@@ -38,17 +38,17 @@ public sealed class BookFilterExpressionService
 
         var ast = parser.Parse();
 
-        var parameter = Expression.Parameter(typeof(Book), "book");
+        var parameter = Expression.Parameter(typeof(Resource), "resource");
 
         var body = await BuildNodeAsync(ast, parameter, cancellationToken);
 
-        return Expression.Lambda<Func<Book, bool>>(body, parameter);
+        return Expression.Lambda<Func<Resource, bool>>(body, parameter);
     }
 
     /// <summary>
     /// Chuyển từng node trong AST thành Expression.
     /// </summary>
-    private async Task<Expression> BuildNodeAsync(BookFilterNode node, ParameterExpression parameter, CancellationToken cancellationToken)
+    private async Task<Expression> BuildNodeAsync(ResourceFilterNode node, ParameterExpression parameter, CancellationToken cancellationToken)
     {
         switch (node)
         {

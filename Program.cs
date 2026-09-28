@@ -51,7 +51,7 @@ builder.Services.AddScoped<IHomeService, HomeService>();
 
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 
-builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IResourceService, ResourceService>();
 
 builder.Services.AddScoped<IAuthorService, AuthorService>();
 
@@ -73,7 +73,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IBookRepository, BookRepository>();
+builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 builder.Services.AddScoped<IAuthorRepository, AuthorRepository>();
 builder.Services.AddScoped<IDocumenTypeRepository, DocumentTypeRepository>();
 builder.Services.AddScoped<IPublisherRepository, PublisherRepository>();
@@ -82,15 +82,15 @@ builder.Services.AddScoped<ICardRegistrationRepository, CardRegistrationReposito
 builder.Services.AddScoped<IStorageFileRepository, StorageFileRepository>();
 
 
-builder.Services.AddScoped<IBookFilterHandler, AuthorFilterHandler>();
-builder.Services.AddScoped<IBookFilterHandler, CategoryFilterHandler>();
-builder.Services.AddScoped<IBookFilterHandler, PublisherFilterHandler>();
-builder.Services.AddScoped<IBookFilterHandler, DocumentTypeFilterHandler>();
+builder.Services.AddScoped<IResourceFilterHandler, AuthorFilterHandler>();
+builder.Services.AddScoped<IResourceFilterHandler, CategoryFilterHandler>();
+builder.Services.AddScoped<IResourceFilterHandler, PublisherFilterHandler>();
+builder.Services.AddScoped<IResourceFilterHandler, DocumentTypeFilterHandler>();
 
 builder.Services.AddSingleton<FilterExpressionTokenizer>();
 
 builder.Services.AddScoped<FilterHandlerRegistry>();
-builder.Services.AddScoped<BookFilterExpressionService>();
+builder.Services.AddScoped<ResourceFilterExpressionService>();
 
 
 // builder.Services.AddCors(options =>

@@ -40,7 +40,6 @@ public class UserRepository : IUserRepository
         if (user is null)
             return;
 
-        user.LastLoginAt = DateTime.UtcNow;
         user.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);

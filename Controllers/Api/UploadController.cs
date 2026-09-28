@@ -19,7 +19,11 @@ public class UploadController : Controller
         _uploadSessionService = uploadSessionService;
     }
 
-
+    [HttpPost]
+    public async Task<IActionResult> create()
+    {
+        return Ok(await _uploadSessionService.CreateAsync(UploadType.Avatar, null));
+    }
 
     /// <summary>
     /// Hoàn tất phiên upload sau khi file đã được upload lên storage.

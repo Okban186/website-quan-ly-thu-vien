@@ -9,12 +9,12 @@ using WebsiteQuanLyThuVien.Repositories.Filters;
 
 namespace WebsiteQuanLyThuVien.Repositories;
 
-public class BookRepository : IBookRepository
+public class ResourceRepository : IResourceRepository
 {
     private readonly ApplicationDbContext _context;
-    private readonly BookFilterExpressionService _filterExpressionService;
+    private readonly ResourceFilterExpressionService _filterExpressionService;
 
-    public BookRepository(ApplicationDbContext context, BookFilterExpressionService filterExpressionService)
+    public ResourceRepository(ApplicationDbContext context, ResourceFilterExpressionService filterExpressionService)
     {
         _context = context;
         _filterExpressionService = filterExpressionService;
@@ -29,9 +29,9 @@ public class BookRepository : IBookRepository
     /// - Sắp xếp
     /// - Phân trang
     /// </summary>
-    public async Task<PagedResult<BookSearchItemDto>> AdvancedSearchAsync(ReaderBookSearchRequest request, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ResourceSearchItemDto>> AdvancedSearchAsync(ReaderResourceSearchRequest request, CancellationToken cancellationToken = default)
     {
-        var query = _context.Books.AsNoTracking().AsQueryable();
+        var query = _context.Resources.AsNoTracking().AsQueryable();
 
 
         // KEYWORD
@@ -41,7 +41,7 @@ public class BookRepository : IBookRepository
         {
             var keyword = request.Keyword.Trim();
 
-            query = query.Where(book => book.Title.Contains(keyword));
+            query = query.Where(Resource => Resource.Title.Contains(keyword));
         }
 
 
@@ -61,7 +61,7 @@ public class BookRepository : IBookRepository
 
         if (request.PublicationYear.HasValue)
         {
-            query = query.Where(book => book.PublicationYear == request.PublicationYear.Value);
+            query = query.Where(Resource => Resource.PublicationYear == request.PublicationYear.Value);
         }
 
 
@@ -73,7 +73,7 @@ public class BookRepository : IBookRepository
             case "available":
 
                 query = query.Where(
-                    book => book.BookCopies.Any(
+                    Resource => Resource.LibraryItems.Any(
                         copy => copy.Status.ToString() == "AVAILABLE"));
 
                 break;
@@ -81,7 +81,7 @@ public class BookRepository : IBookRepository
             case "unavailable":
 
                 query = query.Where(
-                    book => !book.BookCopies.Any(
+                    Resource => !Resource.LibraryItems.Any(
                         copy => copy.Status.ToString() == "AVAILABLE"));
 
                 break;
@@ -94,18 +94,18 @@ public class BookRepository : IBookRepository
         query = request.Sort?.ToLowerInvariant() switch
         {
             "title" =>
-                query.OrderBy(book => book.Title),
+                query.OrderBy(Resource => Resource.Title),
 
             "year" =>
                 query
-                    .OrderByDescending(book => book.PublicationYear)
-                    .ThenBy(book => book.Title),
+                    .OrderByDescending(Resource => Resource.PublicationYear)
+                    .ThenBy(Resource => Resource.Title),
 
             "newest" =>
-                query.OrderByDescending(book => book.CreatedAt),
+                query.OrderByDescending(Resource => Resource.CreatedAt),
 
             _ =>
-                query.OrderBy(book => book.Title)
+                query.OrderBy(Resource => Resource.Title)
         };
 
 
@@ -130,31 +130,31 @@ public class BookRepository : IBookRepository
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(book => new BookSearchItemDto
+            .Select(Resource => new ResourceSearchItemDto
             {
-                Id = book.Id,
+                Id = Resource.Id,
 
-                Title = book.Title,
+                Title = Resource.Title,
 
-                PublicationYear = book.PublicationYear,
+                PublicationYear = Resource.PublicationYear,
 
-                DocumentTypeName = book.DocumentType.Name,
+                DocumentTypeName = Resource.DocumentType.Name,
 
-                PublisherName = book.Publisher != null
-                    ? book.Publisher.Name
+                PublisherName = Resource.Publisher != null
+                    ? Resource.Publisher.Name
                     : null,
 
-                Authors = book.BookAuthors
+                Authors = Resource.ResourceAuthors
                     .Select(ba => ba.Author.Name)
                     .ToList(),
 
-                Categories = book.BookCategories
+                Categories = Resource.ResourceCategories
                     .Select(bc => bc.Category.Name)
                     .ToList()
             })
             .ToListAsync(cancellationToken);
 
-        return new PagedResult<BookSearchItemDto>
+        return new PagedResult<ResourceSearchItemDto>
         {
             Items = items,
 

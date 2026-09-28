@@ -62,7 +62,7 @@ public class RefreshTokenService : IRefreshTokenService
         if (currentToken.RevokedAt.HasValue)
         {
 
-            if (currentToken.ReplacedByTokenId != null && currentToken.RevokedAt >= DateTime.UtcNow.AddSeconds(-5))
+            if (currentToken.ReplacedBy != null && currentToken.RevokedAt >= DateTime.UtcNow.AddSeconds(-5))
                 return null;
             ///Hủy tất cả các token khác trong cùng session
             await RevokeFamilyAsync(currentToken.FamilyId, cancellationToken);

@@ -13,27 +13,27 @@ public class HomeService : IHomeService
     {
         _categoryRepository = categoryRepository;
     }
-    public async Task<HomeViewModel> GetHomeAsync( CancellationToken cancellationToken = default) 
-    { 
-        var categoriesTask = _categoryRepository.GetPagedAsync("","",1,8); 
+    public async Task<HomeViewModel> GetHomeAsync(CancellationToken cancellationToken = default)
+    {
+        var categoriesTask = _categoryRepository.GetPagedAsync("", "", 1, 8);
 
-        await Task.WhenAll( categoriesTask); 
+        await Task.WhenAll(categoriesTask);
 
         PagedResult<CategoryListItem> categoryPage = await categoriesTask;
 
         var categoryTemporaryList = new List<CategoryViewModel>();
 
-        
-        return new HomeViewModel 
-        { 
+
+        return new HomeViewModel
+        {
             Categories = categoryPage.Items.Select(x => new CategoryViewModel
             {
                 Id = x.Id,
                 Name = x.Name,
-                BookCount = x.BookCount
+                ResourceCount = x.ResourceCount
             })
             .ToList(),
-  
-        }; 
-    } 
+
+        };
+    }
 }
