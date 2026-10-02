@@ -15,7 +15,9 @@ public class LoanItem
     public LoanItemStatus Status { get; set; }
 
     public ItemCondition? ConditionAtLoan { get; set; }
+    public string? ConditionNoteAtLoan { get; set; }
     public ItemCondition? ConditionAtReturn { get; set; }
+    public string? ConditionNoteAtReturn { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
