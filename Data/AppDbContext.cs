@@ -232,6 +232,98 @@ public class ApplicationDbContext : DbContext
         });
     }
 
+    private static void ConfigureImportBatch(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ImportBatch>(entity =>
+        {
+            entity.ToTable("import_batches");
+
+            entity.HasKey(x => x.Id)
+                .HasName("PK_import_batches");
+
+            entity.Property(x => x.Id)
+                .HasColumnName("id")
+                .HasDefaultValueSql("NEWSEQUENTIALID()")
+                .ValueGeneratedOnAdd();
+
+            entity.Property(x => x.StorageFileId)
+                .HasColumnName("storage_file_id")
+                .IsRequired();
+
+            entity.Property(x => x.ImportType)
+                .HasColumnName("import_type")
+                .HasMaxLength(50)
+                .IsRequired()
+                .HasDefaultValue("LIBRARY_ITEM");
+
+            entity.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasMaxLength(30)
+                .IsRequired()
+                .HasDefaultValue("PENDING");
+
+            entity.Property(x => x.TotalRows)
+                .HasColumnName("total_rows")
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            entity.Property(x => x.SuccessRows)
+                .HasColumnName("success_rows")
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            entity.Property(x => x.FailedRows)
+                .HasColumnName("failed_rows")
+                .IsRequired()
+                .HasDefaultValue(0);
+
+            entity.Property(x => x.CreatedBy)
+                .HasColumnName("created_by")
+                .IsRequired();
+
+            entity.Property(x => x.CreatedAt)
+                .HasColumnName("created_at")
+                .HasColumnType("datetime2(7)")
+                .IsRequired()
+                .HasDefaultValueSql("SYSUTCDATETIME()");
+
+            entity.Property(x => x.StartedAt)
+                .HasColumnName("started_at")
+                .HasColumnType("datetime2(7)");
+
+            entity.Property(x => x.CompletedAt)
+                .HasColumnName("completed_at")
+                .HasColumnType("datetime2(7)");
+
+            entity.Property(x => x.ErrorMessage)
+                .HasColumnName("error_message");
+
+            entity.HasOne(x => x.StorageFile)
+                .WithMany()
+                .HasForeignKey(x => x.StorageFileId)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_import_batches_storage_file");
+
+            entity.HasOne(x => x.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(x => x.CreatedBy)
+                .OnDelete(DeleteBehavior.NoAction)
+                .HasConstraintName("FK_import_batches_created_by");
+
+            entity.HasIndex(x => x.StorageFileId)
+                .HasDatabaseName("IX_import_batches_storage_file_id");
+
+            entity.HasIndex(x => x.CreatedBy)
+                .HasDatabaseName("IX_import_batches_created_by");
+
+            entity.HasIndex(x => x.CreatedAt)
+                .HasDatabaseName("IX_import_batches_created_at");
+
+            entity.HasIndex(x => x.Status)
+                .HasDatabaseName("IX_import_batches_status");
+        });
+    }
+
     private static void ConfigureResource(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Resource>(entity =>
@@ -282,6 +374,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.ItemCondition).HasColumnName("item_condition").HasMaxLength(20).HasConversion<string>().HasDefaultValue(ItemCondition.GOOD);
             entity.Property(x => x.AcquiredAt).HasColumnName("acquired_at").HasColumnType("datetime2(7)");
             entity.Property(x => x.AcquisitionPrice).HasColumnName("acquisition_price").HasPrecision(12, 2);
+            entity.Property(x => x.CoverPrice).HasColumnName("cover_price").HasPrecision(12, 2);
+            entity.Property(x => x.PublicationYear).HasColumnName("publication_year");
+            entity.Property(x => x.EditionNumber).HasColumnName("edition_number");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
 
@@ -356,7 +451,7 @@ public class ApplicationDbContext : DbContext
 
             entity.ToTable(t =>
             {
-                t.HasCheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','REJECTED','CANCELLED','READY')");
+                t.HasCheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','COMPLETED','REJECTED','CANCELLED')");
             });
         });
     }
@@ -427,6 +522,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>().HasDefaultValue(LoanItemStatus.BORROWED);
             entity.Property(x => x.ConditionAtLoan).HasColumnName("condition_at_loan").HasMaxLength(20).HasConversion<string>();
             entity.Property(x => x.ConditionAtReturn).HasColumnName("condition_at_return").HasMaxLength(20).HasConversion<string>();
+            entity.Property(x => x.ConditionNoteAtLoan).HasColumnName("condition_note_at_loan");
+            entity.Property(x => x.ConditionNoteAtReturn).HasColumnName("condition_note_at_return");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
 
@@ -627,6 +724,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()").ValueGeneratedOnAdd();
             entity.Property(x => x.ResourceId).HasColumnName("resource_id");
             entity.Property(x => x.FileId).HasColumnName("file_id");
+            entity.Property(x => x.DisplayOrder).HasColumnName("display_order").HasDefaultValue(1);
             entity.Property(x => x.ResourceType).HasColumnName("resource_type").HasMaxLength(30).HasConversion<string>();
             entity.Property(x => x.AccessLevel).HasColumnName("access_level").HasMaxLength(20).HasConversion<string>().HasDefaultValue(DigitalResourceAccessLevel.MEMBER);
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>().HasDefaultValue(DigitalResourceStatus.ACTIVE);
@@ -635,7 +733,7 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(x => x.ResourceId).HasDatabaseName("IX_digital_resources_resource_id");
             entity.HasIndex(x => x.ResourceType).HasDatabaseName("IX_digital_resources_resource_type");
-
+            entity.HasIndex(r => new { r.ResourceId, r.ResourceType, r.DisplayOrder }).IsUnique().HasDatabaseName("UQ_digital_resources_order");
             entity.HasOne(x => x.Resource).WithMany(x => x.DigitalResources).HasForeignKey(x => x.ResourceId).OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_digital_resources_resource");
             entity.HasOne(x => x.File).WithMany(x => x.DigitalResources).HasForeignKey(x => x.FileId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_digital_resources_file");
 
@@ -693,10 +791,11 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(x => x.Id).HasName("PK_copy_issues");
             entity.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()").ValueGeneratedOnAdd();
             entity.Property(x => x.LibraryItemId).HasColumnName("library_item_id");
+            entity.Property(x => x.LoanItemId).HasColumnName("loan_item_id");
             entity.Property(x => x.ReportedBy).HasColumnName("reported_by");
             entity.Property(x => x.ResolvedBy).HasColumnName("resolved_by");
             entity.Property(x => x.IssueType).HasColumnName("issue_type").HasMaxLength(30).HasConversion<string>();
-            entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(1000);
+            entity.Property(x => x.Description).HasColumnName("description");
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>().HasDefaultValue(CopyIssueStatus.OPEN);
             entity.Property(x => x.ResolvedAt).HasColumnName("resolved_at").HasColumnType("datetime2(7)");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");

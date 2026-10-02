@@ -353,6 +353,9 @@ CREATE TABLE library_items (
 
     acquired_at DATETIME2(7) NULL,
     acquisition_price DECIMAL(12, 2) NULL,
+    cover_price DECIMAL(12, 2) NULL,
+    edition_number INT NULL,
+    publication_year INT NULL,
 
     created_at DATETIME2(7) NOT NULL
         CONSTRAINT DF_library_items_created_at
@@ -386,6 +389,7 @@ CREATE TABLE library_items (
                 'REMOVED'
             )
         ),
+    CONSTRAINT CK_library_items_price CHECK (acquisition_price >= 0 AND cover_price >= 0),
 
     CONSTRAINT CK_library_items_condition
         CHECK (
@@ -396,7 +400,7 @@ CREATE TABLE library_items (
                 'DAMAGED'
             )
         )
-);
+)
 
 
 /* =========================================================
@@ -605,9 +609,9 @@ CREATE TABLE borrow_request_items (
             status IN (
                 'PENDING',
                 'APPROVED',
+                'COMPLETED',
                 'REJECTED',
-                'CANCELLED',
-                'READY'
+                'CANCELLED'
             )
         )
 );
@@ -730,6 +734,8 @@ CREATE TABLE loan_items (
 
     condition_at_loan NVARCHAR(20) NULL,
     condition_at_return NVARCHAR(20) NULL,
+    condition_note_at_loan NVARCHAR(MAX) NULL,
+    condition_note_at_return NVARCHAR(MAX) NULL,
 
     created_at DATETIME2(7) NOT NULL
         CONSTRAINT DF_loan_items_created_at
@@ -757,7 +763,28 @@ CREATE TABLE loan_items (
                 'RETURNED',
                 'LOST'
             )
-        )
+        ),
+
+    CONSTRAINT CK_loan_items_condition_at_loan
+CHECK (
+    condition_at_loan IN (
+        'NEW',
+        'GOOD',
+        'WORN',
+        'DAMAGED'
+    )
+),
+
+CONSTRAINT CK_loan_items_condition_at_return
+CHECK (
+    condition_at_return IS NULL
+    OR condition_at_return IN (
+        'NEW',
+        'GOOD',
+        'WORN',
+        'DAMAGED'
+    )
+)
 );
 
 
@@ -1099,6 +1126,7 @@ CREATE TABLE digital_resources (
 
     resource_id UNIQUEIDENTIFIER NOT NULL,
     file_id UNIQUEIDENTIFIER NOT NULL,
+    display_order INT NOT NULL DEFAULT 1,
 
     resource_type NVARCHAR(30) NOT NULL,
 
@@ -1155,6 +1183,13 @@ CREATE TABLE digital_resources (
                 'INACTIVE'
             )
         )
+
+    CONSTRAINT UQ_digital_resources_order
+        UNIQUE (
+        resource_id,
+        resource_type,
+        display_order
+)
 );
 
 
@@ -1217,10 +1252,12 @@ CREATE TABLE copy_issues (
 
     library_item_id UNIQUEIDENTIFIER NOT NULL,
 
+    loan_item_id UNIQUEIDENTIFIER NULL,
+
     reported_by UNIQUEIDENTIFIER NOT NULL,
 
     issue_type NVARCHAR(30) NOT NULL,
-    description NVARCHAR(1000) NULL,
+    description NVARCHAR(MAX) NULL,
 
     status NVARCHAR(20) NOT NULL
         CONSTRAINT DF_copy_issues_status DEFAULT 'OPEN',
@@ -1414,6 +1451,93 @@ CREATE TABLE revoked_tokens (
         REFERENCES users(id)
         ON DELETE NO ACTION
 );
+
+
+CREATE TABLE import_batches (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+
+    storage_file_id UNIQUEIDENTIFIER NOT NULL,
+
+    import_type VARCHAR(50) NOT NULL DEFAULT 'LIBRARY_ITEM',
+
+    status VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+
+    total_rows INTEGER NOT NULL DEFAULT 0,
+
+    success_rows INTEGER NOT NULL DEFAULT 0,
+
+    failed_rows INTEGER NOT NULL DEFAULT 0,
+
+    created_by UNIQUEIDENTIFIER NOT NULL,
+
+    created_at DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
+
+    started_at DATETIME2(7),
+
+    completed_at DATETIME2(7),
+
+    error_message TEXT,
+
+    CONSTRAINT fk_import_batches_storage_file
+        FOREIGN KEY (storage_file_id)
+        REFERENCES storage_files(id),
+
+    CONSTRAINT fk_import_batches_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES users(id),
+
+    CONSTRAINT chk_import_batches_type
+        CHECK (
+            import_type IN (
+                'LIBRARY_ITEM'
+            )
+        ),
+
+    CONSTRAINT chk_import_batches_status
+        CHECK (
+            status IN (
+                'PENDING',
+                'PROCESSING',
+                'COMPLETED',
+                'COMPLETED_WITH_ERRORS',
+                'FAILED',
+                'CANCELLED'
+            )
+        ),
+
+    CONSTRAINT chk_import_batches_total_rows
+        CHECK (total_rows >= 0),
+
+    CONSTRAINT chk_import_batches_success_rows
+        CHECK (success_rows >= 0),
+
+    CONSTRAINT chk_import_batches_failed_rows
+        CHECK (failed_rows >= 0),
+
+    CONSTRAINT chk_import_batches_row_count
+        CHECK (
+            success_rows + failed_rows <= total_rows
+        ),
+
+    CONSTRAINT chk_import_batches_completed_at
+        CHECK (
+            completed_at IS NULL
+            OR started_at IS NULL
+            OR completed_at >= started_at
+        )
+);
+
+CREATE INDEX ix_import_batches_storage_file_id
+    ON import_batches(storage_file_id);
+
+CREATE INDEX ix_import_batches_created_by
+    ON import_batches(created_by);
+
+CREATE INDEX ix_import_batches_created_at
+    ON import_batches(created_at DESC);
+
+CREATE INDEX ix_import_batches_status
+    ON import_batches(status);
 
 
 
