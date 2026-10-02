@@ -7,6 +7,7 @@ public class CopyIssue
     public Guid Id { get; set; }
 
     public Guid LibraryItemId { get; set; }
+    public Guid LoanItemId { get; set; }
     public Guid ReportedBy { get; set; }
 
     public CopyIssueType IssueType { get; set; }
