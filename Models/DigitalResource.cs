@@ -9,6 +9,8 @@ public class DigitalResource
     public Guid ResourceId { get; set; }
     public Guid FileId { get; set; }
 
+    public int DisplayOrder { get; set; }
+
     public DigitalResourceType ResourceType { get; set; }
     public DigitalResourceAccessLevel AccessLevel { get; set; }
     public DigitalResourceStatus Status { get; set; }
