@@ -16,6 +16,9 @@ public class LibraryItem
 
     public DateTime? AcquiredAt { get; set; }
     public decimal? AcquisitionPrice { get; set; }
+    public decimal? CoverPrice { get; set; }
+    public int EditionNumber { get; set; }
+    public int PublicationYear { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
