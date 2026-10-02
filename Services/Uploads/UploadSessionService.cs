@@ -203,8 +203,5 @@ public class UploadSessionService : IUploadSessionService
         };
     }
 
-    public Task<CreateUploadSessionResponse> CreateAsync(UploadType uploadType, Guid? cardRegistrationId = null, CancellationToken cancellationToken = default)
-    {
-        throw new NotImplementedException();
-    }
+
 }
