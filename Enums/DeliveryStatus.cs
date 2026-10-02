@@ -3,8 +3,8 @@ namespace WebsiteQuanLyThuVien.Enums;
 public enum DeliveryStatus
 {
     PENDING,
-    DELIVERING,
+    READY_FOR_PICKUP,
+    OUT_FOR_DELIVERY,
     DELIVERED,
-    FAILED,
     CANCELLED
 }
