@@ -6,5 +6,5 @@ public enum CopyIssueType
     LOST,
     MISSING_PAGE,
     DEFACED,
-    OTHER
+    MISSING_LOCATION
 }
