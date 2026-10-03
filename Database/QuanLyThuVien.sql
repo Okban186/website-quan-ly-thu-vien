@@ -383,6 +383,7 @@ CREATE TABLE library_items (
                 'AVAILABLE',
                 'RESERVED',
                 'BORROWED',
+                'RETURNED_PENDING_CHECK',
                 'LOST',
                 'DAMAGED',
                 'MAINTENANCE',
