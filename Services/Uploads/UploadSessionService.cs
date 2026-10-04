@@ -30,7 +30,7 @@ public class UploadSessionService : IUploadSessionService
         throw new NotImplementedException();
     }
 
-    public async Task CompleteAsync(Guid uploadSessionId, CancellationToken cancellationToken = default)
+    public async Task<Guid> CompleteAsync(Guid uploadSessionId, CancellationToken cancellationToken = default)
     {
         //Lấy session
         var session = await _uploadSessionRepository.GetByIdAsync(uploadSessionId, cancellationToken);
@@ -126,6 +126,8 @@ public class UploadSessionService : IUploadSessionService
 
         //Lưu DB
         await _uploadSessionRepository.UpdateAsync(session, cancellationToken);
+
+        return storageFile.Id;
     }
 
     public async Task<CreateUploadSessionResponse> CreateAsync(UploadType uploadType, Guid? userId, Guid? cardRegistrationId = null, CancellationToken cancellationToken = default)

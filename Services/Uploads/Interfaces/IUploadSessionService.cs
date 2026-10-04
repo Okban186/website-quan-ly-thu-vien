@@ -24,8 +24,8 @@ public interface IUploadSessionService
     /// </summary>
     /// <param name="uploadSessionId">Id tới bảng UploadSession nơi ánh xạ tới đường dẫn lưu trữ của tài nguyên</param>
     /// <param name="cancellationToken"></param>
-    /// <returns>Không trả về gì</returns>gì
-    Task CompleteAsync(Guid uploadSessionId, CancellationToken cancellationToken = default);
+    /// <returns>Trả về uuid của storageFile để các model cần tham chiếu đến tài nguyên sau khi tải dễ dàng hơn</returns>gì
+    Task<Guid> CompleteAsync(Guid uploadSessionId, CancellationToken cancellationToken = default);
 
     Task CancelAsync(Guid uploadSessionId, CancellationToken cancellationToken = default);
 }
