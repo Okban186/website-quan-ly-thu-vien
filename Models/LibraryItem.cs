@@ -12,7 +12,6 @@ public class LibraryItem
     public string Barcode { get; set; } = null!;
 
     public LibraryItemStatus Status { get; set; }
-    public ItemCondition ItemCondition { get; set; }
 
     public DateTime? AcquiredAt { get; set; }
     public decimal? AcquisitionPrice { get; set; }

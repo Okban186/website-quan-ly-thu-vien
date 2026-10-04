@@ -371,7 +371,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.LocationId).HasColumnName("location_id");
             entity.Property(x => x.Barcode).HasColumnName("barcode").HasMaxLength(100).IsRequired();
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>().HasDefaultValue(LibraryItemStatus.AVAILABLE);
-            entity.Property(x => x.ItemCondition).HasColumnName("item_condition").HasMaxLength(20).HasConversion<string>().HasDefaultValue(ItemCondition.GOOD);
             entity.Property(x => x.AcquiredAt).HasColumnName("acquired_at").HasColumnType("datetime2(7)");
             entity.Property(x => x.AcquisitionPrice).HasColumnName("acquisition_price").HasPrecision(12, 2);
             entity.Property(x => x.CoverPrice).HasColumnName("cover_price").HasPrecision(12, 2);
@@ -390,8 +389,7 @@ public class ApplicationDbContext : DbContext
 
             entity.ToTable(t =>
             {
-                t.HasCheckConstraint("CK_library_items_status", "[status] IN ('AVAILABLE','RESERVED','BORROWED','LOST','DAMAGED','MAINTENANCE','REMOVED')");
-                t.HasCheckConstraint("CK_library_items_condition", "[item_condition] IN ('NEW','GOOD','WORN','DAMAGED')");
+                t.HasCheckConstraint("CK_library_items_status", "[status] IN ('AVAILABLE','RESERVED','BORROWED','RETURNED_PENDING_CHECK','LOST','DAMAGED','MAINTENANCE','REMOVED')");
             });
         });
     }
@@ -520,10 +518,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.DueAt).HasColumnName("due_at").HasColumnType("datetime2(7)");
             entity.Property(x => x.ReturnedAt).HasColumnName("returned_at").HasColumnType("datetime2(7)");
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>().HasDefaultValue(LoanItemStatus.BORROWED);
-            entity.Property(x => x.ConditionAtLoan).HasColumnName("condition_at_loan").HasMaxLength(20).HasConversion<string>();
-            entity.Property(x => x.ConditionAtReturn).HasColumnName("condition_at_return").HasMaxLength(20).HasConversion<string>();
-            entity.Property(x => x.ConditionNoteAtLoan).HasColumnName("condition_note_at_loan");
-            entity.Property(x => x.ConditionNoteAtReturn).HasColumnName("condition_note_at_return");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
 
