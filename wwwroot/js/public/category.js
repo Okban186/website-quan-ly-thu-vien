@@ -238,9 +238,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // =========================================================
+
     // Responsive pagination
-    // =========================================================
+
 
     const paginationContainer =
         document.getElementById(
@@ -268,8 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ];
 
-        const ELLIPSIS_CLASS =
-            'pagination-ellipsis min-w-[2.25rem] h-9 px-1 flex items-center justify-center text-xs text-slate-400 select-none';
+        const ELLIPSIS_CLASS = 'pagination-ellipsis min-w-[2.25rem] h-9 px-1 flex items-center justify-center text-xs text-slate-400 select-none';
 
 
         function getMaxPaginationButtons() {
@@ -558,9 +557,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // =========================================================
+
     // Đồng bộ state khi trang được load
-    // =========================================================
+
 
     syncPageSizeFromUrl();
     syncSortFromUrl();
