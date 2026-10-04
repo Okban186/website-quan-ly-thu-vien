@@ -71,6 +71,137 @@ VALUES (
 
 GO
 
+/* =========================================================
+   STAFF USERS
+   ========================================================= */
+
+DECLARE @LibrarianId UNIQUEIDENTIFIER = NEWID();
+DECLARE @CatalogerId UNIQUEIDENTIFIER = NEWID();
+DECLARE @StorekeeperId UNIQUEIDENTIFIER = NEWID();
+
+DECLARE @LibrarianRoleId UNIQUEIDENTIFIER;
+DECLARE @CatalogerRoleId UNIQUEIDENTIFIER;
+DECLARE @StorekeeperRoleId UNIQUEIDENTIFIER;
+
+SELECT @LibrarianRoleId = id
+FROM roles
+WHERE name = N'LIBRARIAN';
+
+SELECT @CatalogerRoleId = id
+FROM roles
+WHERE name = N'CATALOGER';
+
+SELECT @StorekeeperRoleId = id
+FROM roles
+WHERE name = N'STOREKEEPER';
+
+
+/* =========================================================
+   LIBRARIAN
+   ========================================================= */
+
+INSERT INTO users (
+    id,
+    username,
+    email,
+    password_hash,
+    full_name,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (
+    @LibrarianId,
+    N'librarian',
+    N'librarian@library.local',
+    N'AQAAAAIAAYagAAAAEE7eEFl3OwbvdF/66TBEMu6eZoEb70ll74uxAf5x4O4nKws7j+C/j/myXHUXuX6TTA==',
+    N'Thủ thư',
+    N'ACTIVE',
+    SYSUTCDATETIME(),
+    SYSUTCDATETIME()
+);
+
+INSERT INTO user_roles (
+    user_id,
+    role_id
+)
+VALUES (
+    @LibrarianId,
+    @LibrarianRoleId
+);
+
+
+/* =========================================================
+   CATALOGER
+   ========================================================= */
+
+INSERT INTO users (
+    id,
+    username,
+    email,
+    password_hash,
+    full_name,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (
+    @CatalogerId,
+    N'cataloger',
+    N'cataloger@library.local',
+    N'AQAAAAIAAYagAAAAEE7eEFl3OwbvdF/66TBEMu6eZoEb70ll74uxAf5x4O4nKws7j+C/j/myXHUXuX6TTA==',
+    N'Biên mục tài liệu',
+    N'ACTIVE',
+    SYSUTCDATETIME(),
+    SYSUTCDATETIME()
+);
+
+INSERT INTO user_roles (
+    user_id,
+    role_id
+)
+VALUES (
+    @CatalogerId,
+    @CatalogerRoleId
+);
+
+
+/* =========================================================
+   STOREKEEPER
+   ========================================================= */
+
+INSERT INTO users (
+    id,
+    username,
+    email,
+    password_hash,
+    full_name,
+    status,
+    created_at,
+    updated_at
+)
+VALUES (
+    @StorekeeperId,
+    N'storekeeper',
+    N'storekeeper@library.local',
+    N'AQAAAAIAAYagAAAAEE7eEFl3OwbvdF/66TBEMu6eZoEb70ll74uxAf5x4O4nKws7j+C/j/myXHUXuX6TTA==',
+    N'Thủ kho',
+    N'ACTIVE',
+    SYSUTCDATETIME(),
+    SYSUTCDATETIME()
+);
+
+INSERT INTO user_roles (
+    user_id,
+    role_id
+)
+VALUES (
+    @StorekeeperId,
+    @StorekeeperRoleId
+);
+
+GO
+
 
 /* =========================================================
    MEMBER USERS
