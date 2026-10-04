@@ -8,37 +8,44 @@
     <script type="importmap"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <script src="https://cdn.tailwindcss.com" asp-append-version="true"></script>
-    <script src="~/js/common/header.js" asp-append-version="true"></script>
-    <script src="~/js/common/login-modal.js" asp-append-version="true"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="min-h-screen flex flex-col bg-slate-50">
+
     <partial name="_Header" />
-    
+
     <main role="main" class="flex-grow w-full">
         @RenderBody()
     </main>
 
     <partial name="_Footer" />
+
     <partial name="_LoginModal" />
 
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none">
+    </div>
 
-    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-3 pointer-events-none"></div>
-    
-
+    <!-- Third-party libraries -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-  
+
     <partial name="_ValidationScriptsPartial" />
 
+    <!-- Core -->
+    <script src="~/js/core/api.js" asp-append-version="true"></script>
+    <script src="~/js/core/http.js" asp-append-version="true"></script>
+    <script src="~/js/core/api-client.js" asp-append-version="true"></script>
 
-    @await RenderSectionAsync("Scripts", required: false)
+    <!-- Common -->
     <script src="~/js/common/antiforgery.js" asp-append-version="true"></script>
-    <script src="~/js/common/auth.js" asp-append-version="true"></script>
-    <script src="~/js/common/modal.js" asp-append-version="true"></script>
     <script src="~/js/common/notification.js" asp-append-version="true"></script>
-    
+    <script src="~/js/common/header.js" asp-append-version="true"></script>
+    <script src="~/js/common/login-modal.js" asp-append-version="true"></script>
+
+    <!-- Page-specific -->
+    @await RenderSectionAsync("Scripts", required: false)
+
 </body>
 
 </html>
