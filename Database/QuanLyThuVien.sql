@@ -347,10 +347,6 @@ CREATE TABLE library_items (
 
     status NVARCHAR(20) NOT NULL
         CONSTRAINT DF_library_items_status DEFAULT 'AVAILABLE',
-
-    item_condition NVARCHAR(20) NOT NULL
-        CONSTRAINT DF_library_items_condition DEFAULT 'GOOD',
-
     acquired_at DATETIME2(7) NULL,
     acquisition_price DECIMAL(12, 2) NULL,
     cover_price DECIMAL(12, 2) NULL,
@@ -391,16 +387,6 @@ CREATE TABLE library_items (
             )
         ),
     CONSTRAINT CK_library_items_price CHECK (acquisition_price >= 0 AND cover_price >= 0),
-
-    CONSTRAINT CK_library_items_condition
-        CHECK (
-            item_condition IN (
-                'NEW',
-                'GOOD',
-                'WORN',
-                'DAMAGED'
-            )
-        )
 )
 
 
@@ -732,11 +718,6 @@ CREATE TABLE loan_items (
 
     status NVARCHAR(20) NOT NULL
         CONSTRAINT DF_loan_items_status DEFAULT 'BORROWED',
-
-    condition_at_loan NVARCHAR(20) NULL,
-    condition_at_return NVARCHAR(20) NULL,
-    condition_note_at_loan NVARCHAR(MAX) NULL,
-    condition_note_at_return NVARCHAR(MAX) NULL,
 
     created_at DATETIME2(7) NOT NULL
         CONSTRAINT DF_loan_items_created_at
