@@ -4,14 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const DEFAULT_PAGE_SIZE = 12;
 
-    const API = {
-        searchBooks: '/api/resources/search',
-        searchAuthors: '/api/authors/search',
-        searchPublishers: '/api/publishers/search',
-        searchCategories: '/api/categories/search',
-        searchDocumentTypes: '/api/document-types/search'
-    };
-
     /**
      * Operator của group hiện tại được dùng để nối
      * group hiện tại với group tiếp theo.
@@ -40,6 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
         publisher: new Map(),
         category: new Map()
     };
+
+
 
     /**
      * DOM ELEMENTS
@@ -94,16 +88,17 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    async function getJson(url) {
-        const response = await fetch(url, {
-            method: 'GET',
+    async function getJson(url, options = {}) {
+        const response = await apiClient.public.get(url, {
             headers: {
-                Accept: 'application/json'
-            }
+                Accept: 'application/json',
+                ...options.headers
+            },
+            ...options
         });
 
         if (!response.ok) {
-            throw new Error(`Request failed: ${response.status} `);
+            throw new Error(`Request failed: ${response.status}`);
         }
 
         return await response.json();
@@ -151,14 +146,15 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoading();
 
         try {
-            const response = await fetch(API.searchBooks, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json'
-                },
-                body: JSON.stringify(request)
-            });
+            const response = await apiClient.public.post(
+                API.public.resources.search,
+                request,
+                {
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                }
+            );
 
             if (!response.ok) {
                 throw new Error(`Book search failed: ${response.status} `);
@@ -704,15 +700,11 @@ text-xs
         }
 
         try {
-            const params = new URLSearchParams();
-
-            if (normalizedKeyword) {
-                params.set('name', normalizedKeyword);
-            }
-
-            const query = params.toString();
-            const requestUrl = query ? `${url}?${query} ` : url;
-            const data = await getJson(requestUrl);
+            const data = await getJson(url, {
+                params: normalizedKeyword
+                    ? { name: normalizedKeyword }
+                    : {}
+            });
 
             const items = extractItems(data)
                 .map(normalizeSelectionItem)
@@ -726,10 +718,9 @@ text-xs
             console.error(`Không thể tải dữ liệu filter "${type}": `, error);
 
             container.innerHTML = `
-    <div class="px-3 py-2 text-xs text-red-400" >
-        Không thể tải dữ liệu
-                </div >
-    `;
+        <div class="px-3 py-2 text-xs text-red-400">
+            Không thể tải dữ liệu
+        </div>`;
 
             showFilterList(container);
         }
@@ -755,28 +746,28 @@ text-xs
             field: 'document_types',
             input: elements.documentTypeSearch,
             list: elements.documentTypeList,
-            url: API.searchDocumentTypes,
+            url: API.public.documentTypes.search,
             operator: '|'
         },
         author: {
             field: 'authors',
             input: elements.authorSearch,
             list: elements.authorList,
-            url: API.searchAuthors,
+            url: API.public.authors.search,
             operator: '&'
         },
         publisher: {
             field: 'publishers',
             input: elements.publisherSearch,
             list: elements.publisherList,
-            url: API.searchPublishers,
+            url: API.public.publishers.search,
             operator: '|'
         },
         category: {
             field: 'categories',
             input: elements.categorySearch,
             list: elements.categoryList,
-            url: API.searchCategories,
+            url: API.public.categories.search,
             operator: '&'
         }
     };

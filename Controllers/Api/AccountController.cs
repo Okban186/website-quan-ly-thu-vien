@@ -5,10 +5,9 @@ using WebsiteQuanLyThuVien.Exceptions;
 using WebsiteQuanLyThuVien.Repositories;
 using WebsiteQuanLyThuVien.Services.Authentication;
 
-
 namespace WebsiteQuanLyThuVien.Controllers.Api;
 
-[Route("api/account")]
+[Route("api/accounts")]
 public class AccountController : Controller
 {
     private readonly IAuthenticationService _authenticationService;
@@ -95,7 +94,7 @@ public class AccountController : Controller
         Response.Cookies.Delete("access_token");
         Response.Cookies.Delete("refresh_token");
 
-        return RedirectToAction("Index", "Home");
+        return Ok(new { success = true, message = "Logged out successfully" });
     }
 
 

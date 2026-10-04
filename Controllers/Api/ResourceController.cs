@@ -17,7 +17,7 @@ public class ResourceController : Controller
     }
 
     [HttpPost]
-    [Route("search")]
+    [Route("advance-search")]
     [AllowAnonymous]
     public async Task<IActionResult> ResourcesSearchAsync([FromBody] ReaderResourceSearchRequest request)
     {
