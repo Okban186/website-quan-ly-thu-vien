@@ -12,7 +12,7 @@ public static class UploadTypeExtensions
             UploadType.Avatar => "members/avatars",
             UploadType.IdentityFront => "members/identity/front",
             UploadType.IdentityBack => "members/identity/back",
-            UploadType.ResourceImage => "books/covers",
+            UploadType.ResourceImage => "resources/images",
             UploadType.Ebook => "digital/ebooks",
             UploadType.Audiobook => "digital/audiobooks",
             UploadType.Document => "digital/documents",
