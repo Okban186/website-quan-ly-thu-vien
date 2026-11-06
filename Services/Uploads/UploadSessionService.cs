@@ -206,4 +206,50 @@ public class UploadSessionService : IUploadSessionService
     }
 
 
+
+
+
+    public async Task<BatchUploadResultResponse> CompleteBatchAsync(IEnumerable<Guid> uploadSessionIds, CancellationToken cancellationToken = default)
+    {
+        var response = new BatchUploadResultResponse();
+
+        var tasks = uploadSessionIds.Select(async id =>
+        {
+            try
+            {
+                var storageFileId = await CompleteAsync(id, cancellationToken);
+
+                // Thành công trả về HTTP 200 OK
+                return new BatchItemResult(id, true, StatusCodes.Status200OK, null, storageFileId);
+            }
+            catch (BusinessException ex)
+            {
+
+                return new BatchItemResult(id, false, ex.StatusCode, ex.Message, null);
+            }
+            catch (Exception ex)
+            {
+                // Lỗi hệ thống bất ngờ -> Trả về HTTP 500 Internal Server Error
+                return new BatchItemResult(id, false, StatusCodes.Status500InternalServerError, "Đã xảy ra lỗi hệ thống nội bộ.", null);
+            }
+        });
+
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var result in results)
+        {
+            if (result.IsSuccess)
+            {
+                response.Successful.Add(result);
+            }
+            else
+            {
+                response.Failed.Add(result);
+            }
+        }
+
+        return response;
+    }
+
+
 }

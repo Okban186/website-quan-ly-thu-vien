@@ -27,5 +27,13 @@ public interface IUploadSessionService
     /// <returns>Trả về uuid của storageFile để các model cần tham chiếu đến tài nguyên sau khi tải dễ dàng hơn</returns>gì
     Task<Guid> CompleteAsync(Guid uploadSessionId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Xử lý xác thực nhiều id cùng lúc
+    /// </summary>
+    /// <param name="uploadSessionIds"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<BatchUploadResultResponse> CompleteBatchAsync(IEnumerable<Guid> uploadSessionIds, CancellationToken cancellationToken = default);
+
     Task CancelAsync(Guid uploadSessionId, CancellationToken cancellationToken = default);
 }
