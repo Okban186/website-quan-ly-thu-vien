@@ -71,11 +71,19 @@ public interface IFileStorageService
 
 
     /// <summary>
-    /// Tạo URL tạm thời để truy cập file từ storage.
+    /// Tạo URL tạm thời để truy cập file từ storage, có dùng chữ ký
     /// </summary>
     /// <param name="objectKey">Key của file trong storage.</param>
     /// <param name="expiration">Thời gian URL có hiệu lực.</param>
     /// <param name="cancellationToken">Token dùng để hủy thao tác.</param>
     /// <returns>URL tạm thời để truy cập file.</returns>
-    Task<string> CreatePresignedGetUrlAsync(string objectKey, TimeSpan expiration, CancellationToken cancellationToken = default);
+    Task<string> CreatePresignedGetUrlAsync(string objectKey, TimeSpan? expiration, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tạo url public giúp cache trên các trình duyệt dễ dàng hơn
+    /// </summary>
+    /// <param name="objectKey"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task<string> CreatePublicGetUrlAsync(string objectKey, CancellationToken cancellationToken = default);
 }
