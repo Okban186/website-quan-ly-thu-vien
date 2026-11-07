@@ -6,6 +6,7 @@ using WebsiteQuanLyThuVien.DTOs.Requests;
 using WebsiteQuanLyThuVien.DTOs.Response;
 using WebsiteQuanLyThuVien.Models;
 using WebsiteQuanLyThuVien.Repositories.Filters;
+using WebsiteQuanLyThuVien.Services.Storage;
 
 namespace WebsiteQuanLyThuVien.Repositories;
 
@@ -14,10 +15,13 @@ public class ResourceRepository : IResourceRepository
     private readonly ApplicationDbContext _context;
     private readonly ResourceFilterExpressionService _filterExpressionService;
 
-    public ResourceRepository(ApplicationDbContext context, ResourceFilterExpressionService filterExpressionService)
+    private readonly IFileStorageService _fileStorageService;
+
+    public ResourceRepository(ApplicationDbContext context, ResourceFilterExpressionService filterExpressionService, IFileStorageService fileStorageService)
     {
         _context = context;
         _filterExpressionService = filterExpressionService;
+        _fileStorageService = fileStorageService;
     }
 
     /// <summary>
@@ -127,41 +131,48 @@ public class ResourceRepository : IResourceRepository
             ? 12
             : request.PageSize;
 
-        var items = await query
+        var pagedData = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(Resource => new ResourceSearchItemDto
+            .Select(resource => new
             {
-                Id = Resource.Id,
+                resource.Id,
+                resource.Title,
+                resource.PublicationYear,
+                DocumentTypeName = resource.DocumentType != null ? resource.DocumentType.Name : null,
+                PublisherName = resource.Publisher != null ? resource.Publisher.Name : null,
+                Authors = resource.ResourceAuthors.Select(ba => ba.Author.Name).ToList(),
+                Categories = resource.ResourceCategories.Select(bc => bc.Category.Name).ToList(),
 
-                Title = Resource.Title,
-
-                PublicationYear = Resource.PublicationYear,
-
-                DocumentTypeName = Resource.DocumentType.Name,
-
-                PublisherName = Resource.Publisher != null
-                    ? Resource.Publisher.Name
-                    : null,
-
-                Authors = Resource.ResourceAuthors
-                    .Select(ba => ba.Author.Name)
-                    .ToList(),
-
-                Categories = Resource.ResourceCategories
-                    .Select(bc => bc.Category.Name)
-                    .ToList()
+                // Lấy ObjectKey thô của ảnh chính
+                ObjectKey = resource.ResourceImages
+                    .OrderByDescending(img => img.IsPrimary)
+                    .ThenBy(img => img.DisplayOrder)
+                    .Select(img => img.File != null ? img.File.ObjectKey : null)
+                    .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
+        var items = await Task.WhenAll(pagedData.Select(async resource => new ResourceSearchItemDto
+        {
+            Id = resource.Id,
+            Title = resource.Title,
+            PublicationYear = resource.PublicationYear,
+            DocumentTypeName = resource.DocumentTypeName,
+            PublisherName = resource.PublisherName,
+            Authors = resource.Authors,
+            Categories = resource.Categories,
+
+            CoverUrl = !string.IsNullOrEmpty(resource.ObjectKey)
+                ? await _fileStorageService.CreatePublicGetUrlAsync(resource.ObjectKey)
+                : null
+        }));
+
         return new PagedResult<ResourceSearchItemDto>
         {
-            Items = items,
-
+            Items = items.ToList(),
             TotalItems = totalCount,
-
             Page = page,
-
             PageSize = pageSize
         };
     }

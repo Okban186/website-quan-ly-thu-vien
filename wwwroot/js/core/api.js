@@ -4,7 +4,9 @@ const API = {
             login: '/api/accounts/login'
         },
         resources: {
-            search: '/api/resources/advance-search'
+            search: '/api/resources/advance-search',
+            copies: (id) => `/api/resources/${id}/copies`,
+            suggestions: (id) => `/api/resources/${id}/suggestions`
         },
 
         authors: {

@@ -216,13 +216,27 @@ public class MinioFileStorageService : IFileStorageService
     }
 
 
-    public async Task<string> CreatePresignedGetUrlAsync(string objectKey, TimeSpan expiration, CancellationToken cancellationToken = default)
+    public async Task<string> CreatePresignedGetUrlAsync(string objectKey, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
+        // Mặc định là 1 giờ nếu không truyền vào
+        var expiryTime = expiration ?? TimeSpan.FromHours(1);
+
         var args = new PresignedGetObjectArgs()
             .WithBucket(_options.BucketName)
             .WithObject(objectKey)
-            .WithExpiry((int)expiration.TotalSeconds);
+            .WithExpiry((int)expiryTime.TotalSeconds);
 
         return await _minioClient.PresignedGetObjectAsync(args);
+    }
+
+    public Task<string> CreatePublicGetUrlAsync(string objectKey, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(objectKey))
+            return Task.FromResult(string.Empty);
+
+        var scheme = _options.UseSSL ? "https" : "http";
+        var publicUrl = $"{scheme}://{_options.Endpoint}/{_options.BucketName}/{objectKey}";
+
+        return Task.FromResult(publicUrl);
     }
 }

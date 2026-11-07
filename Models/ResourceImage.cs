@@ -7,6 +7,8 @@ public class ResourceImage
     public Guid ResourceId { get; set; }
     public Guid FileId { get; set; }
 
+    public int DisplayOrder { get; set; }
+
     public bool IsPrimary { get; set; }
 
     public DateTime CreatedAt { get; set; }
