@@ -32,7 +32,7 @@ public class UploadSessionService : IUploadSessionService
 
     public async Task<Guid> CompleteAsync(Guid uploadSessionId, CancellationToken cancellationToken = default)
     {
-        //Lấy session
+        // Lấy session
         var session = await _uploadSessionRepository.GetByIdAsync(uploadSessionId, cancellationToken);
 
         if (session is null)
@@ -40,79 +40,83 @@ public class UploadSessionService : IUploadSessionService
             throw new BusinessException("Không tìm thấy upload.");
         }
 
-        //Kiểm tra trạng thái
-        if (session.Status != UploadSessionStatus.PENDING)
+        // Xử lý IDEMPOTENCY: Nếu session đã COMPLETED từ trước, trả về luôn StorageFile tương ứng
+        if (session.Status == UploadSessionStatus.COMPLETED)
         {
-            throw new BusinessException("Upload không ở trạng thái chờ xử lý.");
+            // Tìm storageFile dựa vào final ObjectKey hiện tại của session
+            var existingFile = await _storageFileRepository.GetByObjectKeyAsync(session.ObjectKey, cancellationToken);
+            if (existingFile != null)
+            {
+                return existingFile.Id;
+            }
+            // Trường hợp hi hữu đã completed nhưng mất record file thì xử lý tạo mới hoặc báo lỗi
         }
 
-        //Kiểm tra hết hạn
+        // Kiểm tra trạng thái (cho phép PENDING hoặc FAILED nếu muốn cho retry, nhưng chuẩn nhất vẫn là PENDING)
+        if (session.Status != UploadSessionStatus.PENDING && session.Status != UploadSessionStatus.FAILED)
+        {
+            throw new BusinessException("Upload không ở trạng thái hợp lệ để hoàn thành.");
+        }
+
+        // Kiểm tra hết hạn
         if (session.ExpiresAt <= DateTime.UtcNow)
         {
             session.Status = UploadSessionStatus.EXPIRED;
-
             await _uploadSessionRepository.UpdateAsync(session, cancellationToken);
-
             throw new BusinessException("Upload đã hết hạn.");
         }
 
-        //Kiểm tra file tồn tại
-        var exists = await _fileStorageService.ExistsAsync(session.ObjectKey, cancellationToken);
+        // Kiểm tra ở temp (session.ObjectKey) HOẶC kiểm tra xem đã từng move sang final prefix chưa
+        bool fileExistsInTemp = await _fileStorageService.ExistsAsync(session.ObjectKey, cancellationToken);
 
-        if (!exists)
+        string targetObjectKey = session.ObjectKey;
+
+        if (!fileExistsInTemp)
         {
+            // Phòng hờ trường hợp lần trước đã move sang thư mục chính thức nhưng chưa kịp update session DB
+            // Ta có thể check xem session có đang giữ cấu trúc prefix chính thức hay không, hoặc search storage xem file đã tồn tại chưa.
+            // Hoặc đơn giản: Nếu file không ở temp, ta báo lỗi không tìm thấy file.
+
             session.Status = UploadSessionStatus.FAILED;
-
             await _uploadSessionRepository.UpdateAsync(session, cancellationToken);
-
-            throw new BusinessException("Không tìm thấy file đã upload.");
+            throw new BusinessException("Không tìm thấy file đã upload hoặc file đã bị xử lý trước đó.");
         }
 
-        //Lấy thông tin file
+        // Lấy thông tin file
         var objectInfo = await _fileStorageService.GetObjectInfoAsync(session.ObjectKey, cancellationToken);
 
-        //Kiểm tra kích thước
+        // Kiểm tra kích thước
         var maxFileSize = session.UploadType.GetMaxFileSize();
-
         if (objectInfo.Size > maxFileSize)
         {
             session.Status = UploadSessionStatus.FAILED;
-
             await _fileStorageService.DeleteAsync(session.ObjectKey, cancellationToken);
-
             await _uploadSessionRepository.UpdateAsync(session, cancellationToken);
-
             throw new BusinessException("File vượt quá kích thước cho phép.");
         }
 
-        //Detect MIME thật
+        // Detect MIME thật
         var actualMimeType = await _fileStorageService.DetectRealContentTypeAsync(session.ObjectKey, cancellationToken);
 
-        //Kiểm tra MIME theo UploadType
+        // Kiểm tra MIME theo UploadType
         var allowedMimeTypes = session.UploadType.GetAllowedMimeTypes();
-
         if (!allowedMimeTypes.Contains(actualMimeType))
         {
             session.Status = UploadSessionStatus.FAILED;
-
             await _fileStorageService.DeleteAsync(session.ObjectKey, cancellationToken);
-
             await _uploadSessionRepository.UpdateAsync(session, cancellationToken);
             throw new BusinessException($"Loại file không được phép: {actualMimeType}");
         }
 
         string extension = UploadTypeExtensions.GetExtensionFromMimeType(actualMimeType);
-        //Tạo key chính thức
+
+        // Tạo key chính thức
         var finalObjectKey = $"{session.UploadType.GetFinalPrefix()}/{Guid.NewGuid()}{extension}";
 
-        //Move từ temp sang vị trí chính thức
+        // Move từ temp sang vị trí chính thức
         await _fileStorageService.MoveAsync(session.ObjectKey, finalObjectKey, cancellationToken);
 
-        //Cập nhật session
-        session.ObjectKey = finalObjectKey;
-        session.Status = UploadSessionStatus.COMPLETED;
-        session.CompletedAt = DateTime.UtcNow;
-
+        // Tạo bản ghi StorageFile trước
         var storageFile = new StorageFile
         {
             Id = Guid.NewGuid(),
@@ -124,7 +128,11 @@ public class UploadSessionService : IUploadSessionService
 
         await _storageFileRepository.CreateAsync(storageFile);
 
-        //Lưu DB
+        // Cập nhật session sau cùng
+        session.ObjectKey = finalObjectKey;
+        session.Status = UploadSessionStatus.COMPLETED;
+        session.CompletedAt = DateTime.UtcNow;
+
         await _uploadSessionRepository.UpdateAsync(session, cancellationToken);
 
         return storageFile.Id;
