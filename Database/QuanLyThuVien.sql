@@ -1070,6 +1070,8 @@ CREATE TABLE resource_images (
     resource_id UNIQUEIDENTIFIER NOT NULL,
     file_id UNIQUEIDENTIFIER NOT NULL,
 
+    display_order INT NOT NULL,
+
     is_primary BIT NOT NULL
         CONSTRAINT DF_resource_images_is_primary DEFAULT 0,
 

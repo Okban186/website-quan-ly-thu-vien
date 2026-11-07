@@ -696,6 +696,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(x => x.Id).HasName("PK_resource_images");
             entity.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()").ValueGeneratedOnAdd();
             entity.Property(x => x.ResourceId).HasColumnName("resource_id");
+            entity.Property(x => x.DisplayOrder).HasColumnName("display_order");
             entity.Property(x => x.FileId).HasColumnName("file_id");
             entity.Property(x => x.IsPrimary).HasColumnName("is_primary").HasDefaultValue(false);
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
