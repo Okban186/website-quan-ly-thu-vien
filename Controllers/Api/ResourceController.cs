@@ -25,4 +25,28 @@ public class ResourceController : Controller
 
         return Ok(result);
     }
+
+    [HttpGet("{id:guid}/copies")]
+    public async Task<IActionResult> GetResourceCopies(
+    Guid id,
+    [FromQuery] int page = 1,
+    CancellationToken cancellationToken = default)
+    {
+        var result = await _resourceService.GetResourceCopiesAsync(id, page);
+
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}/suggestions")]
+    public async Task<IActionResult> GetSuggestions(Guid id, CancellationToken cancellationToken)
+    {
+
+
+        var result = await _resourceService.GetSuggestionsAsync(id, cancellationToken);
+
+        return Ok(result);
+    }
 }
