@@ -268,77 +268,80 @@ document.addEventListener('DOMContentLoaded', () => {
          */
         if (state.view === 'grid') {
             return `
-    <article
-class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer"
-data-book-id="${escapeHtml(book.id)}"
-    >
-                    <div class="aspect-[3/4] bg-slate-100 overflow-hidden">
+        <a href="/Resource/Detail/${book.id}" class="block group no-underline h-full">
+            <article
+                class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition cursor-pointer flex flex-col h-full"
+                data-book-id="${escapeHtml(book.id)}"
+            >
+                    <div class="relative aspect-[3/4] bg-slate-100 overflow-hidden">
                         ${book.coverUrl
                     ? `
                                 <img
                                     src="${escapeHtml(book.coverUrl)}"
                                     alt="${escapeHtml(book.title)}"
-                                    class="w-full h-full object-cover"
+                                    class="absolute inset-0 w-full h-full object-cover"
                                 >
                             `
                     : `
-                                <div class="w-full h-full flex items-center justify-center text-xs text-slate-400">
+                                <div class="absolute inset-0 w-full h-full flex items-center justify-center text-xs text-slate-400">
                                     Không có ảnh
                                 </div>
                             `}
                     </div>
 
-                    <div class="p-4">
-                        <div class="flex items-start justify-between gap-2">
-                            <h3 class="text-sm font-bold text-slate-800 line-clamp-2">
-                                ${escapeHtml(book.title)}
-                            </h3>
+                    <div class="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-start justify-between gap-2">
+                                <h3 class="text-sm font-bold text-slate-800 line-clamp-2">
+                                    ${escapeHtml(book.title)}
+                                </h3>
 
-                            ${book.documentTypeName
+                                ${book.documentTypeName
                     ? `
-                                    <span class="shrink-0 text-[10px] px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                                        ${escapeHtml(book.documentTypeName)}
-                                    </span>
+                                        <span class="shrink-0 text-[10px] px-2 py-1 rounded-full bg-slate-100 text-slate-600">
+                                            ${escapeHtml(book.documentTypeName)}
+                                        </span>
+                                    `
+                    : ''}
+                            </div>
+
+                            <p class="text-xs text-slate-500 mt-2">
+                                ${escapeHtml(authors)}
+                            </p>
+
+                            ${book.publisherName
+                    ? `
+                                    <p class="text-[11px] text-slate-400 mt-1">
+                                        ${escapeHtml(book.publisherName)}
+                                    </p>
+                                `
+                    : ''}
+
+                            ${book.publicationYear
+                    ? `
+                                    <p class="text-[11px] text-slate-400 mt-1">
+                                        ${book.publicationYear}
+                                    </p>
+                                `
+                    : ''}
+
+                            ${categories.length > 0
+                    ? `
+                                    <div class="flex flex-wrap gap-1 mt-3">
+                                        ${categories
+                        .slice(0, 3)
+                        .map(category => `
+                                                <span class="text-[10px] px-2 py-1 bg-slate-50 text-slate-500 rounded-md">
+                                                    ${escapeHtml(category)}
+                                                </span>
+                                            `)
+                        .join('')}
+                                    </div>
                                 `
                     : ''}
                         </div>
 
-                        <p class="text-xs text-slate-500 mt-2">
-                            ${escapeHtml(authors)}
-                        </p>
-
-                        ${book.publisherName
-                    ? `
-                                <p class="text-[11px] text-slate-400 mt-1">
-                                    ${escapeHtml(book.publisherName)}
-                                </p>
-                            `
-                    : ''}
-
-                        ${book.publicationYear
-                    ? `
-                                <p class="text-[11px] text-slate-400 mt-1">
-                                    ${book.publicationYear}
-                                </p>
-                            `
-                    : ''}
-
-                        ${categories.length > 0
-                    ? `
-                                <div class="flex flex-wrap gap-1 mt-3">
-                                    ${categories
-                        .slice(0, 3)
-                        .map(category => `
-                                            <span class="text-[10px] px-2 py-1 bg-slate-50 text-slate-500 rounded-md">
-                                                ${escapeHtml(category)}
-                                            </span>
-                                        `)
-                        .join('')}
-                                </div>
-                            `
-                    : ''}
-
-                        <div class="mt-3 text-[11px] font-medium ${isAvailable
+                        <div class="mt-4 pt-2 border-t border-slate-100 text-[11px] font-medium ${isAvailable
                     ? 'text-emerald-600'
                     : 'text-red-500'}">
                             ${isAvailable
@@ -347,6 +350,7 @@ data-book-id="${escapeHtml(book.id)}"
                         </div>
                     </div>
                 </article >
+                </a>
     `;
         }
 
@@ -354,28 +358,30 @@ data-book-id="${escapeHtml(book.id)}"
          * LIST
          */
         return `
+        <a href="/Resource/Detail/${book.id}" class="block group no-underline">
     <article
 class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition cursor-pointer"
 data-book-id="${escapeHtml(book.id)}"
     >
     <div class="flex gap-4">
-        <div class="w-20 sm:w-24 shrink-0">
-            <div class="aspect-[3/4] bg-slate-100 rounded-lg overflow-hidden">
-                ${book.coverUrl
+<div class="w-24 sm:w-28 shrink-0">
+    <!-- Khung ngoài giữ tỷ lệ chuẩn 3:4, có bo góc và ẩn phần thừa -->
+    <div class="aspect-[3/4] bg-slate-100 rounded-xl overflow-hidden shadow-sm flex items-center justify-center">
+        ${book.coverUrl
                 ? `
-                                    <img
-                                        src="${escapeHtml(book.coverUrl)}"
-                                        alt="${escapeHtml(book.title)}"
-                                        class="w-full h-full object-cover"
-                                    >
-                                `
+                <img
+                    src="${escapeHtml(book.coverUrl)}"
+                    alt="${escapeHtml(book.title)}"
+                    class="w-full h-full object-cover rounded-xl [image-rendering:-webkit-optimize-contrast]"
+                >
+            `
                 : `
-                                    <div class="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
-                                        Không có ảnh
-                                    </div>
-                                `}
-            </div>
-        </div>
+                <div class="w-full h-full flex items-center justify-center text-[10px] text-slate-400">
+                    Không có ảnh
+                </div>
+            `}
+    </div>
+</div>
 
         <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-start gap-2">
@@ -447,6 +453,7 @@ data-book-id="${escapeHtml(book.id)}"
         </div>
     </div>
             </article >
+            </a>
     `;
     }
 
@@ -957,16 +964,6 @@ text-xs
         elements.activeFilters.classList.remove('hidden');
     }
 
-    // elements.activeFilterList?.addEventListener('click', event => {
-    //     const button = event.target.closest('[data-filter-key]');
-
-    //     if (!button) {
-    //         return;
-    //     }
-
-    //     clearFilter(button.dataset.filterKey);
-    // });
-
     /**
      * CLEAR ONE FILTER
      */
@@ -1218,17 +1215,6 @@ text-xs
         elements.filterExpression.value = state.filterExpression;
     }
 
-    /**
-     * Escape tên để đưa vào expression.
-     *
-     * Ví dụ:
-     *
-     * Văn học Việt Nam
-     *
-     * =>
-     *
-     * "Văn học Việt Nam"
-     */
     function quoteFilterValue(value) {
         return `"${String(value)
             .replaceAll('\\', '\\\\')
@@ -1290,21 +1276,6 @@ text-xs
         return null;
     }
 
-    /**
-     * Thêm một giá trị vào filter expression.
-     *
-     * Ví dụ:
-     *
-     * categories:"Văn học Việt Nam"
-     *
-     * thêm:
-     *
-     * "Công nghệ thông tin"
-     *
-     * =>
-     *
-     * categories:"Văn học Việt Nam" & "Công nghệ thông tin"
-     */
     function appendFilterValue(field, value, operator = '|') {
         if (!value) {
             return;
@@ -1314,24 +1285,12 @@ text-xs
         const quotedValue = quoteFilterValue(value);
         const group = findFilterGroup(expression, field);
 
-        /**
-         * Chưa có group:
-         *
-         * categories:("Âm nhạc")
-         */
         if (!group) {
             const newGroup = `${field}:(${quotedValue})`;
 
             if (!expression) {
                 state.filterExpression = newGroup;
             } else {
-                /**
-                 * Các field khác nhau mặc định AND.
-                 *
-                 * categories:(...)
-                 * &
-                 * authors:(...)
-                 */
                 state.filterExpression = `${expression} & ${newGroup}`;
             }
 
@@ -1339,22 +1298,10 @@ text-xs
             return;
         }
 
-        /**
-         * Đã có group:
-         *
-         * categories:("Âm nhạc")
-         *
-         * =>
-         *
-         * categories:("Âm nhạc" & "CNTT")
-         */
         const currentContent = expression
             .slice(group.contentStart, group.end)
             .trim();
 
-        /**
-         * Tránh thêm trùng.
-         */
         const existingValues = extractQuotedValues(currentContent);
         const normalizedValue = String(value).trim().toLowerCase();
 
@@ -1441,6 +1388,17 @@ text-xs
     /**
      * INITIALIZE
      */
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get('filter');
+
+    if (filterParam) {
+        state.filterExpression = decodeURIComponent(filterParam);
+        renderFilterExpression(); // Hiển thị biểu thức lên ô input
+
+        // Xóa sạch tham số trên thanh URL nhưng không làm mất dữ liệu hay tải lại trang
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     updateViewButtons();
     hideAllFilterLists();
     searchBooks();
