@@ -18,7 +18,5 @@ public class ResourceSearchItemDto
 
     public IReadOnlyList<string> Categories { get; set; } = [];
 
-    public int AvailableCopies { get; set; }
-
-    public int TotalCopies { get; set; }
+    public bool HasResourceAvaiable { get; set; }
 }
