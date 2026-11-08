@@ -201,7 +201,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.UserId).HasColumnName("user_id");
             entity.Property(x => x.MembershipStatus).HasColumnName("membership_status").HasMaxLength(30).HasConversion<string>().HasDefaultValue(LibraryMembershipStatus.ACTIVE);
             entity.Property(x => x.RegisteredAt).HasColumnName("registered_at").HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
-            entity.Property(x => x.ExpiredAt).HasColumnName("expired_at").HasColumnType("datetime2");
 
             entity.HasIndex(x => x.UserId).IsUnique().HasDatabaseName("UQ_library_members_user_id");
             entity.HasOne(x => x.User).WithOne(x => x.LibraryMember).HasForeignKey<LibraryMember>(x => x.UserId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_library_members_user");

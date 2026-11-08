@@ -11,7 +11,6 @@ public class LibraryMember
     public LibraryMembershipStatus MembershipStatus { get; set; }
 
     public DateTime RegisteredAt { get; set; }
-    public DateTime? ExpiredAt { get; set; }
 
     public User User { get; set; } = null!;
 
