@@ -146,8 +146,6 @@ CREATE TABLE library_members (
         CONSTRAINT DF_library_members_registered_at
         DEFAULT SYSUTCDATETIME(),
 
-    expired_at DATETIME2 NULL,
-
     CONSTRAINT UQ_library_members_user_id UNIQUE (user_id),
 
     CONSTRAINT FK_library_members_user
