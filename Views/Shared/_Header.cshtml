@@ -275,7 +275,7 @@
 
 
                                 <!-- Account -->
-                                <button id="menu-item-account" type="button" class="w-full text-left
+                                <a id="menu-item-account" type="button" class="w-full text-left
                                     px-4 py-2.5
                                     text-xs text-slate-700
                                     hover:bg-slate-50
@@ -295,11 +295,29 @@
 
                                     <span>Tài khoản</span>
 
-                                </button>
+                                </a>
+                                <a href="@Url.Action("Index", "BorrowCart")" id="menu-item-borrow-queue" type="button"
+                                   class="w-full text-left
+                                    px-4 py-2.5
+                                    text-xs text-slate-700
+                                    hover:bg-slate-50
+                                    flex items-center gap-2.5
+                                    transition-colors">
 
+                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2"
+                                         viewBox="0 0 24 24">
+                                        <!-- Icon cái khay / hộp tài liệu (Tray/Archive) -->
+                                        <path
+                                            d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0h-2.586a1 1 0 0 0-.707.293l-2.414 2.414a1 1 0 0 1-.707.293h-3.172a1 1 0 0 1-.707-.293l-2.414-2.414A1 1 0 0 0 6.586 13H4">
+                                        </path>
+                                    </svg>
+
+                                    <span>Danh sách chờ mượn</span>
+
+                                </a>
 
                                 <!-- Borrow -->
-                                <button id="menu-item-borrow" type="button" class="w-full text-left
+                                <a id="menu-item-borrow" type="button" class="w-full text-left
                                     px-4 py-2.5
                                     text-xs text-slate-700
                                     hover:bg-slate-50
@@ -314,13 +332,13 @@
 
                                     </svg>
 
-                                    <span>Đang mượn</span>
+                                    <span>Hoạt động mượn</span>
 
-                                </button>
+                                </a>
 
 
                                 <!-- Fines -->
-                                <button id="menu-item-fines" type="button" class="w-full text-left
+                                <a id="menu-item-fines" type="button" class="w-full text-left
                                     px-4 py-2.5
                                     text-xs text-slate-700
                                     hover:bg-slate-50
@@ -329,21 +347,13 @@
 
                                     <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" stroke-width="2"
                                          viewBox="0 0 24 24">
-
-                                        <circle cx="12" cy="12" r="10">
-                                        </circle>
-
-                                        <line x1="12" y1="8" x2="12" y2="12">
-                                        </line>
-
-                                        <line x1="12" y1="16" x2="12.01" y2="16">
-                                        </line>
-
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
                                     </svg>
 
-                                    <span>Phí phạt</span>
+                                    <span>Khoản phí & Phạt</span>
 
-                                </button>
+                                </a>
 
 
                                 <div class="border-t border-slate-100 my-1">
