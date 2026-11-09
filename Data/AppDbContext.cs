@@ -51,6 +51,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<RevokedToken> RevokedTokens => Set<RevokedToken>();
 
+    public DbSet<BorrowCartItem> BorrowCartItems => Set<BorrowCartItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -90,6 +92,7 @@ public class ApplicationDbContext : DbContext
         ConfigureUploadSession(modelBuilder);
         ConfigureRefreshToken(modelBuilder);
         ConfigureRevokedToken(modelBuilder);
+        ConfigureBorrowCartItem(modelBuilder);
     }
 
     private static void ConfigureStorageFile(ModelBuilder modelBuilder)
@@ -408,7 +411,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Note).HasColumnName("note").HasMaxLength(1000);
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.Property(x => x.UpdatedAt).HasColumnName("updated_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(r => r.RequestCode).HasColumnName("request_code").IsRequired().HasMaxLength(50);
 
+            entity.HasIndex(r => r.RequestCode).IsUnique().HasDatabaseName("IX_BorrowRequests_RequestCode");
             entity.HasIndex(x => x.MemberId).HasDatabaseName("IX_borrow_requests_member_id");
             entity.HasIndex(x => x.Status).HasDatabaseName("IX_borrow_requests_status");
 
@@ -466,6 +471,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Address).HasColumnName("address").HasMaxLength(500).IsRequired();
             entity.Property(x => x.RecipientName).HasColumnName("recipient_name").HasMaxLength(255).IsRequired();
             entity.Property(x => x.RecipientPhone).HasColumnName("recipient_phone").HasMaxLength(30).IsRequired();
+            entity.Property(r => r.CarrierTrackingCode).HasColumnName("carrier_tracking_code").HasMaxLength(100);
+            entity.HasIndex(r => r.CarrierTrackingCode).HasDatabaseName("IX_BorrowRequests_CarrierTrackingCode");
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(30).HasConversion<string>().HasDefaultValue(DeliveryStatus.PENDING);
             entity.Property(x => x.DeliveredAt).HasColumnName("delivered_at").HasColumnType("datetime2(7)");
             entity.Property(x => x.CreatedAt).HasColumnName("created_at").HasColumnType("datetime2(7)").HasDefaultValueSql("SYSUTCDATETIME()");
@@ -1069,5 +1076,38 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(x => x.Name).IsUnique().HasDatabaseName("UQ_document_types_name");
         });
+    }
+
+    private static void ConfigureBorrowCartItem(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<BorrowCartItem>(entity =>
+            {
+                entity.ToTable("borrow_cart_items");
+
+                entity.HasKey(bc => new { bc.MemberId, bc.ResourceId })
+                      .HasName("PK_BorrowCartItems");
+
+                entity.Property(bc => bc.MemberId)
+                      .HasColumnName("member_id");
+
+                entity.Property(bc => bc.ResourceId)
+                      .HasColumnName("resource_id");
+
+                entity.Property(bc => bc.CreatedAt)
+                      .HasColumnName("created_at")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(bc => bc.Member)
+                      .WithMany()
+                      .HasForeignKey(bc => bc.MemberId)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_BorrowCartItems_LibraryMembers");
+
+                entity.HasOne(bc => bc.Resource)
+                      .WithMany()
+                      .HasForeignKey(bc => bc.ResourceId)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_BorrowCartItems_Resources");
+            });
     }
 }

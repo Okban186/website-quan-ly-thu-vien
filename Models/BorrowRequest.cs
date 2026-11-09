@@ -8,6 +8,8 @@ public class BorrowRequest
 
     public Guid MemberId { get; set; }
 
+    public string RequestCode { get; set; } = string.Empty;
+
     public BorrowRequestType RequestType { get; set; }
     public BorrowRequestStatus Status { get; set; }
 

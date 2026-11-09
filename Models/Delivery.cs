@@ -8,6 +8,8 @@ public class Delivery
 
     public Guid BorrowRequestId { get; set; }
 
+    public string CarrierTrackingCode { get; set; }
+
     public string Address { get; set; } = null!;
     public string RecipientName { get; set; } = null!;
     public string RecipientPhone { get; set; } = null!;
