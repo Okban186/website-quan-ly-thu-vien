@@ -44,9 +44,7 @@ public class ResourceService : IResourceService
         return result;
     }
 
-    public async Task<ResourceDetailViewModel?> getResourceDetail(
-    string id,
-    CancellationToken cancellationToken = default)
+    public async Task<ResourceDetailViewModel?> getResourceDetail(Guid? userId, string id, CancellationToken cancellationToken = default)
     {
         if (!Guid.TryParse(id, out Guid fid))
             return null;
@@ -88,6 +86,53 @@ public class ResourceService : IResourceService
         int totalCopies = await _context.LibraryItems
             .CountAsync(lb => lb.ResourceId == fid, cancellationToken);
 
+        var memberId = await _context.LibraryMembers
+        .Where(m => m.UserId == userId)
+        .Select(m => m.Id)
+        .FirstOrDefaultAsync(cancellationToken);
+
+        bool isInCart = userId == null ? false : await _context.BorrowCartItems
+            .AnyAsync(bc => bc.MemberId == memberId && bc.ResourceId == resource.Id);
+
+        var phone = "";
+        var address = "";
+        bool isBorrowing = false;
+        if (userId != null)
+        {
+            var dynam = await _context.Users.Where(u => u.Id == userId).Select(u => new { u.Phone, u.Address }).FirstOrDefaultAsync();
+
+            phone = dynam?.Phone ?? "";
+            address = dynam?.Address ?? "";
+
+
+            if (userId.HasValue)
+            {
+                var activeStatuses = new[] {
+        BorrowRequestStatus.PENDING,
+        BorrowRequestStatus.APPROVED,
+        BorrowRequestStatus.READY_FOR_PICKUP,
+        BorrowRequestStatus.DELIVERING
+    };
+
+                // Kiểm tra xem user có đang có request chờ xử lý/đang mượn đối với tài liệu này không
+                bool hasActiveRequest = await _context.BorrowRequestItems
+                    .Include(bri => bri.BorrowRequest)
+                    .AnyAsync(bri => bri.BorrowRequest.MemberId == memberId
+                                  && bri.ResourceId == fid
+                                  && activeStatuses.Contains(bri.BorrowRequest.Status));
+
+                bool hasActiveLoan = await _context.LoanItems
+                    .Include(li => li.Loan)
+                    .Include(li => li.LibraryItem)
+                    .AnyAsync(li => li.Loan.MemberId == memberId
+                                 && li.LibraryItem.ResourceId == fid
+                                 && li.Loan.Status == LoanStatus.ACTIVE
+                                 && li.Status == LoanItemStatus.BORROWED);
+
+                isBorrowing = hasActiveRequest || hasActiveLoan;
+            }
+        }
+
         int availableCopies = await _context.LibraryItems.CountAsync(lb => lb.ResourceId == fid && lb.Status == LibraryItemStatus.AVAILABLE, cancellationToken);
 
         return new ResourceDetailViewModel
@@ -95,16 +140,20 @@ public class ResourceService : IResourceService
             Id = resource.Id,
             Title = resource.Title,
             Images = Images,
+            Phone = phone,
+            Address = address,
             PhysicalDescription = resource.PhysicalDescription!,
             ISBN = resource.Isbn!,
             Categories = categoryNames,
             Authors = authorNames,
+            IsInCart = isInCart,
             DocumentTypeName = resource.DocumentType.Name,
             Description = resource.Description,
             PublisherName = resource.Publisher.Name,
             PublicationYear = resource.PublicationYear,
             AvailableCopies = availableCopies,
-            TotalCopies = totalCopies
+            TotalCopies = totalCopies,
+            IsBorrowing = isBorrowing
         };
 
 

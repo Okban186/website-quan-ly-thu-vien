@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WebsiteQuanLyThuVien.Migrations
 {
     /// <inheritdoc />
-    public partial class CheckModel : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -80,7 +80,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                     title = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     message = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     notification_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                    created_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
@@ -146,6 +146,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                     price = table.Column<decimal>(type: "decimal(12,2)", precision: 12, scale: 2, nullable: true),
                     publisher_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     document_type_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    physical_description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "ACTIVE"),
                     created_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
                     updated_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
@@ -204,6 +205,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     resource_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     file_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    display_order = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     resource_type = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     access_level = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "MEMBER"),
                     status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "ACTIVE"),
@@ -238,17 +240,18 @@ namespace WebsiteQuanLyThuVien.Migrations
                     location_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     barcode = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "AVAILABLE"),
-                    item_condition = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "GOOD"),
                     acquired_at = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
                     acquisition_price = table.Column<decimal>(type: "decimal(12,2)", precision: 12, scale: 2, nullable: true),
+                    cover_price = table.Column<decimal>(type: "decimal(12,2)", precision: 12, scale: 2, nullable: true),
+                    edition_number = table.Column<int>(type: "int", nullable: false),
+                    publication_year = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
                     updated_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_library_items", x => x.Id);
-                    table.CheckConstraint("CK_library_items_condition", "[item_condition] IN ('NEW','GOOD','WORN','DAMAGED')");
-                    table.CheckConstraint("CK_library_items_status", "[status] IN ('AVAILABLE','RESERVED','BORROWED','LOST','DAMAGED','MAINTENANCE','REMOVED')");
+                    table.CheckConstraint("CK_library_items_status", "[status] IN ('AVAILABLE','RESERVED','BORROWED','RETURNED_PENDING_CHECK','LOST','DAMAGED','MAINTENANCE','REMOVED')");
                     table.ForeignKey(
                         name: "FK_library_items_location",
                         column: x => x.location_id,
@@ -317,6 +320,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     resource_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     file_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    display_order = table.Column<int>(type: "int", nullable: false),
                     is_primary = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     created_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
@@ -343,8 +347,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     membership_status = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false, defaultValue: "ACTIVE"),
-                    registered_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
-                    expired_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    registered_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
                 constraints: table =>
                 {
@@ -481,9 +484,10 @@ namespace WebsiteQuanLyThuVien.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     library_item_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    loan_item_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     reported_by = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     issue_type = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
-                    description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "OPEN"),
                     resolved_at = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
                     resolved_by = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -540,11 +544,37 @@ namespace WebsiteQuanLyThuVien.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "borrow_cart_items",
+                columns: table => new
+                {
+                    member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    resource_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BorrowCartItems", x => new { x.member_id, x.resource_id });
+                    table.ForeignKey(
+                        name: "FK_BorrowCartItems_LibraryMembers",
+                        column: x => x.member_id,
+                        principalTable: "library_members",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_BorrowCartItems_Resources",
+                        column: x => x.resource_id,
+                        principalTable: "resources",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "borrow_requests",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     member_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RequestCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     request_type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     status = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false, defaultValue: "PENDING"),
                     processed_by = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -635,8 +665,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_borrow_request_items", x => x.Id);
-                    table.CheckConstraint("CK_borrow_request_items_quantity", "[quantity] > 0");
-                    table.CheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','REJECTED','CANCELLED','READY')");
+                    table.CheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','COMPLETED','REJECTED','CANCELLED')");
                     table.ForeignKey(
                         name: "FK_borrow_request_items_library_item",
                         column: x => x.library_item_id,
@@ -661,6 +690,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     borrow_request_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CarrierTrackingCode = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     recipient_name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     recipient_phone = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
@@ -785,8 +815,6 @@ namespace WebsiteQuanLyThuVien.Migrations
                     due_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false),
                     returned_at = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
                     status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "BORROWED"),
-                    condition_at_loan = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    condition_at_return = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
                     updated_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
                 },
@@ -814,8 +842,8 @@ namespace WebsiteQuanLyThuVien.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWSEQUENTIALID()"),
                     card_registration_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    ObjectKey = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UploadType = table.Column<int>(type: "int", nullable: false),
+                    object_key = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    upload_type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "PENDING"),
                     expires_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2(7)", nullable: false, defaultValueSql: "SYSUTCDATETIME()"),
@@ -825,7 +853,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_upload_sessions", x => x.Id);
-                    table.CheckConstraint("CK_upload_sessions_status", "[status] IN ('PENDING','COMPLETED','EXPIRED','CANCELLED')");
+                    table.CheckConstraint("CK_upload_sessions_status", "[status] IN ('PENDING','COMPLETED','EXPIRED','FAILED')");
                     table.ForeignKey(
                         name: "FK_upload_sessions_card_registration",
                         column: x => x.card_registration_id,
@@ -925,6 +953,11 @@ namespace WebsiteQuanLyThuVien.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_borrow_cart_items_resource_id",
+                table: "borrow_cart_items",
+                column: "resource_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_borrow_request_items_library_item_id",
                 table: "borrow_request_items",
                 column: "library_item_id");
@@ -953,6 +986,12 @@ namespace WebsiteQuanLyThuVien.Migrations
                 name: "IX_borrow_requests_status",
                 table: "borrow_requests",
                 column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_BorrowRequests_RequestCode",
+                table: "borrow_requests",
+                column: "RequestCode",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_card_registrations_avatar_file_id",
@@ -1040,6 +1079,11 @@ namespace WebsiteQuanLyThuVien.Migrations
                 column: "status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_BorrowRequests_CarrierTrackingCode",
+                table: "deliveries",
+                column: "CarrierTrackingCode");
+
+            migrationBuilder.CreateIndex(
                 name: "UQ_deliveries_borrow_request",
                 table: "deliveries",
                 column: "borrow_request_id",
@@ -1059,6 +1103,12 @@ namespace WebsiteQuanLyThuVien.Migrations
                 name: "IX_digital_resources_resource_type",
                 table: "digital_resources",
                 column: "resource_type");
+
+            migrationBuilder.CreateIndex(
+                name: "UQ_digital_resources_order",
+                table: "digital_resources",
+                columns: new[] { "resource_id", "resource_type", "display_order" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "UQ_document_types_name",
@@ -1379,6 +1429,9 @@ namespace WebsiteQuanLyThuVien.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "borrow_cart_items");
+
             migrationBuilder.DropTable(
                 name: "borrow_request_items");
 

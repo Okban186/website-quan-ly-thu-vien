@@ -494,6 +494,8 @@ CREATE TABLE borrow_requests (
 
     member_id UNIQUEIDENTIFIER NOT NULL,
 
+    request_code VARCHAR(50) UNIQUE NOT NULL,
+
     request_type NVARCHAR(20) NOT NULL,
     status NVARCHAR(30) NOT NULL
         CONSTRAINT DF_borrow_requests_status DEFAULT 'PENDING',
@@ -602,6 +604,19 @@ CREATE TABLE borrow_request_items (
 );
 
 
+CREATE TABLE borrow_cart_items (
+    member_id UNIQUEIDENTIFIER NOT NULL,
+    resource_id UNIQUEIDENTIFIER NOT NULL,
+    created_at DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+    
+    CONSTRAINT PK_BorrowCartItems PRIMARY KEY (member_id, resource_id),
+    
+    CONSTRAINT FK_BorrowCartItems_LibraryMembers FOREIGN KEY (member_id) 
+        REFERENCES library_members(id) ON DELETE CASCADE,
+    CONSTRAINT FK_BorrowCartItems_Resources FOREIGN KEY (resource_id) 
+        REFERENCES resources(id) ON DELETE CASCADE
+);
+
 /* =========================================================
    19. DELIVERIES
    ========================================================= */
@@ -612,6 +627,8 @@ CREATE TABLE deliveries (
         DEFAULT NEWSEQUENTIALID(),
 
     borrow_request_id UNIQUEIDENTIFIER NOT NULL,
+
+    carrier_tracking_code VARCHAR(100) UNIQUE,
 
     address NVARCHAR(500) NOT NULL,
     recipient_name NVARCHAR(255) NOT NULL,
@@ -1930,3 +1947,7 @@ ON refresh_tokens(expires_at);
 */
 CREATE INDEX IX_revoked_tokens_expires_at
 ON revoked_tokens(expires_at);
+
+
+CREATE INDEX IX_deliveries_carrier_tracking_code
+ON deliveries(carrier_tracking_code);

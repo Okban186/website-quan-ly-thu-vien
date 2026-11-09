@@ -259,9 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ? book.categories
             : [];
 
-        const availableCopies = Number(book.availableCopies ?? 0);
-        const totalCopies = Number(book.totalCopies ?? 0);
-        const isAvailable = availableCopies > 0;
+
+        const isAvailable = book.hasResourceAvaiable
 
         /**
          * GRID
@@ -345,8 +344,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ? 'text-emerald-600'
                     : 'text-red-500'}">
                             ${isAvailable
-                    ? `${availableCopies}/${totalCopies} bản có sẵn`
-                    : 'Hết sách'}
+                    ? `Có sẵn`
+                    : 'Hết'}
                         </div>
                     </div>
                 </article >
@@ -446,8 +445,8 @@ data-book-id="${escapeHtml(book.id)}"
                 ? 'text-emerald-600'
                 : 'text-red-500'}">
                     ${isAvailable
-                ? `${availableCopies}/${totalCopies} bản có sẵn`
-                : 'Hết sách'}
+                ? `Có sẵn`
+                : 'Hết'}
                 </span>
             </div>
         </div>

@@ -57,6 +57,30 @@ namespace WebsiteQuanLyThuVien.Migrations
                     b.ToTable("authors", (string)null);
                 });
 
+            modelBuilder.Entity("WebsiteQuanLyThuVien.Models.BorrowCartItem", b =>
+                {
+                    b.Property<Guid>("MemberId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("member_id");
+
+                    b.Property<Guid>("ResourceId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("resource_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("MemberId", "ResourceId")
+                        .HasName("PK_BorrowCartItems");
+
+                    b.HasIndex("ResourceId");
+
+                    b.ToTable("borrow_cart_items", (string)null);
+                });
+
             modelBuilder.Entity("WebsiteQuanLyThuVien.Models.BorrowRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -82,6 +106,11 @@ namespace WebsiteQuanLyThuVien.Migrations
                     b.Property<Guid?>("ProcessedBy")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("processed_by");
+
+                    b.Property<string>("RequestCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("RequestType")
                         .IsRequired()
@@ -110,6 +139,10 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasDatabaseName("IX_borrow_requests_member_id");
 
                     b.HasIndex("ProcessedBy");
+
+                    b.HasIndex("RequestCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_BorrowRequests_RequestCode");
 
                     b.HasIndex("Status")
                         .HasDatabaseName("IX_borrow_requests_status");
@@ -175,9 +208,7 @@ namespace WebsiteQuanLyThuVien.Migrations
 
                     b.ToTable("borrow_request_items", null, t =>
                         {
-                            t.HasCheckConstraint("CK_borrow_request_items_quantity", "[quantity] > 0");
-
-                            t.HasCheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','REJECTED','CANCELLED','READY')");
+                            t.HasCheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','COMPLETED','REJECTED','CANCELLED')");
                         });
                 });
 
@@ -437,8 +468,7 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnType("nvarchar(max)")
                         .HasColumnName("description");
 
                     b.Property<string>("IssueType")
@@ -450,6 +480,10 @@ namespace WebsiteQuanLyThuVien.Migrations
                     b.Property<Guid>("LibraryItemId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("library_item_id");
+
+                    b.Property<Guid>("LoanItemId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("loan_item_id");
 
                     b.Property<Guid>("ReportedBy")
                         .HasColumnType("uniqueidentifier")
@@ -513,6 +547,11 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("borrow_request_id");
 
+                    b.Property<string>("CarrierTrackingCode")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2(7)")
@@ -556,6 +595,9 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .IsUnique()
                         .HasDatabaseName("UQ_deliveries_borrow_request");
 
+                    b.HasIndex("CarrierTrackingCode")
+                        .HasDatabaseName("IX_BorrowRequests_CarrierTrackingCode");
+
                     b.ToTable("deliveries", (string)null);
                 });
 
@@ -579,6 +621,12 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasColumnType("datetime2(7)")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1)
+                        .HasColumnName("display_order");
 
                     b.Property<Guid>("FileId")
                         .HasColumnType("uniqueidentifier")
@@ -618,6 +666,10 @@ namespace WebsiteQuanLyThuVien.Migrations
 
                     b.HasIndex("ResourceType")
                         .HasDatabaseName("IX_digital_resources_resource_type");
+
+                    b.HasIndex("ResourceId", "ResourceType", "DisplayOrder")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_digital_resources_order");
 
                     b.ToTable("digital_resources", null, t =>
                         {
@@ -753,23 +805,28 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("barcode");
 
+                    b.Property<decimal?>("CoverPrice")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("cover_price");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2(7)")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
-                    b.Property<string>("ItemCondition")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("GOOD")
-                        .HasColumnName("item_condition");
+                    b.Property<int>("EditionNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("edition_number");
 
                     b.Property<Guid?>("LocationId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("location_id");
+
+                    b.Property<int>("PublicationYear")
+                        .HasColumnType("int")
+                        .HasColumnName("publication_year");
 
                     b.Property<Guid>("ResourceId")
                         .HasColumnType("uniqueidentifier")
@@ -807,9 +864,7 @@ namespace WebsiteQuanLyThuVien.Migrations
 
                     b.ToTable("library_items", null, t =>
                         {
-                            t.HasCheckConstraint("CK_library_items_condition", "[item_condition] IN ('NEW','GOOD','WORN','DAMAGED')");
-
-                            t.HasCheckConstraint("CK_library_items_status", "[status] IN ('AVAILABLE','RESERVED','BORROWED','LOST','DAMAGED','MAINTENANCE','REMOVED')");
+                            t.HasCheckConstraint("CK_library_items_status", "[status] IN ('AVAILABLE','RESERVED','BORROWED','RETURNED_PENDING_CHECK','LOST','DAMAGED','MAINTENANCE','REMOVED')");
                         });
                 });
 
@@ -867,10 +922,6 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("NEWSEQUENTIALID()");
-
-                    b.Property<DateTime?>("ExpiredAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("expired_at");
 
                     b.Property<string>("MembershipStatus")
                         .IsRequired()
@@ -974,16 +1025,6 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("NEWSEQUENTIALID()");
-
-                    b.Property<string>("ConditionAtLoan")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("condition_at_loan");
-
-                    b.Property<string>("ConditionAtReturn")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasColumnName("condition_at_return");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1130,7 +1171,7 @@ namespace WebsiteQuanLyThuVien.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
+                        .HasColumnType("datetime2(7)")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
@@ -1453,6 +1494,11 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasColumnType("int")
                         .HasColumnName("page_count");
 
+                    b.Property<string>("PhysicalDescription")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("physical_description");
+
                     b.Property<decimal?>("Price")
                         .HasPrecision(12, 2)
                         .HasColumnType("decimal(12,2)")
@@ -1562,6 +1608,10 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasColumnType("datetime2(7)")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("display_order");
 
                     b.Property<Guid>("FileId")
                         .HasColumnType("uniqueidentifier")
@@ -1766,7 +1816,9 @@ namespace WebsiteQuanLyThuVien.Migrations
 
                     b.Property<string>("ObjectKey")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("object_key");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1782,8 +1834,11 @@ namespace WebsiteQuanLyThuVien.Migrations
                         .HasColumnName("updated_at")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
-                    b.Property<int>("UploadType")
-                        .HasColumnType("int");
+                    b.Property<string>("UploadType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("upload_type");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier")
@@ -1802,7 +1857,7 @@ namespace WebsiteQuanLyThuVien.Migrations
 
                     b.ToTable("upload_sessions", null, t =>
                         {
-                            t.HasCheckConstraint("CK_upload_sessions_status", "[status] IN ('PENDING','COMPLETED','EXPIRED','CANCELLED')");
+                            t.HasCheckConstraint("CK_upload_sessions_status", "[status] IN ('PENDING','COMPLETED','EXPIRED','FAILED')");
                         });
                 });
 
@@ -1924,6 +1979,27 @@ namespace WebsiteQuanLyThuVien.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("user_roles", (string)null);
+                });
+
+            modelBuilder.Entity("WebsiteQuanLyThuVien.Models.BorrowCartItem", b =>
+                {
+                    b.HasOne("WebsiteQuanLyThuVien.Models.LibraryMember", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_BorrowCartItems_LibraryMembers");
+
+                    b.HasOne("WebsiteQuanLyThuVien.Models.Resource", "Resource")
+                        .WithMany()
+                        .HasForeignKey("ResourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_BorrowCartItems_Resources");
+
+                    b.Navigation("Member");
+
+                    b.Navigation("Resource");
                 });
 
             modelBuilder.Entity("WebsiteQuanLyThuVien.Models.BorrowRequest", b =>

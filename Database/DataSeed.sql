@@ -106,6 +106,12 @@ INSERT INTO users (
     email,
     password_hash,
     full_name,
+    phone,
+    date_of_birth,
+    citizen_id,
+    gender,
+    address,
+    avatar_file_id,
     status,
     created_at,
     updated_at
@@ -116,6 +122,12 @@ VALUES (
     N'librarian@library.local',
     N'AQAAAAIAAYagAAAAEE7eEFl3OwbvdF/66TBEMu6eZoEb70ll74uxAf5x4O4nKws7j+C/j/myXHUXuX6TTA==',
     N'Thủ thư',
+    N'0901111222',
+    '1995-05-12',
+    N'079095001234',
+    N'Female',
+    N'Quận 1, Thành phố Hồ Chí Minh',
+    NULL,
     N'ACTIVE',
     SYSUTCDATETIME(),
     SYSUTCDATETIME()
@@ -141,6 +153,12 @@ INSERT INTO users (
     email,
     password_hash,
     full_name,
+    phone,
+    date_of_birth,
+    citizen_id,
+    gender,
+    address,
+    avatar_file_id,
     status,
     created_at,
     updated_at
@@ -151,6 +169,12 @@ VALUES (
     N'cataloger@library.local',
     N'AQAAAAIAAYagAAAAEE7eEFl3OwbvdF/66TBEMu6eZoEb70ll74uxAf5x4O4nKws7j+C/j/myXHUXuX6TTA==',
     N'Biên mục tài liệu',
+    N'0903333444',
+    '1997-08-20',
+    N'079097005678',
+    N'Male',
+    N'Quận 3, Thành phố Hồ Chí Minh',
+    NULL,
     N'ACTIVE',
     SYSUTCDATETIME(),
     SYSUTCDATETIME()
@@ -176,6 +200,12 @@ INSERT INTO users (
     email,
     password_hash,
     full_name,
+    phone,
+    date_of_birth,
+    citizen_id,
+    gender,
+    address,
+    avatar_file_id,
     status,
     created_at,
     updated_at
@@ -186,6 +216,12 @@ VALUES (
     N'storekeeper@library.local',
     N'AQAAAAIAAYagAAAAEE7eEFl3OwbvdF/66TBEMu6eZoEb70ll74uxAf5x4O4nKws7j+C/j/myXHUXuX6TTA==',
     N'Thủ kho',
+    N'0905555666',
+    '1992-11-05',
+    N'079092009012',
+    N'Male',
+    N'Thủ Đức, Thành phố Hồ Chí Minh',
+    NULL,
     N'ACTIVE',
     SYSUTCDATETIME(),
     SYSUTCDATETIME()
@@ -198,6 +234,83 @@ INSERT INTO user_roles (
 VALUES (
     @StorekeeperId,
     @StorekeeperRoleId
+);
+
+
+/* =========================================================
+   THÊM LIBRARY_MEMBERS VÀ LIBRARY_CARDS CHO STAFF (UTC)
+   ========================================================= */
+
+DECLARE @StaffMemberId1 UNIQUEIDENTIFIER = NEWID();
+DECLARE @StaffMemberId2 UNIQUEIDENTIFIER = NEWID();
+DECLARE @StaffMemberId3 UNIQUEIDENTIFIER = NEWID();
+
+INSERT INTO library_members (
+    id,
+    user_id,
+    membership_status,
+    registered_at
+)
+VALUES 
+(
+    @StaffMemberId1,
+    @LibrarianId,
+    N'ACTIVE',
+    SYSUTCDATETIME()
+),
+(
+    @StaffMemberId2,
+    @CatalogerId,
+    N'ACTIVE',
+    SYSUTCDATETIME()
+),
+(
+    @StaffMemberId3,
+    @StorekeeperId,
+    N'ACTIVE',
+    SYSUTCDATETIME()
+);
+
+INSERT INTO library_cards (
+    id,
+    member_id,
+    card_number,
+    issued_at,
+    expired_at,
+    status,
+    created_at,
+    updated_at
+)
+VALUES 
+(
+    NEWID(),
+    @StaffMemberId1,
+    N'STF00001',
+    SYSUTCDATETIME(),
+    NULL,
+    N'ACTIVE',
+    SYSUTCDATETIME(),
+    SYSUTCDATETIME()
+),
+(
+    NEWID(),
+    @StaffMemberId2,
+    N'STF00002',
+    SYSUTCDATETIME(),
+    NULL,
+    N'ACTIVE',
+    SYSUTCDATETIME(),
+    SYSUTCDATETIME()
+),
+(
+    NEWID(),
+    @StaffMemberId3,
+    N'STF00003',
+    SYSUTCDATETIME(),
+    NULL,
+    N'ACTIVE',
+    SYSUTCDATETIME(),
+    SYSUTCDATETIME()
 );
 
 GO

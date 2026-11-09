@@ -1,10 +1,12 @@
-@using WebsiteQuanLyThuVien.DTOs.ViewModels
+@using System.Security.Claims
 @using Markdig
+@using WebsiteQuanLyThuVien.DTOs.ViewModels
 @model ResourceDetailViewModel
 
 @{
     var availableCopies = Model.AvailableCopies;
     var isAvailable = availableCopies > 0;
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
 }
 
 @section Scripts {
@@ -98,145 +100,336 @@
                         }
                     </div>
 
-                    <button id="btn-borrow" @(isAvailable ? "onclick=openBorrowModal()" : "disabled") class="w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 
-                        @(isAvailable
-        ? "bg-[#1e3a5f] hover:bg-[#142944] text-white cursor-pointer"
-        : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none")">
-                        <i class="fa-solid fa-bookmark @(isAvailable ? "text-amber-400" : "text-slate-300")"></i>
-                        <span>@(isAvailable ? "Đặt mượn" : "Đã hết sách")</span>
-                    </button>
+                    @if (userId != null)
+                {
 
-                    <!-- Quick status box -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5 text-xs shadow-sm">
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-500">Số bản có sẵn</span>
-                            <span class="font-bold text-emerald-600">@(Model.AvailableCopies)/@(Model.TotalCopies)</span>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <span class="text-slate-500">Loại tài liệu</span>
-                            <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"document_types:(\"{@Model.DocumentTypeName}\")"))"
-                               class="hover:underline font-semibold text-slate-700">@Model.DocumentTypeName</a>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Modal Lightbox Phóng to ảnh -->
-                <div id="imageLightbox"
-                     class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4 backdrop-blur-sm transition-all"
-                     onclick="closeLightbox()">
-                    <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center"
-                         onclick="event.stopPropagation()">
-                        <button onclick="closeLightbox()"
-                                class="absolute -top-10 right-0 text-white hover:text-slate-300 text-xl font-bold p-2 cursor-pointer transition-colors">
-                            <i class="fa-solid fa-xmark text-2xl"></i>
-                        </button>
-                        <img id="lightboxImg" src="" alt="Phóng to ảnh"
-                             class="max-w-full max-h-[85vh] rounded-lg object-contain shadow-2xl" />
-                    </div>
-                </div>
 
-                <!-- Right Column (Info, Description, Copies table) -->
-                <div class="md:col-span-8 space-y-6">
-                    
-                    <!-- Header section -->
-                    <div class="space-y-2">
-                        <div class="flex flex-wrap items-center gap-2">
-                            @foreach (var categoryName in @Model.Categories)
-                            {
-                     
-                                <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"categories:(\"{categoryName}\")"))"
-                                   class="hover:bg-[#1e3a5f] hover:text-white hover:border-[#1e3a5f] bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-md font-semibold">@categoryName</a>
-                            }
-                        
-                            <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"document_types:(\"{@Model.DocumentTypeName}\")"))"
-                               class="hover:bg-[#1e3a5f] hover:text-white hover:border-[#1e3a5f] bg-blue-50 text-[#1e3a5f] text-xs px-2.5 py-0.5 rounded-md font-semibold">@Model.DocumentTypeName</a>
-                        </div>
-
-                        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
-                            @Model.Title
-                        </h1>
-                        <div class="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-600">
-                            <span class="font-bold text-slate-800">Tác giả:</span>
-                            @if (Model.Authors.Count == 0)
-                            {
-                                <span>Chưa xác định</span>
-                            }
-                            else
-                            {
-                                for (int i = 0; i <
-                               Model.Authors.Count; i++)
+                    <div class="flex items-center gap-2">
+                        <!-- Nút 1: Thêm vào danh sách chờ mượn (Icon nhỏ gọn) -->
+                            <button id="btn-add-queue"
+                                    title="@(Model.IsInCart ? "Đã trong danh sách chờ mượn (Bấm để xóa)" : "Thêm vào danh sách chờ mượn")"
+                                    onclick="@(Model.IsInCart ? $"removeFromQueueAndResetButton('{Model.Id}')" : $"addToBorrowQueue('{Model.Id}')")"
+                                    class="px-4 py-3 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center shrink-0 @(Model.IsInCart ? "bg-[#1e3a5f] text-white hover:bg-[#142944] cursor-pointer shadow-md" : "bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 cursor-pointer")">
+                                @if (Model.IsInCart)
                                 {
-                                    <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"authors:(\"{@Model.Authors[i]}\")"))"
-                                       class="text-[#1e3a5f] hover:underline font-semibold">@Model.Authors[i]</a>
-
-                                    @if (i < Model.Authors.Count - 1)
-                                    {
-                                        <span>, </span>
-                                    }
+                                    <!-- Khi đã chọn: Nền xanh đậm, icon màu vàng hoặc trắng sáng nổi bật -->
+                                    <i class="fa-solid fa-bookmark text-amber-400 text-base"></i>
                                 }
-                        
-                            }
-                        </div>
+                                else
+                                {
+                                    <!-- Khi chưa chọn: Nền trắng, viền xám, icon xanh nhạt -->
+                                    <i class="fa-regular fa-bookmark text-[#1e3a5f] text-base"></i>
+                                }
+                            </button>
+
+                        <!-- Nút 2: Đặt mượn ngay -->
+                            <!-- Nút 2: Đặt mượn ngay -->
+                            <button id="btn-direct-borrow" disabled="@Model.IsBorrowing"
+                                    title="@(Model.IsBorrowing ? "Bạn đang có yêu cầu hoặc đang mượn tài liệu này" : "Đặt mượn ngay")"
+                                    onclick="@(Model.IsBorrowing ? "" : $"openBorrowModal('{Model.Id}')")"
+                                    class="flex-1 py-3 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 @(Model.IsBorrowing ? "bg-slate-200 text-slate-500 cursor-not-allowed shadow-none" : "bg-[#1e3a5f] hover:bg-[#142944] text-white cursor-pointer")">
+                    
+                                <span>@(Model.IsBorrowing ? "Đang mượn / Chờ duyệt" : "Đặt mượn ngay")</span>
+                            </button>
                     </div>
-
-                    <!-- Metadata Grid -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs">
-                            <div>
-                                <span class="block text-slate-400 font-medium mb-1">Nhà xuất bản</span>
-                                <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"publishers:(\"{@Model.PublisherName}\")"))"
-                                   class="hover:underline font-semibold text-slate-800">@Model.PublisherName</a>
-                            </div>
-                            <div>
-                                <span class="block text-slate-400 font-medium mb-1">Năm xuất bản</span>
-                                <span class="font-semibold text-slate-800">@Model.PublicationYear</span>
-                            </div>
-                            <div>
-                                <span class="block text-slate-400 font-medium mb-1">ISBN</span>
-                                <span class="font-semibold text-slate-800 font-mono text-[11px]">@Model.ISBN</span>
-                            </div>
-                            <div>
-                                <span class="block text-slate-400 font-medium mb-1">Mô tả vật lý</span>
-                                <span
-                                class="font-semibold text-slate-800 font-mono text-[11px]">@Model.PhysicalDescription</span>
-                            </div>
-                        
-                        </div>
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-                        <h3 class="text-base font-semibold text-slate-800">Mô tả</h3>
-
-                        <!-- Khung chứa nội dung -->
-                        <div id="descContainer"
-                             class="prose prose-sm max-w-none text-slate-600 leading-relaxed max-h-32 overflow-hidden transition-all duration-300 relative">
-                            @Html.Raw(Markdown.ToHtml(Model.Description ?? ""))
-
-                            <!-- Hiệu ứng mờ dần ở đáy (Ẩn mặc định, JS sẽ bật lên nếu nội dung dài) -->
-                            <div id="descGradient"
-                                 class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none hidden">
-                            </div>
-                        </div>
-
-                        <!-- Nút điều hướng (Ẩn mặc định, JS sẽ hiện lên nếu nội dung dài) -->
-                        <button id="toggleDescBtn" onclick="toggleDescription()"
-                                class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none hidden">
-                            Xem thêm
-                        </button>
-                    </div>
-
-                    @if (@Model.TotalCopies != 0)
-                    {
-                        <div id="resourceCopies" data-resource-id="@Model.Id" class="hidden">
-                        </div>
-                    }
+                }
+            <!-- Quick status box -->
+            <div class="bg-white rounded-xl border border-slate-200 p-4 space-y-2.5 text-xs shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Số bản có sẵn</span>
+                    <span class="font-bold text-emerald-600">@(Model.AvailableCopies)/@(Model.TotalCopies)</span>
                 </div>
-            </div>
-            <div id="resourceSuggestions" data-resource-id="@Model.Id" class="mt-4 hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Loại tài liệu</span>
+                    <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"document_types:(\"{@Model.DocumentTypeName}\")"))"
+                       class="hover:underline font-semibold text-slate-700">@Model.DocumentTypeName</a>
+                </div>
             </div>
         </div>
 
-                
+        <!-- Modal Lightbox Phóng to ảnh -->
+        <div id="imageLightbox"
+             class="fixed inset-0 z-50 bg-black/80 hidden items-center justify-center p-4 backdrop-blur-sm transition-all"
+             onclick="closeLightbox()">
+            <div class="relative max-w-4xl max-h-[90vh] flex items-center justify-center"
+                 onclick="event.stopPropagation()">
+                <button onclick="closeLightbox()"
+                        class="absolute -top-10 right-0 text-white hover:text-slate-300 text-xl font-bold p-2 cursor-pointer transition-colors">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+                <img id="lightboxImg" src="" alt="Phóng to ảnh"
+                     class="max-w-full max-h-[85vh] rounded-lg object-contain shadow-2xl" />
+            </div>
+        </div>
+
+        <!-- Right Column (Info, Description, Copies table) -->
+        <div class="md:col-span-8 space-y-6">
+                    
+            <!-- Header section -->
+            <div class="space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    @foreach (var categoryName in @Model.Categories)
+                    {
+                     
+                        <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"categories:(\"{categoryName}\")"))"
+                           class="hover:bg-[#1e3a5f] hover:text-white hover:border-[#1e3a5f] bg-slate-100 text-slate-700 text-xs px-2.5 py-0.5 rounded-md font-semibold">@categoryName</a>
+                    }
+                        
+                    <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"document_types:(\"{@Model.DocumentTypeName}\")"))"
+                       class="hover:bg-[#1e3a5f] hover:text-white hover:border-[#1e3a5f] bg-blue-50 text-[#1e3a5f] text-xs px-2.5 py-0.5 rounded-md font-semibold">@Model.DocumentTypeName</a>
+                </div>
+
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
+                    @Model.Title
+                </h1>
+                <div class="flex flex-wrap items-center gap-1.5 text-sm font-medium text-slate-600">
+                    <span class="font-bold text-slate-800">Tác giả:</span>
+                    @if (Model.Authors.Count == 0)
+                    {
+                        <span>Chưa xác định</span>
+                    }
+                    else
+                    {
+                        for (int i = 0; i <
+                       Model.Authors.Count; i++)
+                        {
+                            <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"authors:(\"{@Model.Authors[i]}\")"))"
+                               class="text-[#1e3a5f] hover:underline font-semibold">@Model.Authors[i]</a>
+
+                            @if (i < Model.Authors.Count - 1)
+                            {
+                                <span>, </span>
+                            }
+                        }
+                        
+                    }
+                </div>
+            </div>
+
+            <!-- Metadata Grid -->
+            <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6 text-xs">
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-1">Nhà xuất bản</span>
+                        <a href="/Resource/Search?filter=@(Uri.EscapeDataString($"publishers:(\"{@Model.PublisherName}\")"))"
+                           class="hover:underline font-semibold text-slate-800">@Model.PublisherName</a>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-1">Năm xuất bản</span>
+                        <span class="font-semibold text-slate-800">@Model.PublicationYear</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-1">ISBN</span>
+                        <span class="font-semibold text-slate-800 font-mono text-[11px]">@Model.ISBN</span>
+                    </div>
+                    <div>
+                        <span class="block text-slate-400 font-medium mb-1">Mô tả vật lý</span>
+                        <span
+                        class="font-semibold text-slate-800 font-mono text-[11px]">@Model.PhysicalDescription</span>
+                    </div>
+                        
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+                <h3 class="text-base font-semibold text-slate-800">Mô tả</h3>
+
+                <!-- Khung chứa nội dung -->
+                <div id="descContainer"
+                     class="prose prose-sm max-w-none text-slate-600 leading-relaxed max-h-32 overflow-hidden transition-all duration-300 relative">
+                    @Html.Raw(Markdown.ToHtml(Model.Description ?? ""))
+
+                    <!-- Hiệu ứng mờ dần ở đáy (Ẩn mặc định, JS sẽ bật lên nếu nội dung dài) -->
+                    <div id="descGradient"
+                         class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none hidden">
+                    </div>
+                </div>
+
+                <!-- Nút điều hướng (Ẩn mặc định, JS sẽ hiện lên nếu nội dung dài) -->
+                <button id="toggleDescBtn" onclick="toggleDescription()"
+                        class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors focus:outline-none hidden">
+                    Xem thêm
+                </button>
+            </div>
+
+            @if (@Model.TotalCopies != 0)
+            {
+                <div id="resourceCopies" data-resource-id="@Model.Id" class="hidden">
+                </div>
+            }
+        </div>
     </div>
+    <div id="resourceSuggestions" data-resource-id="@Model.Id" class="mt-4 hidden">
+    </div>
+</div>
+
+                
+</div>
+
+    <div id="borrow-flow-modal"
+         class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden">
+
+            <div class="flex items-center justify-end px-6 py-4 border-b border-slate-100">
+
+                <button onclick="closeBorrowModal()"
+                        class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 sm:p-8 space-y-6">
+
+                    <!-- Stepper Progress Bar -->
+                    <div class="flex items-center justify-center gap-3">
+                        <div id="step-badge-1"
+                             class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors bg-[#1e3a5f] text-white">
+                            1</div>
+                            <div id="step-line-1" class="w-12 sm:w-20 h-0.5 bg-slate-200"></div>
+                            <div id="step-badge-2"
+                                 class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors bg-slate-200 text-slate-500">
+                                2</div>
+                                <div id="step-line-2" class="w-12 sm:w-20 h-0.5 bg-slate-200"></div>
+                                <div id="step-badge-3"
+                                     class="w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-colors bg-slate-200 text-slate-500">
+                                    3</div>
+                                </div>
+
+                                <!-- STEP 1: CHỌN PHƯƠNG THỨC -->
+                                <div id="modal-step-1" class="space-y-4">
+                                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Chọn phương thức nhận</h3>
+                                    <div class="space-y-3">
+                                        <!-- Đổi thành RESERVATION -->
+                                        <div onclick="selectModalDelivery('RESERVATION')" id="option-pickup"
+                                             class="p-4 rounded-xl border border-[#1e3a5f] bg-blue-50/30 ring-1 ring-[#1e3a5f] transition-all cursor-pointer flex items-start gap-3.5">
+                                            <div id="dot-pickup"
+                                                 class="w-4 h-4 rounded-full mt-0.5 border border-[#1e3a5f] bg-[#1e3a5f] flex items-center justify-center transition-colors">
+                                                <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                                            </div>
+                                            <div class="space-y-1">
+                                                <h4 class="text-xs font-bold text-slate-900">Nhận tại thư viện</h4>
+                                                <p class="text-xs text-slate-600">Đến trực tiếp thư viện để nhận. Có thể nhận ngay trong
+                                                    ngày làm việc.</p>
+                                                    <p class="text-[11px] text-slate-500 pt-1">Giờ mở cửa: T2-T7: 8:00 – 20:00 | CN: 8:00 –
+                                                        17:00</p>
+                                                    </div>
+                                                </div>
+
+                                                <!-- DELIVERY -->
+                                                <div onclick="selectModalDelivery('DELIVERY')" id="option-delivery"
+                                                     class="p-4 rounded-xl border border-slate-200 hover:border-slate-300 transition-all cursor-pointer flex items-start gap-3.5">
+                                                    <div id="dot-delivery"
+                                                         class="w-4 h-4 rounded-full mt-0.5 border border-slate-300 bg-white flex items-center justify-center transition-colors">
+                                                        <div class="w-1.5 h-1.5 rounded-full bg-white hidden"></div>
+                                                    </div>
+                                                    <div class="space-y-1 flex-1">
+                                                        <h4 class="text-xs font-bold text-slate-900">Giao tận nơi</h4>
+                                                        <p class="text-xs text-slate-600">Chúng tôi sẽ giao đến địa chỉ của bạn trong 1-2 ngày làm
+                                                            việc.</p>
+                                                            <p class="text-[11px] text-slate-500 pt-0.5">📦 Phí giao hàng: Miễn phí trong nội thành</p>
+
+                                                            <div id="modal-input-wrapper" class="mt-3 pt-2 hidden space-y-3">
+                                                                <div>
+                                                                    <label class="block text-[11px] font-semibold text-slate-700 mb-1">Số điện thoại
+                                                                        nhận sách:</label>
+                                                                        <input type="tel" id="modal-phone-input"
+                                                                               class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#1e3a5f] transition-colors"
+                                                                               placeholder="Nhập số điện thoại (10 chữ số)..." value="@Model.Phone">
+                                                                        <!-- Thông báo lỗi SĐT -->
+                                                                        <p id="phone-error-msg" class="text-[11px] text-rose-500 mt-1 hidden"></p>
+                                                                    </div>
+                                                                    <div>
+                                                                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Địa chỉ giao
+                                                                            nhận:</label>
+                                                                            <input type="text" id="modal-address-input"
+                                                                                   class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#1e3a5f] transition-colors"
+                                                                                   placeholder="Nhập số nhà, tên đường, phường/xã..." value="@Model.Address">
+                                                                            <!-- Thông báo lỗi Địa chỉ -->
+                                                                            <p id="address-error-msg" class="text-[11px] text-rose-500 mt-1 hidden"></p>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="bg-slate-50 rounded-xl border border-slate-200 p-4">
+                                                            <span class="text-xs text-slate-500 block">Thời hạn mượn</span>
+                                                            <span class="text-base font-bold text-slate-900 block mt-0.5">14 ngày</span>
+                                                            <span class="text-xs text-slate-500 mt-1 block">Có thể gia hạn thêm 1 lần (tối đa 7 ngày)</span>
+                                                        </div>
+
+                                                        <button onclick="goToModalStep(2)"
+                                                                class="w-full bg-[#1e3a5f] hover:bg-[#142944] text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer">
+                                                            <span>Tiếp theo</span>
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- STEP 2: XÁC NHẬN -->
+                                                    <div id="modal-step-2" class="space-y-4 hidden">
+                                                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Xác nhận đặt mượn</h3>
+                                                        <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 text-xs shadow-xs">
+                                                            <div class="p-3.5 flex justify-between">
+                                                                <span class="text-slate-500">Số lượng tài liệu</span>
+                                                                <span id="confirm-count" class="font-bold text-slate-900">0</span>
+                                                            </div>
+                                                            <div class="p-3.5 flex justify-between">
+                                                                <span class="text-slate-500">Phương thức</span>
+                                                                <span id="confirm-method" class="font-semibold text-slate-800">Nhận tại thư viện</span>
+                                                            </div>
+                                                            <div id="confirm-phone-row" class="p-3.5 flex justify-between hidden">
+                                                                <span class="text-slate-500">Số điện thoại</span>
+                                                                <span id="confirm-phone" class="font-semibold text-slate-800"></span>
+                                                            </div>
+                                                            <div id="confirm-address-row" class="p-3.5 flex justify-between hidden">
+                                                                <span class="text-slate-500">Địa chỉ nhận</span>
+                                                                <span id="confirm-address" class="font-semibold text-slate-800"></span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="flex items-center gap-3 pt-2">
+                                                            <button onclick="goToModalStep(1)"
+                                                                    class="flex-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                                                                Quay lại
+                                                            </button>
+                                                            <button id="btn-modal-submit" onclick="submitModalBorrow('@Model.Id')"
+                                                                    class="flex-1 bg-[#1e3a5f] hover:bg-[#142944] text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer">
+                                                                Xác nhận đặt mượn
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- STEP 3: THÀNH CÔNG -->
+                                                    <div id="modal-step-3" class="py-6 text-center space-y-6 hidden">
+                                                        <div
+                                                            class="w-16 h-16 rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto text-2xl font-bold">
+                                                            ✓</div>
+                                                            <div class="space-y-2">
+                                                                <h3 class="text-2xl font-bold text-slate-900">Đặt mượn thành công!</h3>
+
+                                                            </div>
+
+                                                            <div class="bg-slate-50 rounded-xl border border-slate-200 p-4 max-w-xs mx-auto space-y-3">
+                                                                <!-- 1. Mã yêu cầu nội bộ (Luôn hiển thị cho mọi loại) -->
+                                                                <div>
+                                                                    <span class="text-[11px] text-slate-400 font-medium block">Mã yêu cầu</span>
+                                                                    <span id="modal-request-code"
+                                                                          class="text-base font-bold font-mono text-slate-900 block">-</span>
+                                                                </div>
+
+                                                               
+
+                                                                <div class="flex items-center justify-center gap-1.5 text-xs font-semibold text-amber-600 pt-1">
+                                                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                                    <span>Chờ xử lý</span>
+                                                                </div>
+                                                            </div>
 
 
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
