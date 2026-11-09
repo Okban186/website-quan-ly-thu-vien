@@ -8,6 +8,11 @@ public class ResourceDetailViewModel
 
     public string Title { get; set; } = string.Empty;
 
+    public string Phone { get; set; } = "";
+    public string Address { get; set; } = "";
+
+    public bool IsBorrowing { get; set; } = false;
+
     public string ISBN { get; set; } = string.Empty;
 
     public string PhysicalDescription { get; set; } = String.Empty;
@@ -29,6 +34,8 @@ public class ResourceDetailViewModel
     public int AvailableCopies { get; set; }
 
     public int TotalCopies { get; set; }
+
+    public bool IsInCart { get; set; }
 
     public record ImageResourceItem(string url, int display_order, bool isPrimary);
 
