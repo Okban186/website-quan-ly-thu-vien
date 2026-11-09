@@ -190,8 +190,7 @@ public class ReservationService : IReservationService
                 UpdatedAt = DateTime.UtcNow
             });
         }
-        var carrierTrackingCode = $"TRK-{DateTime.UtcNow:yyyyMMdd}-{Random.Shared.Next(1000, 9999)}";
-        // Nếu là giao hàng, tạo 1 bản ghi deliveries duy nhất
+
         if (request.RequestType == "DELIVERY")
         {
 
@@ -200,7 +199,6 @@ public class ReservationService : IReservationService
                 Id = Guid.NewGuid(),
                 BorrowRequestId = borrowRequestId,
                 Address = request.DeliveryAddress!,
-                CarrierTrackingCode = carrierTrackingCode,
                 RecipientName = userCardInfo.User.FullName,
                 RecipientPhone = request.RecipientPhone!,
                 Status = DeliveryStatus.PENDING,
@@ -219,7 +217,6 @@ public class ReservationService : IReservationService
             Id = borrowRequestId,
             RequestCode = borrowRequestCode,
             RequestType = request.RequestType,
-            CarrierTrackingCode = carrierTrackingCode
         }; ;
     }
 
