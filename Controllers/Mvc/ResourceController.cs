@@ -23,18 +23,24 @@ public class ResourceController : Controller
     }
 
 
+
     public async Task<IActionResult> Detail(string id)
     {
         if (string.IsNullOrEmpty(id))
-            return NotFound();
+            throw new BusinessException("Khong tim thay", StatusCodes.Status404NotFound);
 
-        Guid? userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"));
+        string? userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+        Guid? userId = null;
+        if (!string.IsNullOrEmpty(userIdStr) && Guid.TryParse(userIdStr, out var parsedUserId))
+        {
+            userId = parsedUserId;
+        }
 
         ResourceDetailViewModel viewModel = await _resourceService.getResourceDetail(userId, id);
 
-        if (viewModel == null) throw new BusinessException("Khong tim thay", StatusCodes.Status404NotFound);
-
-
+        if (viewModel == null)
+            throw new BusinessException("Khong tim thay", StatusCodes.Status404NotFound);
 
         return View(viewModel);
     }
