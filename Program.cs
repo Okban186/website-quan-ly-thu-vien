@@ -61,6 +61,10 @@ builder.Services.AddScoped<IDocumentTypeService, DocumentTypeService>();
 
 builder.Services.AddScoped<IUploadSessionService, UploadSessionService>();
 
+builder.Services.AddScoped<IReservationService, ReservationService>();
+
+builder.Services.AddScoped<IBorrowCartService, BorrowCartService>();
+
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
