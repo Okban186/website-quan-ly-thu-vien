@@ -44,9 +44,7 @@ public class ResourceService : IResourceService
         return result;
     }
 
-    public async Task<ResourceDetailViewModel?> getResourceDetail(
-    string id,
-    CancellationToken cancellationToken = default)
+    public async Task<ResourceDetailViewModel?> getResourceDetail(Guid? userId, string id, CancellationToken cancellationToken = default)
     {
         if (!Guid.TryParse(id, out Guid fid))
             return null;
@@ -88,6 +86,14 @@ public class ResourceService : IResourceService
         int totalCopies = await _context.LibraryItems
             .CountAsync(lb => lb.ResourceId == fid, cancellationToken);
 
+        var memberId = await _context.LibraryMembers
+        .Where(m => m.UserId == userId)
+        .Select(m => m.Id)
+        .FirstOrDefaultAsync(cancellationToken);
+
+        bool isInCart = userId == null ? false : await _context.BorrowCartItems
+            .AnyAsync(bc => bc.MemberId == memberId && bc.ResourceId == resource.Id);
+
         int availableCopies = await _context.LibraryItems.CountAsync(lb => lb.ResourceId == fid && lb.Status == LibraryItemStatus.AVAILABLE, cancellationToken);
 
         return new ResourceDetailViewModel
@@ -99,6 +105,7 @@ public class ResourceService : IResourceService
             ISBN = resource.Isbn!,
             Categories = categoryNames,
             Authors = authorNames,
+            IsInCart = isInCart,
             DocumentTypeName = resource.DocumentType.Name,
             Description = resource.Description,
             PublisherName = resource.Publisher.Name,

@@ -4,6 +4,7 @@ using WebsiteQuanLyThuVien.Data;
 using WebsiteQuanLyThuVien.DTOs;
 using WebsiteQuanLyThuVien.DTOs.Requests;
 using WebsiteQuanLyThuVien.DTOs.Response;
+using WebsiteQuanLyThuVien.Enums;
 using WebsiteQuanLyThuVien.Models;
 using WebsiteQuanLyThuVien.Repositories.Filters;
 using WebsiteQuanLyThuVien.Services.Storage;
@@ -115,6 +116,7 @@ public class ResourceRepository : IResourceRepository
 
         // TOTAL COUNT
 
+        bool hasResourceAvailable = await _context.LibraryItems.AnyAsync(li => li.Status == LibraryItemStatus.AVAILABLE);
 
         var totalCount =
             await query.CountAsync(cancellationToken);
@@ -162,7 +164,7 @@ public class ResourceRepository : IResourceRepository
             PublisherName = resource.PublisherName,
             Authors = resource.Authors,
             Categories = resource.Categories,
-
+            HasResourceAvaiable = hasResourceAvailable,
             CoverUrl = !string.IsNullOrEmpty(resource.ObjectKey)
                 ? await _fileStorageService.CreatePublicGetUrlAsync(resource.ObjectKey)
                 : null

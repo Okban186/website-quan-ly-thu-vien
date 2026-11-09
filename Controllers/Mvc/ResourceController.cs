@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebsiteQuanLyThuVien.DTOs.Requests;
 using WebsiteQuanLyThuVien.DTOs.Response;
 using WebsiteQuanLyThuVien.DTOs.ViewModels;
+using WebsiteQuanLyThuVien.Exceptions;
 
 namespace WebsiteQuanLyThuVien.Controllers.Mvc;
 
@@ -26,9 +28,11 @@ public class ResourceController : Controller
         if (string.IsNullOrEmpty(id))
             return NotFound();
 
-        ResourceDetailViewModel viewModel = await _resourceService.getResourceDetail(id);
+        Guid? userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub"));
 
-        if (viewModel == null) return NotFound();
+        ResourceDetailViewModel viewModel = await _resourceService.getResourceDetail(userId, id);
+
+        if (viewModel == null) throw new BusinessException("Khong tim thay", StatusCodes.Status404NotFound);
 
 
 
