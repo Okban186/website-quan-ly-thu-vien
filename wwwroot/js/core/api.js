@@ -29,6 +29,16 @@ const API = {
     private: {
         auth: {
             logout: '/api/accounts/logout'
+        },
+
+        borrowCart: {
+            getqueue: '/api/borrow-carts/queue',
+            bulkDelete: '/api/borrow-carts/queue/bulk-delete',
+            add: (resourceId) => `/api/borrow-carts/queue/${resourceId}`
+        },
+
+        borrowRequest: {
+            create: '/api/borrow-requests'
         }
     },
 
