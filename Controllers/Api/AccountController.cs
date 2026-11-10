@@ -1,8 +1,10 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebsiteQuanLyThuVien.DTOs.Requests;
 using WebsiteQuanLyThuVien.Exceptions;
 using WebsiteQuanLyThuVien.Repositories;
+using WebsiteQuanLyThuVien.Services;
 using WebsiteQuanLyThuVien.Services.Authentication;
 
 namespace WebsiteQuanLyThuVien.Controllers.Api;
@@ -13,14 +15,17 @@ public class AccountController : Controller
     private readonly IAuthenticationService _authenticationService;
     private readonly IJwtTokenService _jwtTokenService;
 
+    private readonly IAccountService _accountService;
+
     private readonly IUserRepository _userRepository;
 
     private readonly IRefreshTokenService _refreshTokenService;
-    public AccountController(IAuthenticationService authenticationService, IJwtTokenService jwtTokenService, IUserRepository userRepository, IRefreshTokenService refreshTokenService)
+    public AccountController(IAccountService accountService, IAuthenticationService authenticationService, IJwtTokenService jwtTokenService, IUserRepository userRepository, IRefreshTokenService refreshTokenService)
     {
         _authenticationService = authenticationService;
         _jwtTokenService = jwtTokenService;
         _userRepository = userRepository;
+        _accountService = accountService;
         _refreshTokenService = refreshTokenService;
     }
 
@@ -162,6 +167,43 @@ public class AccountController : Controller
         });
     }
 
+    [HttpPost]
+    [Authorize]
+    [Route("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+
+        await _accountService.ChangePasswordAsync(userId, request);
+
+        return Ok();
+
+
+    }
+
+    [HttpPut]
+    [Authorize]
+    [Route("contact")]
+    public async Task<IActionResult> UpdateContact([FromBody] UpdateUserContactRequest request)
+    {
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        await _accountService.UpdateContactAsync(userId, request);
+        return Ok();
+
+    }
+
+    [HttpPost]
+    [AuthorizeExceptRole("ADMIN")]
+    [Route("report-lost")]
+    public async Task<IActionResult> ReportLostCard()
+    {
+
+        string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        await _accountService.ReportLostCardAsync(userId);
+        return Ok();
+
+    }
 
 }
 
