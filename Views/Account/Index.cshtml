@@ -1,0 +1,678 @@
+@using WebsiteQuanLyThuVien.ViewModels
+@model UserAccountViewModel
+
+@{
+    ViewData["Title"] = "Quản lý tài khoản";
+    bool isCardBlocked = Model?.CardStatus == "BLOCKED";
+    bool isCardExpired = Model?.CardStatus == "EXPIRED";
+     bool isAdmin = User.IsInRole("ADMIN");
+}
+
+@section Scripts {
+    <script src="~/js/public/account/index.js" asp-append-version="true"></script>
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- User Profile Card Header -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+            <div class="flex items-center gap-4">
+                <div id="user-avatar-initials"
+                     class="w-16 h-16 rounded-full bg-[#1e3a5f] text-white flex items-center justify-center font-bold text-xl shadow-xs">
+                    @(Model != null && !string.IsNullOrEmpty(Model.FullName) ? Model.FullName.Substring(0, Math.Min(2,
+                    Model.FullName.Length)).ToUpper() : "NL")
+                </div>
+                <div class="space-y-1">
+                    <h1 id="header-fullname" class="text-xl font-bold text-slate-900 leading-tight">
+                        @(Model?.FullName ?? "Đang tải...")
+                    </h1>
+                    <p class="text-xs text-slate-500">
+                        <span id="header-email">@(Model?.Email ?? "...")</span> • Thẻ: <span id="header-cardnumber"
+                                                                                             class="font-mono font-semibold text-slate-700">@(Model?.CardNumber ?? "...")</span>
+                    </p>
+                    <div id="header-card-status-badge" class="@(isAdmin ? "hidden" : "")">
+                        @if (isCardBlocked)
+                        {
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                <i class="fa-solid fa-lock mr-1"></i> Thẻ đã bị khóa
+                            </span>
+                        }
+                        else if (isCardExpired)
+                        {
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Thẻ đã hết hạn
+                            </span>
+                        }
+                        else
+                        {
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 ">
+                                <i class="fa-solid fa-check mr-1"></i> Đang hoạt động
+                            </span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4 Stats in a row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 text-center @(isAdmin ? "hidden" : "")">
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span id="stat-total-borrowed" class="block text-xl font-bold text-slate-900">@(Model?.TotalBorrowed ??
+                                                                                                                        0)</span>
+                    <span class="text-xs text-slate-500 mt-0.5 block">Tổng đã mượn</span>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <span id="stat-borrowed-count" class="block text-xl font-bold text-[#1e3a5f]">@(Model?.BorrowedCount ??
+                                                                                                                                            0)</span>
+                        <span class="text-xs text-slate-500 mt-0.5 block">Đang mượn</span>
+                    </div>
+                    <div class="p-3 bg-rose-50/50 rounded-xl border border-rose-100">
+                        <span id="stat-overdue-count" class="block text-xl font-bold text-rose-600">@(Model?.OverdueCount ??
+                                                                                                                                                                0)</span>
+                            <span class="text-xs text-rose-700 mt-0.5 block">Quá hạn</span>
+                        </div>
+                        <div class="p-3 bg-rose-50/50 rounded-xl border border-rose-100">
+                            <span id="stat-unpaid-fines"
+                                  class="block text-lg font-bold text-rose-600 truncate">@(Model?.UnpaidFines.ToString("N0") ??
+                                  "0")đ</span>
+                                <span class="text-xs text-rose-700 mt-0.5 block">Phí phạt chưa trả</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs Section -->
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <div class="flex border-b border-slate-200 px-6 pt-2 overflow-x-auto select-none">
+                            <button type="button" onclick="switchTab('info')" id="tab-btn-info"
+                                    class="tab-btn py-3.5 px-4 text-xs font-bold transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 border-[#1e3a5f] text-[#1e3a5f] outline-none cursor-pointer">
+                                <i class="fa-solid fa-user w-4 h-4"></i>
+                                <span>Thông tin cá nhân</span>
+                            </button>
+                            <button type="button" onclick="switchTab('card')" id="tab-btn-card"
+                                    class="@(isAdmin ? "hidden" : "") tab-btn py-3.5 px-4 text-xs font-bold transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 border-transparent text-slate-500 hover:text-slate-800 outline-none cursor-pointer">
+                                <i class="fa-solid fa-credit-card w-4 h-4"></i>
+                                <span>Thẻ thư viện</span>
+                                @if (isCardExpired || isCardBlocked)
+                                {
+                                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                }
+                            </button>
+                            <button type="button" onclick="switchTab('security')" id="tab-btn-security"
+                                    class="tab-btn py-3.5 px-4 text-xs font-bold transition-colors border-b-2 whitespace-nowrap flex items-center gap-2 border-transparent text-slate-500 hover:text-slate-800 outline-none cursor-pointer">
+                                <i class="fa-solid fa-lock w-4 h-4"></i>
+                                <span>Bảo mật</span>
+                            </button>
+                        </div>
+
+                        <div class="p-6 sm:p-8">
+                            <!-- TAB 1: THÔNG TIN CÁ NHÂN -->
+                            <div id="tab-content-info" class="tab-content space-y-6 max-w-2xl">
+                                <div id="info-success-alert"
+                                     class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                                    <span>Đã cập nhật thông tin cá nhân thành công!</span>
+                                </div>
+
+                                <!-- VIEW MODE -->
+                                <div id="profile-view-mode" class="space-y-6">
+                                    <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                                        <div>
+                                            <h3 class="text-sm font-bold text-slate-900">Hồ sơ</h3>
+                                            <p class="text-xs text-slate-500">Thông tin cá nhân được liên kết với thẻ thư viện số của
+                                                bạn</p>
+                                            </div>
+                                            <button type="button" onclick="toggleEditMode(true)"
+                                                    class="bg-white hover:bg-slate-50 text-[#1e3a5f] border border-slate-300 hover:border-slate-400 px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer">
+                                                <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                                <span>Chỉnh sửa</span>
+                                            </button>
+                                        </div>
+
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-xs">
+                                            <div class="space-y-1">
+                                                <span class="text-slate-400 font-medium block">Họ và tên</span>
+                                                <span id="lbl-fullname" class="text-slate-900 font-bold text-sm block">@(Model?.FullName ??
+                                                                                                                                                                                                                                                                             "...")</span>
+                                                </div>
+                                                <div class="space-y-1">
+                                                    <span class="text-slate-400 font-medium block">Số CCCD/CMND</span>
+                                                    <span id="lbl-idcard"
+                                                          class="text-slate-900 font-bold text-sm font-mono block">@(Model?.IdCard ??
+                                                          "...")</span>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <span class="text-slate-400 font-medium block">Ngày sinh</span>
+                                                        <span id="lbl-birthdate"
+                                                              class="text-slate-900 font-semibold text-sm block">@(Model?.BirthDate ?? "...")</span>
+                                                    </div>
+                                                    <div class="space-y-1">
+                                                        <span class="text-slate-400 font-medium block">Số điện thoại</span>
+                                                        <span id="lbl-phone" class="text-slate-900 font-semibold text-sm block">@(Model?.Phone ??
+                                                                                                                                                                                                                                                                                                             "...")</span>
+                                                        </div>
+                                                        <div class="sm:col-span-2 space-y-1">
+                                                            <span class="text-slate-400 font-medium block">Email</span>
+                                                            <span id="lbl-email" class="text-slate-900 font-semibold text-sm block">@(Model?.Email ??
+                                                                                                                                                                                                                                                                                                                                         "...")</span>
+                                                            </div>
+                                                            <div class="sm:col-span-2 space-y-1">
+                                                                <span class="text-slate-400 font-medium block">Địa chỉ thường trú</span>
+                                                                <span id="lbl-address" class="text-slate-900 font-semibold text-sm block">@(Model?.Address
+                                                                                                                                                                                                                                                                                                                                                                                    ?? "...")</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- EDIT MODE -->
+                                                        <div id="profile-edit-form" class="hidden space-y-5">
+                                                            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                                                                <div>
+                                                                    <h3 class="text-sm font-bold text-slate-900">Chỉnh sửa thông tin liên hệ</h3>
+                                                                    <p class="text-xs text-slate-500">Bạn chỉ có thể cập nhật Số điện thoại, Email và Địa chỉ
+                                                                        liên hệ.</p>
+                                                                    </div>
+                                                                    <button type="button" onclick="toggleEditMode(false)"
+                                                                            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+                                                                            title="Hủy bỏ">
+                                                                        <i class="fa-solid fa-xmark text-base"></i>
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                    <div>
+                                                                        <div class="flex items-center justify-between mb-1">
+                                                                            <label class="text-xs font-semibold text-slate-500">Họ và tên</label>
+                                                                            <span class="text-[10px] text-slate-400 flex items-center gap-0.5"><i
+                                                                                class="fa-solid fa-lock text-[8px]"></i> Không thể sửa</span>
+                                                                            </div>
+                                                                            <input value="@Model?.FullName" type="text" id="input-fullname" disabled
+                                                                                   class="w-full text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-3.5 py-2.5 cursor-not-allowed">
+                                                                        </div>
+                                                                        <div>
+                                                                            <div class="flex items-center justify-between mb-1">
+                                                                                <label class="text-xs font-semibold text-slate-500">Số CCCD/CMND</label>
+                                                                                <span class="text-[10px] text-slate-400 flex items-center gap-0.5"><i
+                                                                                    class="fa-solid fa-lock text-[8px]"></i> Không thể sửa</span>
+                                                                                </div>
+                                                                                <input value="@Model?.IdCard" type="text" id="input-idcard" disabled
+                                                                                       class="w-full text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-3.5 py-2.5 cursor-not-allowed font-mono">
+                                                                            </div>
+                                                                            <div>
+                                                                                <div class="flex items-center justify-between mb-1">
+                                                                                    <label class="text-xs font-semibold text-slate-500">Ngày sinh</label>
+                                                                                    <span class="text-[10px] text-slate-400 flex items-center gap-0.5"><i
+                                                                                        class="fa-solid fa-lock text-[8px]"></i> Không thể sửa</span>
+                                                                                    </div>
+                                                                                    <input value="@Model?.BirthDate" type="text" id="input-birthdate" disabled
+                                                                                           class="w-full text-xs text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-3.5 py-2.5 cursor-not-allowed">
+                                                                                </div>
+                                                                                <div>
+                                                                                    <label class="block text-xs font-semibold text-slate-800 mb-1">Số điện thoại *</label>
+                                                                                    <input value="@Model?.Phone" type="tel" id="input-phone" required
+                                                                                           class="w-full text-xs text-slate-800 bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#1e3a5f]">
+                                                                                </div>
+                                                                                <div class="sm:col-span-2">
+                                                                                    <label class="block text-xs font-semibold text-slate-800 mb-1">Email liên hệ *</label>
+                                                                                    <input value="@Model?.Email" type="email" id="input-email" required
+                                                                                           class="w-full text-xs text-slate-800 bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#1e3a5f]">
+                                                                                </div>
+                                                                                <div class="sm:col-span-2">
+                                                                                    <label class="block text-xs font-semibold text-slate-800 mb-1">Địa chỉ thường trú / nhận
+                                                                                        sách *</label>
+                                                                                        <input value="@Model?.Address" type="text" id="input-address" required
+                                                                                               class="w-full text-xs text-slate-800 bg-white border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-[#1e3a5f]">
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div class="flex items-center gap-3 pt-3">
+                                                                                    <button type="button" onclick="toggleEditMode(false)"
+                                                                                            class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer">Hủy</button>
+                                                                                    <button onclick="submitUpdateContact(event)"
+                                                                                            class="bg-[#1e3a5f] hover:bg-[#142944] text-white px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer">
+                                                                                        <i class="fa-solid fa-floppy-disk text-xs"></i>
+                                                                                        <span>Lưu thay đổi</span>
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <!-- TAB 2: THẺ THƯ VIỆN -->
+                                                                        <div id="tab-content-card" class="@(isAdmin ? "hidden" : "") tab-content hidden space-y-6 max-w-xl">
+                                                                            <!-- Virtual Card Graphic -->
+                                                                            <div
+                                                                                class="relative overflow-hidden @(isCardBlocked ? "bg-gradient-to-br from-slate-900 via-amber-950 to-amber-900 border-amber-700/50" : (isCardExpired ? "bg-gradient-to-br from-slate-800 via-rose-950 to-rose-900 border-rose-700/50" : "bg-gradient-to-br from-[#1e3a5f] via-[#162e4c] to-[#0f1f33] border-slate-700")) text-white rounded-2xl p-6 sm:p-7 shadow-xl border">
+                                                                                <div
+                                                                                    class="absolute right-[-40px] top-[-40px] w-48 h-48 rounded-full border border-white/10 pointer-events-none">
+                                                                                </div>
+                                                                                <div class="flex items-center justify-between mb-8">
+                                                                                    <div>
+                                                                                        <span class="text-[11px] uppercase tracking-widest text-slate-300 block font-semibold">THƯ
+                                                                                            VIỆN THÀNH PHỐ</span>
+                                                                                            <span
+                                                                                                class="text-xs @(isCardBlocked ? "text-amber-300" : (isCardExpired ? "text-rose-300" : "text-amber-400")) font-medium">
+                                                                                                @(isCardBlocked ? "THẺ ĐÃ BỊ KHÓA (BÁO MẤT)" : (isCardExpired ? "THẺ ĐÃ HẾT HẠN SỬ DỤNG"                               : "THẺ THÀNH VIÊN"))
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <div id="virtual-card-status-pill">
+                                                                                            @if (isCardBlocked)
+                                                                                            {
+                                                                                                <span
+                                                                                                    class="px-2.5 py-1 bg-amber-600/85 text-white rounded-full text-[10px] font-bold tracking-wider uppercase">Đã
+                                                                                                    khóa</span>
+                                                                                                }
+                            else if (isCardExpired)
+                                                                                                {
+                                                                                                    <span
+                                                                                                        class="px-2.5 py-1 bg-rose-600/80 text-white rounded-full text-[10px] font-bold tracking-wider uppercase">Hết
+                                                                                                        hạn</span>
+                                                                                                    }
+                            else
+                                                                                                    {
+                                                                                                        <span
+                                                                                                            class="px-2.5 py-1 bg-emerald-600/80 text-white rounded-full text-[10px] font-bold tracking-wider uppercase">Hoạt
+                                                                                                            động</span>
+                                                                                                        }
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div class="space-y-4">
+                                                                                                    <div>
+                                                                                                        <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Số thẻ thư
+                                                                                                            viện</span>
+                                                                                                            <span id="card-number-display"
+                                                                                                                  class="text-xl sm:text-2xl font-mono font-bold tracking-widest text-white">@(Model?.CardNumber
+                                                                                                                  ?? "...")</span>
+                                                                                                            </div>
+                                                                                                            <div class="flex items-end justify-between pt-2">
+                                                                                                                <div>
+                                                                                                                    <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Chủ thẻ</span>
+                                                                                                                    <span id="card-holder-name"
+                                                                                                                          class="text-sm font-bold tracking-wider uppercase text-white">@(Model?.FullName ??
+                                                                                                                          "...")</span>
+                                                                                                                    </div>
+                                                                                                                    <div class="text-right">
+                                                                                                                        <span class="text-[10px] text-slate-400 block uppercase tracking-wider">Hết hạn</span>
+                                                                                                                        <span id="card-expiry-display"
+                                                                                                                              class="text-xs font-mono font-semibold @(isCardExpired ? "text-rose-300" : "text-slate-200")">@(Model?.CardExpiryDate
+                                                                                                                              ?? "...")</span>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
+
+                                                                                                            <!-- Expiry / Blocked Notice Box -->
+                                                                                                            <div id="card-expiry-notice-box">
+                                                                                                                @if (isCardBlocked)
+                                                                                                                {
+                                                                                                                    <div
+                                                                                                                        class="p-4 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2.5">
+                                                                                                                        <i class="fa-solid fa-lock text-amber-600 text-base mt-0.5"></i>
+                                                                                                                        <div>
+                                                                                                                            <span class="font-bold block mb-0.5">Thẻ của bạn đã bị khóa do báo mất!</span>
+                                                                                                                            Bạn không thể sử dụng thẻ này để mượn sách. Nếu tìm lại được thẻ, vui lòng mang theo giấy tờ
+                                                                                                                            tùy thân đến gặp thủ thư để được hỗ trợ mở khóa.
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                }
+                                                                                                                else if (isCardExpired)
+                                                                                                                {
+                                                                                                                    <div
+                                                                                                                        class="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2.5">
+                                                                                                                        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base mt-0.5"></i>
+                                                                                                                        <div>
+                                                                                                                            <span class="font-bold block mb-0.5">Thẻ thư viện của bạn đã hết hạn!</span>
+                                                                                                                            Bạn không thể thực hiện mượn sách mới cho đến khi hoàn tất thủ tục gia hạn thẻ.
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                }
+                                                                                                            </div>
+
+                                                                                                            <!-- In-Person notice alert -->
+                                                                                                            <div id="in-person-notice-box"
+                                                                                                                 class="hidden bg-blue-50 border border-blue-200 rounded-xl p-3.5 flex items-start justify-between gap-3 text-xs">
+                                                                                                                <div class="flex items-start gap-2.5">
+                                                                                                                    <i class="fa-solid fa-circle-check text-blue-600 text-sm mt-0.5"></i>
+                                                                                                                    <div>
+                                                                                                                        <p class="font-bold text-blue-900">Đã chọn gia hạn tại thư viện</p>
+                                                                                                                        <p class="text-blue-700 text-[11px] mt-0.5">Vui lòng mang theo thẻ thư viện hoặc CCCD đến
+                                                                                                                            quầy thủ thư (7:30 - 17:00 các ngày trong tuần) để hoàn tất thủ tục gia hạn.</p>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    <button onclick="document.getElementById('in-person-notice-box').classList.add('hidden')"
+                                                                                                                            class="text-blue-400 hover:text-blue-700 cursor-pointer">
+                                                                                                                        <i class="fa-solid fa-xmark"></i>
+                                                                                                                    </button>
+                                                                                                                </div>
+
+                                                                                                                <!-- Card details info list -->
+                                                                                                                <div class="bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-100 text-xs">
+                                                                                                                    <div class="p-3 flex justify-between">
+                                                                                                                        <span class="text-slate-500">Ngày cấp thẻ</span>
+                                                                                                                        <span id="card-issue-date" class="font-semibold text-slate-800">@(Model?.CardIssueDate ??
+                                                                                                                                                                                                                                                                                                                                                                                    "...")</span>
+                                                                                                                        </div>
+                                                                                                                        <div class="p-3 flex justify-between">
+                                                                                                                            <span class="text-slate-500">Ngày hết hạn</span>
+                                                                                                                            <span id="card-expiry-date-detail"
+                                                                                                                                  class="font-semibold @(isCardExpired ? "text-rose-600 font-bold" : "text-slate-800")">@(Model?.CardExpiryDate
+                                                                                                                                  ?? "...")</span>
+                                                                                                                            </div>
+                                                                                                                            <div class="p-3 flex justify-between">
+                                                                                                                                <span class="text-slate-500">Trạng thái thẻ</span>
+                                                                                                                                <span id="card-status-text-detail"
+                                                                                                                                      class="font-bold @(isCardBlocked ? "text-amber-600" : (isCardExpired ? "text-rose-600" : "text-emerald-600"))">@(Model?.CardStatus
+                                                                                                                                      ?? "...")</span>
+                                                                                                                                </div>
+                                                                                                                                <div class="p-3 flex justify-between">
+                                                                                                                                    <span class="text-slate-500">Hạn mức mượn</span>
+                                                                                                                                    <span class="font-semibold text-slate-800">Tối đa @(Model?.Quota ?? 0) cuốn / lần</span>
+                                                                                                                                </div>
+                                                                                                                            </div>
+
+                                                                                                                            <!-- Action buttons -->
+                                                                                                                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                                                                                                                                @if (isCardExpired)
+                                                                                                                                {
+                                                                                                                                    <button type="button" id="btn-renew-card" onclick="openRenewalModal()"
+                                                                                                                                            class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-xs flex items-center gap-2">
+                                                                                                                                        <i class="fa-solid fa-rotate-right"></i> Gia hạn thẻ
+                                                                                                                                    </button>
+                                                                                                                                }
+                                                                                                                                else if (isCardBlocked)
+                                                                                                                                {
+                                                                                                                                    <button type="button" disabled
+                                                                                                                                            class="bg-slate-200 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-semibold cursor-not-allowed flex items-center gap-2"
+                                                                                                                                            title="Thẻ đã bị khóa">
+                                                                                                                                        <i class="fa-solid fa-lock"></i> Thẻ đang bị khóa
+                                                                                                                                    </button>
+                                                                                                                                }
+                                                                                                                                else
+                                                                                                                                {
+                                                                                                                                    <button type="button" disabled
+                                                                                                                                            class="bg-slate-200 text-slate-400 px-5 py-2.5 rounded-xl text-xs font-semibold cursor-not-allowed flex items-center gap-2"
+                                                                                                                                            title="Thẻ vẫn còn hạn, chưa thể gia hạn">
+                                                                                                                                        <i class="fa-solid fa-check"></i> Thẻ đang hoạt động
+                                                                                                                                    </button>
+
+                                                                                                                                    <button type="button" onclick="openLostCardModal()"
+                                                                                                                                            class="bg-white border border-rose-300 text-rose-700 hover:bg-rose-50 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5">
+                                                                                                                                        Báo mất thẻ
+                                                                                                                                    </button>
+                                                                                                                                }
+                                                                                                                            </div>
+                                                                                                                        </div>
+
+                                                                                                                        <!-- TAB 3: BẢO MẬT -->
+                                                                                                                        <div id="tab-content-security" class="tab-content hidden space-y-4 max-w-md text-xs">
+                                                                                                                            <div id="security-success-alert"
+                                                                                                                                 class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center gap-2">
+                                                                                                                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                                                                                                                <span>Đã đổi mật khẩu thành công!</span>
+                                                                                                                            </div>
+
+                                                                                                                            <!-- Hướng dẫn quy tắc mật khẩu -->
+                                                                                                                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 space-y-1">
+                                                                                                                                <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-shield-halved"></i> Quy tắc mật
+                                                                                                                                    khẩu mới:</p>
+                                                                                                                                    <p class="text-[11px] text-blue-700">• Tối thiểu 8 ký tự, bao gồm ít nhất: <strong>1 chữ
+                                                                                                                                        hoa</strong>, <strong>1 chữ số</strong> và <strong>1 ký tự đặc biệt</strong>.</p>
+                                                                                                                                    </div>
+
+                                                                                                                                    <form onsubmit="submitUpdatePassword(event)" class="space-y-4">
+                                                                                                                                        <!-- Mật khẩu hiện tại -->
+                                                                                                                                        <div>
+                                                                                                                                            <label class="block font-semibold text-slate-700 mb-1">Mật khẩu hiện tại</label>
+                                                                                                                                            <div class="relative">
+                                                                                                                                                <input type="password" id="sec-current-pw" placeholder="••••••••" required
+                                                                                                                                                       class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-[#1e3a5f]">
+                                                                                                                                                <button type="button" onclick="togglePasswordVisibility('sec-current-pw', 'eye-icon-1')"
+                                                                                                                                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                                                                                                                                    <i id="eye-icon-1" class="fa-solid fa-eye"></i>
+                                                                                                                                                </button>
+                                                                                                                                            </div>
+                                                                                                                                        </div>
+
+                                                                                                                                        <!-- Mật khẩu mới -->
+                                                                                                                                        <div>
+                                                                                                                                            <label class="block font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
+                                                                                                                                            <div class="relative">
+                                                                                                                                                <input type="password" id="sec-new-pw" placeholder="••••••••" required
+                                                                                                                                                       class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-[#1e3a5f]">
+                                                                                                                                                <button type="button" onclick="togglePasswordVisibility('sec-new-pw', 'eye-icon-2')"
+                                                                                                                                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                                                                                                                                    <i id="eye-icon-2" class="fa-solid fa-eye"></i>
+                                                                                                                                                </button>
+                                                                                                                                            </div>
+                                                                                                                                        </div>
+
+                                                                                                                                        <!-- Xác nhận mật khẩu mới -->
+                                                                                                                                        <div>
+                                                                                                                                            <label class="block font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới</label>
+                                                                                                                                            <div class="relative">
+                                                                                                                                                <input type="password" id="sec-confirm-pw" placeholder="••••••••" required
+                                                                                                                                                       class="w-full text-xs text-slate-800 border border-slate-300 rounded-lg pl-3.5 pr-10 py-2.5 focus:outline-none focus:border-[#1e3a5f]">
+                                                                                                                                                <button type="button" onclick="togglePasswordVisibility('sec-confirm-pw', 'eye-icon-3')"
+                                                                                                                                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">
+                                                                                                                                                    <i id="eye-icon-3" class="fa-solid fa-eye"></i>
+                                                                                                                                                </button>
+                                                                                                                                            </div>
+                                                                                                                                        </div>
+
+                                                                                                                                        <div class="pt-2">
+                                                                                                                                            <button type="submit"
+                                                                                                                                                    class="w-full bg-[#1e3a5f] hover:bg-[#142944] text-white px-6 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm">
+                                                                                                                                                <i class="fa-solid fa-shield-halved"></i>
+                                                                                                                                                <span>Cập nhật mật khẩu</span>
+                                                                                                                                            </button>
+                                                                                                                                        </div>
+                                                                                                                                    </form>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+
+                                                                                                                    <!-- Card Renewal Modal (2 Steps) -->
+                                                                                                                    <div id="renewal-modal"
+                                                                                                                         class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+                                                                                                                        <div
+                                                                                                                            class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+
+                                                                                                                            <!-- STEP 1: CHỌN PHƯƠNG THỨC GIA HẠN -->
+                                                                                                                            <div id="renewal-step-select" class="block">
+                                                                                                                                <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                                                                                                                                    <div>
+                                                                                                                                        <h3 class="text-base font-bold text-slate-900">Gia hạn thẻ thư viện</h3>
+                                                                                                                                        <p class="text-[11px] text-slate-500 mt-0.5">Chọn phương thức gia hạn phù hợp</p>
+                                                                                                                                    </div>
+                                                                                                                                    <button type="button" onclick="closeRenewalModal()"
+                                                                                                                                            class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                                                                                                                                            title="Đóng">
+                                                                                                                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                                                                                                                    </button>
+                                                                                                                                </div>
+
+                                                                                                                                <div class="p-6 space-y-4">
+                                                                                                                                    <!-- Option A: Gia hạn tại thư viện -->
+                                                                                                                                    <button type="button" onclick="handleInPersonRenewal()"
+                                                                                                                                            class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-[#1e3a5f] bg-white hover:bg-slate-50 transition-all group flex items-start gap-4 cursor-pointer shadow-xs">
+                                                                                                                                        <div
+                                                                                                                                            class="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-[#1e3a5f]/10 text-slate-700 group-hover:text-[#1e3a5f] flex items-center justify-center flex-shrink-0 transition-colors">
+                                                                                                                                            <i class="fa-solid fa-building-columns text-base"></i>
+                                                                                                                                        </div>
+                                                                                                                                        <div class="flex-1 min-w-0">
+                                                                                                                                            <div class="flex items-center justify-between">
+                                                                                                                                                <span class="text-xs font-bold text-slate-900 group-hover:text-[#1e3a5f]">Gia hạn tại thư
+                                                                                                                                                    viện</span>
+                                                                                                                                                    <i
+                                                                                                                                                    class="fa-solid fa-chevron-right text-xs text-slate-400 group-hover:text-[#1e3a5f] group-hover:translate-x-0.5 transition-all"></i>
+                                                                                                                                                </div>
+                                                                                                                                                <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                                                                                                                                    Người dùng đến trực tiếp thư viện để thực hiện gia hạn.
+                                                                                                                                                </p>
+                                                                                                                                            </div>
+                                                                                                                                        </button>
+
+                                                                                                                                        <!-- Option B: Gia hạn trực tuyến -->
+                                                                                                                                        <button type="button" onclick="switchToBankTransfer()"
+                                                                                                                                                class="w-full text-left p-4 rounded-xl border border-slate-200 hover:border-[#1e3a5f] bg-white hover:bg-blue-50/20 transition-all group flex items-start gap-4 cursor-pointer shadow-xs">
+                                                                                                                                            <div
+                                                                                                                                                class="w-10 h-10 rounded-xl bg-blue-50 group-hover:bg-[#1e3a5f] text-[#1e3a5f] group-hover:text-white flex items-center justify-center flex-shrink-0 transition-colors">
+                                                                                                                                                <i class="fa-solid fa-credit-card text-base"></i>
+                                                                                                                                            </div>
+                                                                                                                                            <div class="flex-1 min-w-0">
+                                                                                                                                                <div class="flex items-center justify-between">
+                                                                                                                                                    <span class="text-xs font-bold text-slate-900 group-hover:text-[#1e3a5f]">Gia hạn trực
+                                                                                                                                                        tuyến</span>
+                                                                                                                                                        <i
+                                                                                                                                                        class="fa-solid fa-chevron-right text-xs text-slate-400 group-hover:text-[#1e3a5f] group-hover:translate-x-0.5 transition-all"></i>
+                                                                                                                                                    </div>
+                                                                                                                                                    <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                                                                                                                                                        Thanh toán phí gia hạn bằng chuyển khoản ngân hàng.
+                                                                                                                                                    </p>
+                                                                                                                                                </div>
+                                                                                                                                            </button>
+
+                                                                                                                                            <div class="pt-2">
+                                                                                                                                                <button type="button" onclick="closeRenewalModal()"
+                                                                                                                                                        class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-center">
+                                                                                                                                                    Hủy
+                                                                                                                                                </button>
+                                                                                                                                            </div>
+                                                                                                                                        </div>
+                                                                                                                                    </div>
+
+                                                                                                                                    <!-- STEP 2: MÀN HÌNH CHUYỂN KHOẢN NGÂN HÀNG -->
+                                                                                                                                    <div id="renewal-step-transfer" class="hidden">
+                                                                                                                                        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+                                                                                                                                            <div>
+                                                                                                                                                <h3 class="text-base font-bold text-slate-900">Thanh toán gia hạn thẻ</h3>
+                                                                                                                                                <p class="text-[11px] text-slate-500 mt-0.5">Thẻ thư viện: <span
+                                                                                                                                                    class="font-mono font-semibold">@(Model?.CardNumber ?? "...")</span></p>
+                                                                                                                                                </div>
+                                                                                                                                                <button type="button" onclick="closeRenewalModal()"
+                                                                                                                                                        class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                                                                                                                                                        title="Hủy">
+                                                                                                                                                    <i class="fa-solid fa-xmark text-lg"></i>
+                                                                                                                                                </button>
+                                                                                                                                            </div>
+
+                                                                                                                                            <div class="p-6 space-y-5">
+                                                                                                                                                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-3.5 text-xs">
+                                                                                                                                                    <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                                                                                                                                        <span class="font-semibold text-slate-600">Số tiền gia hạn</span>
+                                                                                                                                                        <span class="text-lg font-bold text-rose-600">50.000 ₫</span>
+                                                                                                                                                    </div>
+                                                                                                                                                    <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                                                                                                                                        <span class="font-semibold text-slate-600">Mục đích</span>
+                                                                                                                                                        <span class="font-semibold text-slate-800">Phí gia hạn thẻ thư viện (12 tháng)</span>
+                                                                                                                                                    </div>
+                                                                                                                                                    <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                                                                                                                                        <span class="font-semibold text-slate-600">Tên ngân hàng</span>
+                                                                                                                                                        <span class="font-semibold text-slate-900 text-right max-w-[200px]">Techcombank (Ngân hàng TMCP
+                                                                                                                                                            Kỹ Thương Việt Nam)</span>
+                                                                                                                                                        </div>
+                                                                                                                                                        <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                                                                                                                                            <span class="font-semibold text-slate-600">Chủ tài khoản</span>
+                                                                                                                                                            <span class="font-bold text-slate-900 uppercase">THƯ VIỆN THÀNH PHỐ</span>
+                                                                                                                                                        </div>
+                                                                                                                                                        <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                                                                                                                                            <span class="font-semibold text-slate-600">Số tài khoản chuyển</span>
+                                                                                                                                                            <div class="flex items-center gap-1.5">
+                                                                                                                                                                <span id="bank-acc-num"
+                                                                                                                                                                      class="font-mono font-bold text-slate-900 text-sm tracking-wider">123456789</span>
+                                                                                                                                                                <button type="button" onclick="copyToClipboard('123456789', 'acc-copied')"
+                                                                                                                                                                        class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded transition-colors"
+                                                                                                                                                                        title="Sao chép">
+                                                                                                                                                                    <i class="fa-regular fa-copy text-xs"></i>
+                                                                                                                                                                </button>
+                                                                                                                                                                <span id="acc-copied" class="text-[10px] text-emerald-600 font-semibold hidden">Đã
+                                                                                                                                                                    chép</span>
+                                                                                                                                                                </div>
+                                                                                                                                                            </div>
+                                                                                                                                                            <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+                                                                                                                                                                <span class="font-semibold text-slate-600">Nội dung chuyển khoản</span>
+                                                                                                                                                                <div class="flex items-center gap-1.5">
+                                                                                                                                                                    <span id="transfer-content"
+                                                                                                                                                                          class="font-mono font-bold text-[#1e3a5f] bg-blue-50/80 px-2 py-0.5 rounded border border-blue-100">GH
+                                                                                                                                                                        THE @(Model?.CardNumber != null ?
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        System.Text.RegularExpressions.Regex.Replace(Model.CardNumber, "[^0-9]", "") :
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         "004521")</span>
+                                                                                                                                                                        <button type="button" onclick="copyElementText('transfer-content', 'content-copied')"
+                                                                                                                                                                                class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded transition-colors"
+                                                                                                                                                                                title="Sao chép">
+                                                                                                                                                                            <i class="fa-regular fa-copy text-xs"></i>
+                                                                                                                                                                        </button>
+                                                                                                                                                                        <span id="content-copied" class="text-[10px] text-emerald-600 font-semibold hidden">Đã
+                                                                                                                                                                            chép</span>
+                                                                                                                                                                        </div>
+                                                                                                                                                                    </div>
+                                                                                                                                                                    <div class="flex items-center justify-between pt-1">
+                                                                                                                                                                        <span class="font-semibold text-slate-600 flex items-center gap-1.5">
+                                                                                                                                                                            <i class="fa-regular fa-clock text-slate-400"></i>
+                                                                                                                                                                            <span>Thời gian còn lại</span>
+                                                                                                                                                                        </span>
+                                                                                                                                                                        <span id="renewal-countdown"
+                                                                                                                                                                              class="font-mono text-sm font-bold tabular-nums px-2 py-0.5 rounded text-amber-700 bg-amber-50 border border-amber-200">15:00</span>
+                                                                                                                                                                    </div>
+                                                                                                                                                                </div>
+
+                                                                                                                                                                <!-- QR Code Box -->
+                                                                                                                                                                <div id="qr-code-box" class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                                                                                                                                                                    <div
+                                                                                                                                                                        class="w-36 h-36 bg-white p-2 rounded-xl border border-slate-300 mx-auto flex items-center justify-center shadow-xs">
+                                                                                                                                                                        <i class="fa-solid fa-qrcode text-6xl text-slate-800"></i>
+                                                                                                                                                                    </div>
+                                                                                                                                                                    <p class="text-[11px] text-slate-500 mt-2">Mở ứng dụng ngân hàng và quét mã VietQR để thanh toán tự
+                                                                                                                                                                        động</p>
+                                                                                                                                                                    </div>
+
+                                                                                                                                                                    <!-- Expired Box (Ẩn mặc định) -->
+                                                                                                                                                                    <div id="qr-expired-box"
+                                                                                                                                                                         class="bg-rose-50 rounded-xl p-4 text-center border border-rose-200 space-y-1.5 hidden">
+                                                                                                                                                                        <i class="fa-solid fa-triangle-exclamation text-2xl text-rose-600 mx-auto"></i>
+                                                                                                                                                                        <p class="text-xs font-bold text-rose-900">Giao dịch đã hết thời gian thanh toán</p>
+                                                                                                                                                                        <p class="text-[11px] text-rose-700 leading-relaxed">Thời gian hiệu lực đã kết thúc (00:00). Giao
+                                                                                                                                                                            dịch không còn hiệu lực. Vui lòng hủy và thực hiện lại nếu cần gia hạn.</p>
+                                                                                                                                                                        </div>
+
+                                                                                                                                                                        <div class="pt-2">
+                                                                                                                                                                            <button type="button" onclick="closeRenewalModal()"
+                                                                                                                                                                                    class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer text-center">
+                                                                                                                                                                                Hủy
+                                                                                                                                                                            </button>
+                                                                                                                                                                        </div>
+                                                                                                                                                                    </div>
+                                                                                                                                                                </div>
+
+                                                                                                                                                            </div>
+                                                                                                                                                        </div>
+                                                                                                                                                        <!-- Custom Confirm Report Lost Modal -->
+<div id="lost-card-modal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 text-rose-600">
+                <i class="fa-solid fa-triangle-exclamation"></i> Xác nhận báo mất thẻ
+            </h3>
+            <button type="button" onclick="closeLostCardModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Bạn có chắc chắn muốn báo mất thẻ? Thẻ sẽ bị <span class="font-mono font-bold text-rose-600">KHÓA</span> ngay lập tức và bạn sẽ không thể dùng nó để mượn sách.
+            </p>
+            <div class="flex items-center justify-end gap-3 pt-2">
+                <button type="button" onclick="closeLostCardModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer">
+                    Hủy
+                </button>
+                <button type="button" onclick="executeReportLost()" class="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-xs">
+                    Xác nhận khóa thẻ
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
