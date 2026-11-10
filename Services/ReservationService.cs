@@ -75,6 +75,14 @@ public class ReservationService : IReservationService
 
         if (card.ExpiredAt.HasValue && card.ExpiredAt.Value < DateTime.UtcNow)
         {
+            if (card.Status != LibraryCardStatus.EXPIRED)
+            {
+                card.Status = LibraryCardStatus.EXPIRED;
+                card.UpdatedAt = DateTime.UtcNow;
+
+                // Lưu thay đổi vào database
+                await _context.SaveChangesAsync();
+            }
             throw new BusinessException("Thẻ thư viện của bạn đã hết hạn, vui lòng gia hạn để tiếp tục", StatusCodes.Status403Forbidden);
         }
 
