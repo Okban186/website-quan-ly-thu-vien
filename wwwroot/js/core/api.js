@@ -28,7 +28,10 @@ const API = {
 
     private: {
         auth: {
-            logout: '/api/accounts/logout'
+            logout: '/api/accounts/logout',
+            changePassword: '/api/accounts/change-password',
+            updateContact: '/api/accounts/contact',
+            reportLost: '/api/accounts/report-lost'
         },
 
         borrowCart: {
