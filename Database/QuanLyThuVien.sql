@@ -384,7 +384,7 @@ CREATE TABLE library_items (
                 'REMOVED'
             )
         ),
-    CONSTRAINT CK_library_items_price CHECK (acquisition_price >= 0 AND cover_price >= 0),
+    CONSTRAINT CK_library_items_price CHECK (acquisition_price >= 0 AND cover_price >= 0)
 )
 
 
@@ -762,26 +762,8 @@ CREATE TABLE loan_items (
             )
         ),
 
-    CONSTRAINT CK_loan_items_condition_at_loan
-CHECK (
-    condition_at_loan IN (
-        'NEW',
-        'GOOD',
-        'WORN',
-        'DAMAGED'
-    )
-),
 
-CONSTRAINT CK_loan_items_condition_at_return
-CHECK (
-    condition_at_return IS NULL
-    OR condition_at_return IN (
-        'NEW',
-        'GOOD',
-        'WORN',
-        'DAMAGED'
-    )
-)
+
 );
 
 
@@ -1181,14 +1163,14 @@ CREATE TABLE digital_resources (
                 'ACTIVE',
                 'INACTIVE'
             )
-        )
+        ),
 
     CONSTRAINT UQ_digital_resources_order
         UNIQUE (
         resource_id,
         resource_type,
         display_order
-)
+),
 );
 
 
