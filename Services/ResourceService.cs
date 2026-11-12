@@ -183,7 +183,7 @@ public class ResourceService : IResourceService
 
                 Borrowing = g.Count(x =>
                     x.Status == LibraryItemStatus.RESERVED ||
-                    x.Status == LibraryItemStatus.BORROWD),
+                    x.Status == LibraryItemStatus.BORROWED),
 
                 Processing = g.Count(x =>
                     x.Status == LibraryItemStatus.RETURNED_PENDING_CHECK ||
