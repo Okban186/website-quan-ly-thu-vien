@@ -31,7 +31,7 @@ public class AccountService : IAccountService
             {
                 User = u,
                 Member = _context.LibraryMembers.FirstOrDefault(m => m.UserId == u.Id),
-                IsStaffOrAdmin = _context.UserRoles
+                IsStaffOrMember = _context.UserRoles
                     .Where(ur => ur.UserId == u.Id)
                     .Join(_context.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.Name)
                     .Any(roleName => roleName != "MEMBER")
@@ -45,7 +45,7 @@ public class AccountService : IAccountService
             return new UserAccountViewModel
             {
                 FullName = rawData.User.FullName,
-                Quota = rawData.IsStaffOrAdmin ? 10 : 15,
+                Quota = rawData.IsStaffOrMember ? 10 : 5,
                 Email = rawData.User.Email,
                 Phone = rawData.User.Phone,
                 BirthDate = rawData.User.DateOfBirth?.ToString("dd/MM/yyyy"),
@@ -98,7 +98,7 @@ public class AccountService : IAccountService
         return new UserAccountViewModel
         {
             FullName = rawData.User.FullName,
-            Quota = rawData.IsStaffOrAdmin ? 10 : 15,
+            Quota = rawData.IsStaffOrMember ? 10 : 5,
             Email = rawData.User.Email,
             Phone = rawData.User.Phone,
             BirthDate = rawData.User.DateOfBirth?.ToString("dd/MM/yyyy"),

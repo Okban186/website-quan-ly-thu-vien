@@ -25,4 +25,23 @@ public class BorrowRequestContoller : Controller
             await _reservationService.CreateRequestAsync(Guid.Parse(userId), request)
         );
     }
+
+    [HttpDelete("cancel-request-item/{id:guid}")]
+    public async Task<IActionResult> CancelRequestItem(Guid id)
+    {
+        await _reservationService.CancelRequestItem(id);
+        return Ok();
+
+    }
+
+    [HttpGet("transactions")]
+    public async Task<IActionResult> GetMyRequests([FromQuery] string type, [FromQuery] int page, [FromQuery] int pageSize)
+    {
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        if (!Guid.TryParse(userIdStr, out var userId)) return Unauthorized();
+
+        var result = await _reservationService.GetBorrowItemList(userId, type, page, pageSize);
+        return Ok(result);
+    }
+
 }

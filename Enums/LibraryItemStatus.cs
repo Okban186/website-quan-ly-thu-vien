@@ -4,7 +4,7 @@ public enum LibraryItemStatus
 {
     AVAILABLE,
     RESERVED,
-    BORROWD, 
+    BORROWED,
     RETURNED_PENDING_CHECK,
     LOST,
     DAMAGED,

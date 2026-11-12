@@ -1,3 +1,4 @@
+@using System.Security.Claims
 @{
     var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
                  ?? User.FindFirst("sub")?.Value;
@@ -18,6 +19,14 @@
 
     var isHome = controller == "Home" && action == "Index";
     var isCategory = controller == "Category" && action == "Index";
+
+    var userRoles = User.FindAll(ClaimTypes.Role)
+                        .Select(c => c.Value)
+                        .ToList();
+
+    bool isOnlyAdmin = userRoles.Count == 1 &&
+                       userRoles[0].Equals("ADMIN", StringComparison.OrdinalIgnoreCase);
+
 
 }
 
@@ -296,64 +305,67 @@
                                     <span>Tài khoản</span>
 
                                 </a>
-                                <a href="@Url.Action("Index", "BorrowCart")" id="menu-item-borrow-queue" type="button"
-                                   class="w-full text-left
-                                    px-4 py-2.5
-                                    text-xs text-slate-700
-                                    hover:bg-slate-50
-                                    flex items-center gap-2.5
-                                    transition-colors">
+                                @if (!isOnlyAdmin)
+                                {
+                                    <a href="@Url.Action("Index", "BorrowCart")" id="menu-item-borrow-queue" type="button"
+                                       class="w-full text-left
+                                        px-4 py-2.5
+                                        text-xs text-slate-700
+                                        hover:bg-slate-50
+                                        flex items-center gap-2.5
+                                        transition-colors">
 
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2"
-                                         viewBox="0 0 24 24">
-                                        <!-- Icon cái khay / hộp tài liệu (Tray/Archive) -->
-                                        <path
-                                            d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0h-2.586a1 1 0 0 0-.707.293l-2.414 2.414a1 1 0 0 1-.707.293h-3.172a1 1 0 0 1-.707-.293l-2.414-2.414A1 1 0 0 0 6.586 13H4">
-                                        </path>
-                                    </svg>
+                                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2"
+                                             viewBox="0 0 24 24">
+                                            <!-- Icon cái khay / hộp tài liệu (Tray/Archive) -->
+                                            <path
+                                                d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7m16 0v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-5m16 0h-2.586a1 1 0 0 0-.707.293l-2.414 2.414a1 1 0 0 1-.707.293h-3.172a1 1 0 0 1-.707-.293l-2.414-2.414A1 1 0 0 0 6.586 13H4">
+                                            </path>
+                                        </svg>
 
-                                    <span>Danh sách chờ mượn</span>
+                                        <span>Danh sách chờ mượn</span>
 
-                                </a>
+                                    </a>
 
-                                <!-- Borrow -->
-                                <a id="menu-item-borrow" type="button" class="w-full text-left
-                                    px-4 py-2.5
-                                    text-xs text-slate-700
-                                    hover:bg-slate-50
-                                    flex items-center gap-2.5
-                                    transition-colors">
+                                    <!-- Borrow -->
+                                    <a href="@Url.Action("Index", "Borrow")" id="menu-item-borrow" type="button" class="w-full text-left
+                                        px-4 py-2.5
+                                        text-xs text-slate-700
+                                        hover:bg-slate-50
+                                        flex items-center gap-2.5
+                                        transition-colors">
 
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2"
-                                         viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2"
+                                             viewBox="0 0 24 24">
 
-                                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z">
-                                        </path>
+                                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z">
+                                            </path>
 
-                                    </svg>
+                                        </svg>
 
-                                    <span>Hoạt động mượn</span>
+                                        <span>Hoạt động mượn</span>
 
-                                </a>
+                                    </a>
 
 
-                                <!-- Fines -->
-                                <a id="menu-item-fines" type="button" class="w-full text-left
-                                    px-4 py-2.5
-                                    text-xs text-slate-700
-                                    hover:bg-slate-50
-                                    flex items-center gap-2.5
-                                    transition-colors">
 
-                                    <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" stroke-width="2"
-                                         viewBox="0 0 24 24">
-                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                                        <line x1="1" y1="10" x2="23" y2="10"></line>
-                                    </svg>
+                                    <a id="menu-item-fines" type="button" class="w-full text-left
+                                        px-4 py-2.5
+                                        text-xs text-slate-700
+                                        hover:bg-slate-50
+                                        flex items-center gap-2.5
+                                        transition-colors">
 
-                                    <span>Khoản phí & Phạt</span>
+                                        <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" stroke-width="2"
+                                             viewBox="0 0 24 24">
+                                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                                        </svg>
 
-                                </a>
+                                        <span>Khoản phí & Phạt</span>
+
+                                    </a>
+                                }
 
 
                                 <div class="border-t border-slate-100 my-1">

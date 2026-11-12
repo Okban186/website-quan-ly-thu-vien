@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             label: 'Đang mượn',
             className: 'bg-amber-50 text-amber-700 border-amber-200'
         },
-        BORROWD: {
+        BORROWED: {
             label: 'Đang mượn',
             className: 'bg-amber-50 text-amber-700 border-amber-200'
         },
