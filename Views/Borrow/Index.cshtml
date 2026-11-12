@@ -1,0 +1,182 @@
+@model WebsiteQuanLyThuVien.ViewModels.BorrowManagementViewModel
+
+@{
+    ViewData["Title"] = "Quản lý mượn";
+}
+
+<div class="min-h-screen bg-slate-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight mb-6">
+            Quản lý mượn
+        </h1>
+
+        <div class="flex border-b border-slate-200 mb-6 gap-6 select-none">
+            <button type="button" onclick="switchMainTab('borrowed')" id="main-tab-btn-borrowed"
+                    class="pb-3 text-sm font-bold transition-colors border-b-2 flex items-center gap-2 border-[#1e3a5f] text-[#1e3a5f] cursor-pointer outline-none">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Đang xử lý & Hoạt động</span>
+                <span id="badge-count-borrowed"
+                      class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-[10px]">0</span>
+            </button>
+
+            <button type="button" onclick="switchMainTab('history')" id="main-tab-btn-history"
+                    class="pb-3 text-sm font-bold transition-colors border-b-2 flex items-center gap-2 border-transparent text-slate-500 hover:text-slate-800 cursor-pointer outline-none">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Lịch sử</span>
+                <span id="badge-count-history"
+                      class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-[10px]">0</span>
+            </button>
+        </div>
+
+        <div id="main-tab-content-borrowed" class="main-tab-content space-y-4">
+            <div id="container-borrowed-items" class="space-y-4"></div>
+            <div id="loading-borrowed" class="text-center py-4 text-slate-400 text-xs hidden">
+                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tải thêm dữ liệu...
+            </div>
+        </div>
+
+        <div id="main-tab-content-history" class="main-tab-content space-y-4 hidden">
+            <div id="container-history-items" class="space-y-4"></div>
+            <div id="loading-history" class="text-center py-4 text-slate-400 text-xs hidden">
+                <i class="fa-solid fa-spinner fa-spin mr-1"></i> Đang tải thêm lịch sử...
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cancel-confirm-modal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full mx-4 shadow-xl transform transition-all scale-95 opacity-0 duration-200"
+         id="modal-content-box">
+        <div
+            class="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 text-lg">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900 text-center mb-1">Xác nhận hủy yêu cầu</h3>
+        <p id="modal-book-title" class="text-xs text-slate-500 text-center mb-6 leading-relaxed">
+            Bạn có chắc chắn muốn hủy yêu cầu mượn này không?
+        </p>
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="closeCancelModal()"
+                    class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer">
+                Đóng
+            </button>
+            <button type="button" id="btn-confirm-cancel-action"
+                    class="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer">
+                Xác nhận hủy
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="detail-info-modal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 max-w-lg w-full mx-4 shadow-xl transform transition-all scale-95 opacity-0 duration-200"
+         id="detail-modal-box">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-[#1e3a5f]"></i> Chi tiết giao dịch tài liệu
+            </h3>
+            <button type="button" onclick="closeDetailModal()"
+                    class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+            <div class="flex items-start gap-4 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <img id="det-cover" src="" alt="Cover"
+                     class="w-16 h-22 object-cover rounded-lg shadow-xs bg-slate-200 flex-shrink-0" />
+                <div class="space-y-1">
+                    <h4 id="det-title" class="text-sm font-bold text-slate-900"></h4>
+                    <p id="det-author" class="text-xs text-slate-500 font-medium"></p>
+                    <div class="pt-1" id="det-status-badge"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1">
+                    <span class="text-slate-400 block font-medium">Mã Đơn Tổng (Request Code)</span>
+                    <span id="det-request-code" class="font-mono text-slate-700 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1">
+                    <span class="text-slate-400 block font-medium">Mã Vận Đơn (Carrier Tracking)</span>
+                    <span id="det-carrier-code" class="font-mono text-indigo-600 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1">
+                    <span class="text-slate-400 block font-medium">Phương thức nhận</span>
+                    <span id="det-method" class="text-slate-700 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1">
+                    <span class="text-slate-400 block font-medium">Trạng thái Request</span>
+                    <span id="det-req-status" class="text-slate-700 font-semibold uppercase"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1" id="box-request-date">
+                    <span class="text-slate-400 block font-medium">Thời gian tạo yêu cầu</span>
+                    <span id="det-request-date" class="text-slate-700 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1" id="box-borrow-date-detail"
+                     style="display: none;">
+                    <span class="text-slate-400 block font-medium">Ngày mượn</span>
+                    <span id="det-borrow-date" class="font-mono text-slate-700 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1" id="box-due-date-detail"
+                     style="display: none;">
+                    <span class="text-slate-400 block font-medium">Hạn trả</span>
+                    <span id="det-due-date" class="font-mono text-slate-700 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1" id="box-due-return-detail"
+                     style="display: none;">
+                    <span class="text-slate-400 block font-medium">Ngày trả</span>
+                    <span id="det-return-date" class="font-mono text-slate-700 font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1" id="box-days-left-detail"
+                     style="display: none;">
+                    <span class="text-slate-400 block font-medium">Thời gian còn lại</span>
+                    <span id="det-days-left" class="font-semibold"></span>
+                </div>
+                <div class="p-3 bg-slate-50/50 rounded-xl border border-slate-100 space-y-1" id="box-renew-count-detail"
+                     style="display: none;">
+                    <span class="text-slate-400 block font-medium">Số lần đã gia hạn</span>
+                    <span id="det-renew-count" class="font-mono text-slate-700 font-semibold"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-4 mt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+            <button type="button" onclick="closeDetailModal()"
+                    class="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer">
+                Đóng
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="renew-confirm-modal"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 max-w-sm w-full mx-4 shadow-xl transform transition-all scale-95 opacity-0 duration-200"
+         id="renew-modal-content-box">
+        <div
+            class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-4 text-lg">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-900 text-center mb-1">Xác nhận gia hạn mượn</h3>
+        <p id="modal-renew-book-title" class="text-xs text-slate-500 text-center mb-6 leading-relaxed">
+            Bạn có chắc chắn muốn gia hạn thêm 7 ngày cho tài liệu này không?
+        </p>
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="closeRenewModal()"
+                    class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer">
+                Đóng
+            </button>
+            <button type="button" id="btn-confirm-renew-action"
+                    class="flex-1 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer">
+                Xác nhận
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/public/borrow/index.js" asp-append-version="true"></script>
+}
