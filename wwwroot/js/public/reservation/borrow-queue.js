@@ -373,6 +373,10 @@ function uncheckModalItem(resourceId) {
 
 function closeBorrowModal() {
     document.getElementById("borrow-flow-modal").classList.add("hidden");
+    const modalBooksContainer = document.getElementById("modal-selected-books-list")?.closest('.bg-slate-50');
+    if (modalBooksContainer) modalBooksContainer.classList.remove("hidden");
+    const stepperContainer = document.getElementById("step-badge-1")?.closest('.flex.items-center.justify-center.gap-3');
+    if (stepperContainer) stepperContainer.classList.remove("hidden");
 }
 
 function selectModalDelivery(method) {
@@ -515,6 +519,14 @@ async function submitModalBorrow() {
                         const itemNode = document.getElementById(`queue-item-${id}`);
                         if (itemNode) itemNode.remove();
                     });
+
+                    const badge = document.getElementById("queue-count-badge");
+                    if (badge) {
+                        const currentCount = parseInt(badge.textContent) || 1;
+                        const newCount = Math.max(0, currentCount - itemsToDelete.length);
+                        updateQueueBadge(newCount);
+                        if (newCount === 0) showEmptyState();
+                    }
                 } catch (delErr) {
                     showToast("Lỗi khi xóa tài liệu khỏi khay sau khi đặt mượn:" + delErr);
                 }

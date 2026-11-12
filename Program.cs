@@ -66,6 +66,7 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IBorrowCartService, BorrowCartService>();
 
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ILoanRenewalService, LoanRenewalService>();
 
 
 builder.Services.ConfigureApplicationCookie(options =>

@@ -41,7 +41,13 @@ const API = {
         },
 
         borrowRequest: {
-            create: '/api/borrow-requests'
+            create: '/api/borrow-requests',
+            getTransaction: '/api/borrow-requests/transactions',
+            cancleTransaction: (id) => `/api/borrow-requests/cancel-request-item/${id}`
+        },
+
+        loanRenewal: {
+            renew: (id) => `/api/loan-renewals/renew/${id}`
         }
     },
 

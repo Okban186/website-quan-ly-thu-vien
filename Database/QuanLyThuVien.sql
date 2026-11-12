@@ -594,11 +594,14 @@ CREATE TABLE borrow_request_items (
     CONSTRAINT CK_borrow_request_items_status
         CHECK (
             status IN (
-                'PENDING',
+               'PENDING',
                 'APPROVED',
+                'READY_FOR_PICKUP',
+                'DELIVERING',
                 'COMPLETED',
                 'REJECTED',
-                'CANCELLED'
+                'CANCELLED',
+                'EXPIRED'
             )
         )
 );

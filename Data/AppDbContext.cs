@@ -453,7 +453,7 @@ public class ApplicationDbContext : DbContext
 
             entity.ToTable(t =>
             {
-                t.HasCheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','COMPLETED','REJECTED','CANCELLED')");
+                t.HasCheckConstraint("CK_borrow_request_items_status", "[status] IN ('PENDING','APPROVED','READY_FOR_PICKUP','DELIVERING','COMPLETED','REJECTED','CANCELLED','EXPIRED')");
             });
         });
     }
