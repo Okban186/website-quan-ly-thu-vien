@@ -48,6 +48,10 @@ const API = {
 
         loanRenewal: {
             renew: (id) => `/api/loan-renewals/renew/${id}`
+        },
+
+        charge: {
+            mine: 'api/charges/mine'
         }
     },
 

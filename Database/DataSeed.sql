@@ -10,6 +10,16 @@
    */
 
 
+INSERT INTO charge_types (code, name, display_order)
+VALUES
+    ('CARD_FEE', N'Phí làm thẻ', 1),
+    ('OVERDUE', N'Phí trả tài liệu quá hạn', 2),
+    ('DAMAGED', N'Phí bồi thường tài liệu hư hỏng', 3),
+    ('LOST', N'Phí bồi thường tài liệu mất', 4),
+    ('DELIVERY', N'Phí giao tài liệu', 5),
+    ('OTHER', N'Phí khác', 99);
+
+
 /* =========================================================
    ROLES
    ========================================================= */
