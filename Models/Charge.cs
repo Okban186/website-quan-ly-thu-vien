@@ -9,6 +9,8 @@ public class Charge
     public Guid MemberId { get; set; }
     public Guid? LoanItemId { get; set; }
 
+    public Guid? ChargeTypeId { get; set; }
+
     public ChargeType ChargeType { get; set; }
 
     public decimal Amount { get; set; }

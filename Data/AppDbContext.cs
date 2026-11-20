@@ -53,6 +53,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<BorrowCartItem> BorrowCartItems => Set<BorrowCartItem>();
 
+    public DbSet<ChargeType> ChargeTypes => Set<ChargeType>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -93,6 +95,7 @@ public class ApplicationDbContext : DbContext
         ConfigureRefreshToken(modelBuilder);
         ConfigureRevokedToken(modelBuilder);
         ConfigureBorrowCartItem(modelBuilder);
+        ConfigureChargeType(modelBuilder);
     }
 
     private static void ConfigureStorageFile(ModelBuilder modelBuilder)
@@ -568,7 +571,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(x => x.Id).HasDefaultValueSql("NEWSEQUENTIALID()").ValueGeneratedOnAdd();
             entity.Property(x => x.MemberId).HasColumnName("member_id");
             entity.Property(x => x.LoanItemId).HasColumnName("loan_item_id");
-            entity.Property(x => x.ChargeType).HasColumnName("charge_type").HasMaxLength(20).HasConversion<string>();
+            entity.Property(x => x.ChargeTypeId).HasColumnName("charge_type_id");
             entity.Property(x => x.Amount).HasColumnName("amount").HasPrecision(12, 2);
             entity.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>().HasDefaultValue(ChargeStatus.UNPAID);
             entity.Property(x => x.Description).HasColumnName("description").HasMaxLength(1000);
@@ -580,10 +583,10 @@ public class ApplicationDbContext : DbContext
 
             entity.HasOne(x => x.Member).WithMany(x => x.Charges).HasForeignKey(x => x.MemberId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_charges_member");
             entity.HasOne(x => x.LoanItem).WithMany(x => x.Charges).HasForeignKey(x => x.LoanItemId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_charges_loan_item");
-
+            entity.HasOne(x => x.ChargeType).WithMany(x => x.Charges).HasForeignKey(x => x.ChargeTypeId).OnDelete(DeleteBehavior.NoAction).HasConstraintName("FK_charges_charge_types");
             entity.ToTable(t =>
             {
-                t.HasCheckConstraint("CK_charges_type", "[charge_type] IN ('CARD_FEE','OVERDUE','DAMAGED','LOST')");
+
                 t.HasCheckConstraint("CK_charges_status", "[status] IN ('UNPAID','PAID','WAIVED')");
                 t.HasCheckConstraint("CK_charges_amount", "[amount] >= 0");
             });
@@ -1076,6 +1079,65 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(x => x.Name).IsUnique().HasDatabaseName("UQ_document_types_name");
         });
+    }
+
+    private static void ConfigureChargeType(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ChargeType>(entity =>
+            {
+                entity.ToTable("charge_types");
+
+                entity.HasKey(e => e.Id)
+                    .HasName("PK_charge_types");
+
+                entity.Property(e => e.Id)
+                    .HasColumnName("id")
+                    .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                entity.Property(e => e.Code)
+                    .HasColumnName("code")
+                    .HasMaxLength(50)
+                    .IsUnicode(false)
+                    .IsRequired();
+
+                entity.HasIndex(e => e.Code)
+                    .IsUnique()
+                    .HasDatabaseName("UQ_charge_types_code");
+
+                entity.Property(e => e.Name)
+                    .HasColumnName("name")
+                    .HasMaxLength(150)
+                    .IsUnicode(true)
+                    .IsRequired();
+
+                entity.Property(e => e.Description)
+                    .HasColumnName("description")
+                    .HasMaxLength(500)
+                    .IsUnicode(true);
+
+                entity.Property(e => e.IsActive)
+                    .HasColumnName("is_active")
+                    .HasDefaultValue(true)
+                    .IsRequired();
+
+                entity.Property(e => e.DisplayOrder)
+                    .HasColumnName("display_order")
+                    .HasDefaultValue(0)
+                    .IsRequired();
+
+                entity.Property(e => e.CreatedAt)
+                    .HasColumnName("created_at")
+                    .HasColumnType("datetime2(7)")
+                    .HasDefaultValueSql("SYSUTCDATETIME()")
+                    .IsRequired();
+
+                entity.Property(e => e.UpdatedAt)
+                    .HasColumnName("updated_at")
+                    .HasColumnType("datetime2(7)")
+                    .HasDefaultValueSql("SYSUTCDATETIME()")
+                    .IsRequired();
+            });
+
     }
 
     private static void ConfigureBorrowCartItem(ModelBuilder modelBuilder)

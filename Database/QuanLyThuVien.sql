@@ -763,7 +763,7 @@ CREATE TABLE loan_items (
                 'RETURNED',
                 'LOST'
             )
-        ),
+        )
 
 
 
@@ -805,6 +805,26 @@ CREATE TABLE loan_renewals (
 /* =========================================================
    23. CHARGES
    ========================================================= */
+CREATE TABLE charge_types (
+    id UNIQUEIDENTIFIER NOT NULL
+        CONSTRAINT PK_charge_types PRIMARY KEY
+        DEFAULT NEWSEQUENTIALID(),
+
+    code VARCHAR(50) NOT NULL,
+    name NVARCHAR(150) NOT NULL,
+    description NVARCHAR(500) NULL,
+
+    is_active BIT NOT NULL DEFAULT 1,
+    display_order INT NOT NULL DEFAULT 0,
+
+    created_at DATETIME2(7) NOT NULL
+        DEFAULT SYSUTCDATETIME(),
+
+    updated_at DATETIME2(7) NOT NULL
+        DEFAULT SYSUTCDATETIME(),
+
+    CONSTRAINT UQ_charge_types_code UNIQUE (code)
+);
 
 CREATE TABLE charges (
     id UNIQUEIDENTIFIER NOT NULL
@@ -815,7 +835,7 @@ CREATE TABLE charges (
 
     loan_item_id UNIQUEIDENTIFIER NULL,
 
-    charge_type NVARCHAR(20) NOT NULL,
+    charge_type_id UNIQUEIDENTIFIER NUll,
 
     amount DECIMAL(12, 2) NOT NULL,
 
@@ -842,15 +862,10 @@ CREATE TABLE charges (
         REFERENCES loan_items(id)
         ON DELETE NO ACTION,
 
-    CONSTRAINT CK_charges_type
-        CHECK (
-            charge_type IN (
-                'CARD_FEE',
-                'OVERDUE',
-                'DAMAGED',
-                'LOST'
-            )
-        ),
+CONSTRAINT FK_charges_charge_types
+FOREIGN KEY (charge_type_id)
+REFERENCES charge_types(id);
+
 
     CONSTRAINT CK_charges_status
         CHECK (
@@ -864,6 +879,10 @@ CREATE TABLE charges (
     CONSTRAINT CK_charges_amount
         CHECK (amount >= 0)
 );
+
+
+
+
 
 
 /* =========================================================
@@ -1173,7 +1192,7 @@ CREATE TABLE digital_resources (
         resource_id,
         resource_type,
         display_order
-),
+)
 );
 
 
