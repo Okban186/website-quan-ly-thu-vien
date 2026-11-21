@@ -1,0 +1,4035 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="dashboard">
+  <meta name="design-style" content="carbon">
+  <title>Quản lý Kho Thư viện — Phân hệ Thủ kho</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* Page and surfaces (Carbon) */
+      --background: #ffffff;
+      --surface-container-low: #f4f4f4;
+      --surface-container: #f4f4f4;
+      --surface-container-high: #e0e0e0;
+
+      /* Ink */
+      --on-surface: #161616;
+      --on-surface-variant: #525252;
+
+      /* Rules */
+      --outline: #8d8d8d;
+      --outline-variant: #e0e0e0;
+
+      /* Accents */
+      --primary: #0f62fe;
+      --primary-hover: #0353e9;
+      --on-primary: #ffffff;
+      --primary-container: #d0e2ff;
+      --on-primary-container: #161616;
+      --secondary: #6f6f6f;
+      --tertiary: #198038;
+      --tertiary-container: #defbe6;
+      --error: #da1e28;
+      --error-container: #fff1f1;
+      --on-error: #ffffff;
+
+      /* Semantic tokens */
+      --positive: #198038;
+      --warning: #8e6a00;
+      --warning-container: #fcf4d6;
+      --focus: #0f62fe;
+      --backdrop: rgba(22, 22, 22, 0.48);
+
+      /* Data series */
+      --data-1: #0f62fe;
+      --data-2: #6929c4;
+      --data-3: #005d5d;
+      --data-4: #9f1853;
+      --data-context: #8d8d8d;
+
+      /* Fonts */
+      --font-headline: 'IBM Plex Sans', sans-serif;
+      --font-body: 'IBM Plex Sans', sans-serif;
+      --font-label: 'IBM Plex Mono', monospace;
+
+      /* Shape */
+      --rounded: 0.125rem;
+      --rounded-lg: 0.25rem;
+      --rounded-full: 0.75rem;
+
+      /* Style effects */
+      --shadow-1: 0 2px 6px rgb(0 0 0 / 0.1);
+      --shadow-2: 0 4px 12px rgb(0 0 0 / 0.12);
+      --rule: 1px solid var(--outline-variant);
+      --field-rule: 1px solid var(--outline);
+      --indicator: 2px solid var(--primary);
+      --accent-strip: 3px solid var(--primary);
+
+      /* Type scale (Dashboard) */
+      --display-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+      --headline-size: clamp(1.1875rem, 1.05rem + 0.45vw, 1.375rem);
+      --subhead-size: clamp(1rem, 0.95rem + 0.2vw, 1.125rem);
+      --body-size: clamp(0.9375rem, 0.9rem + 0.1vw, 0.9375rem);
+      --label-size: 0.75rem;
+
+      /* Spacing scale (4pt base) */
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+      --space-3xl: 6rem;
+
+      /* Motion */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { overflow-x: clip; margin: 0; padding: 0; }
+    header { position: static !important; }
+
+    body {
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.5;
+      color: var(--on-surface);
+      background: var(--background);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+      font-size: var(--body-size);
+      color: var(--on-surface);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* App Shell Layout */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 272px minmax(0, 1fr);
+      min-height: 100vh;
+      background: var(--background);
+    }
+    .app-shell * { min-width: 0; }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--surface-container);
+      border-right: var(--rule);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: var(--space-lg) 0 var(--space-md);
+    }
+
+    .sidebar-top {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    .brand-block {
+      padding: 0 var(--space-md) var(--space-md);
+      border-bottom: var(--rule);
+    }
+
+    .brand-kicker {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--on-surface-variant);
+      margin-bottom: var(--space-xs);
+    }
+
+    .brand-title {
+      font-family: var(--font-headline);
+      font-size: var(--subhead-size);
+      font-weight: 300;
+      margin: 0;
+      line-height: 1.25;
+      color: var(--on-surface);
+    }
+    .brand-title strong { font-weight: 600; }
+
+    .operator-card {
+      margin: 0 var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--background);
+      border-left: var(--indicator);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .operator-name {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--on-surface);
+    }
+
+    .operator-meta {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    .side-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .nav-group-label {
+      padding: var(--space-xs) var(--space-md);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--on-surface-variant);
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      width: 100%;
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      background: transparent;
+      border: none;
+      border-left: 2px solid transparent;
+      text-align: left;
+      cursor: pointer;
+      color: var(--on-surface-variant);
+      font-weight: 400;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+
+    .nav-btn:hover {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+
+    .nav-btn.is-active {
+      background: var(--background);
+      color: var(--on-surface);
+      font-weight: 600;
+      border-left: var(--indicator);
+    }
+
+    .nav-btn-left {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .nav-count {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      padding: 0.125rem var(--space-sm);
+      border-radius: var(--rounded-full);
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+    .nav-btn.is-active .nav-count {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+    .nav-count.is-alert {
+      background: var(--error-container);
+      color: var(--error);
+      font-weight: 600;
+    }
+    .nav-count.is-warn {
+      background: var(--warning-container);
+      color: var(--warning);
+      font-weight: 600;
+    }
+
+    .sidebar-footer {
+      padding: var(--space-md);
+      border-top: var(--rule);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    /* Main Workspace */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--background);
+    }
+
+    .workspace-header {
+      padding: var(--space-lg) var(--space-xl);
+      border-bottom: var(--rule);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-md);
+      background: var(--background);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      background: var(--surface-container);
+      border: var(--rule);
+      cursor: pointer;
+    }
+
+    .headline {
+      font-family: var(--font-headline);
+      font-size: var(--display-size);
+      font-weight: 300;
+      letter-spacing: 0;
+      line-height: 1.18;
+      margin: 0;
+      color: var(--on-surface);
+    }
+    .headline strong { font-weight: 600; }
+
+    .header-subtitle {
+      margin: var(--space-xs) 0 0;
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: var(--space-sm);
+    }
+
+    .quick-scan-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .workspace-body {
+      padding: var(--space-lg) var(--space-xl) var(--space-2xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+
+    /* Buttons (Carbon) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      min-height: 40px;
+      padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-md);
+      border: 1px solid transparent;
+      border-radius: 0;
+      font-weight: 400;
+      font-size: 0.875rem;
+      cursor: pointer;
+      text-align: left;
+      white-space: nowrap;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out), border-color var(--dur-micro) var(--ease-out);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--background);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--primary);
+      padding: var(--space-sm) var(--space-md);
+    }
+    .btn-ghost:hover:not(:disabled) {
+      background: var(--surface-container);
+    }
+
+    .btn-danger {
+      background: var(--error);
+      color: var(--on-error);
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: var(--on-surface);
+    }
+
+    .btn-danger-ghost {
+      background: transparent;
+      color: var(--error);
+      padding: var(--space-xs) var(--space-sm);
+      min-height: 36px;
+    }
+    .btn-danger-ghost:hover:not(:disabled) {
+      background: var(--error-container);
+    }
+
+    .btn-compact {
+      min-height: 36px;
+      padding: var(--space-xs) var(--space-sm);
+      font-size: 0.8125rem;
+    }
+
+    .btn-full { width: 100%; }
+
+    /* Inputs & Labels */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+
+    .field-label {
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      display: block;
+    }
+
+    .input-control, .select-control, .textarea-control {
+      width: 100%;
+      height: 40px;
+      padding: 0 var(--space-md);
+      background: var(--surface-container-low);
+      border: none;
+      border-bottom: var(--field-rule);
+      border-radius: var(--rounded);
+      color: var(--on-surface);
+      font-size: 0.875rem;
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+
+    .select-control {
+      padding-right: var(--space-xl);
+    }
+
+    .textarea-control {
+      height: auto;
+      min-height: 80px;
+      padding: var(--space-sm) var(--space-md);
+      resize: vertical;
+    }
+
+    .input-control:focus, .select-control:focus, .textarea-control:focus {
+      background: var(--background);
+    }
+
+    .input-control.is-invalid, .select-control.is-invalid {
+      border-bottom: 2px solid var(--error);
+      background: var(--error-container);
+    }
+
+    .field-error {
+      font-size: var(--label-size);
+      color: var(--error);
+      min-height: 1rem;
+    }
+
+    .field-helper {
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    /* Typography helpers */
+    .label {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--on-surface-variant);
+    }
+
+    .mono {
+      font-family: var(--font-label);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      border-bottom: var(--rule);
+      padding-bottom: var(--space-sm);
+      margin-bottom: var(--space-md);
+    }
+
+    .section-title {
+      font-family: var(--font-headline);
+      font-size: var(--headline-size);
+      font-weight: 600;
+      margin: 0;
+      color: var(--on-surface);
+    }
+
+    /* Carbon Gray Layers & KPI Tiles */
+    .layer {
+      background: var(--surface-container);
+      border-radius: 0;
+      padding: var(--space-md);
+    }
+    .layer .layer {
+      background: var(--surface-container-high);
+    }
+
+    .kpi-grid-wrap {
+      container-type: inline-size;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+
+    .kpi-tile {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-sm);
+      border-bottom: 2px solid transparent;
+    }
+
+    .kpi-tile.is-primary {
+      border-bottom: var(--indicator);
+    }
+
+    .kpi-tile.is-warning {
+      border-bottom: 2px solid var(--warning);
+    }
+
+    .kpi-tile.is-positive {
+      border-bottom: 2px solid var(--positive);
+    }
+
+    .key-value {
+      font-family: var(--font-label);
+      font-weight: 300;
+      font-size: 2rem;
+      line-height: 1.1;
+      color: var(--on-surface);
+    }
+
+    .kpi-caption {
+      font-size: 0.8125rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Charts & Overview Grids */
+    .overview-charts {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--space-md);
+    }
+
+    .overview-bottom {
+      display: grid;
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: var(--space-md);
+    }
+
+    .panel-card {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .chart-box {
+      position: relative;
+      width: 100%;
+      min-height: 280px;
+      background: var(--background);
+      padding: var(--space-md);
+      border: var(--rule);
+    }
+
+    /* Inline Feedback Banner */
+    .feedback-strip {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container);
+      border-left: var(--accent-strip);
+    }
+    .feedback-strip.is-visible { display: flex; }
+    .feedback-strip.is-success { border-left-color: var(--positive); }
+    .feedback-strip.is-error { border-left-color: var(--error); background: var(--error-container); }
+    .feedback-strip.is-warning { border-left-color: var(--warning); background: var(--warning-container); }
+
+    .feedback-msg {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* Filter Bar */
+    .filter-panel {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+      gap: var(--space-md);
+      align-items: end;
+    }
+
+    .filter-actions-row {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--space-sm);
+    }
+
+    /* Batch Bar */
+    .batch-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+      border-left: var(--indicator);
+    }
+    .batch-bar.is-visible { display: flex; }
+
+    .batch-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    /* Data Tables */
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      border-top: var(--rule);
+      border-bottom: var(--rule);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.875rem;
+    }
+
+    .data-table thead th {
+      background: var(--surface-container-high);
+      padding: var(--space-sm) var(--space-md);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--on-surface-variant);
+      border-bottom: var(--rule);
+      white-space: nowrap;
+    }
+
+    .sort-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      text-transform: inherit;
+      letter-spacing: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+    .sort-btn:hover { color: var(--on-surface); }
+
+    .data-table tbody tr {
+      background: var(--background);
+      border-bottom: var(--rule);
+      transition: background-color var(--dur-micro) var(--ease-out);
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: var(--surface-container-low);
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--surface-container-high);
+    }
+
+    .data-table tbody tr.is-selected {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+
+    .data-table td {
+      padding: var(--space-sm) var(--space-md);
+      vertical-align: middle;
+    }
+
+    .td-num {
+      text-align: right;
+      font-family: var(--font-label);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .td-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-xs);
+      white-space: nowrap;
+    }
+
+    .book-title-cell {
+      font-weight: 600;
+      color: var(--on-surface);
+    }
+    .book-meta-sub {
+      font-size: 0.75rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Tags (Carbon 24px pill) */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 var(--space-sm);
+      border-radius: var(--rounded-full);
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+    .tag-ready {
+      background: var(--tertiary-container);
+      color: var(--positive);
+    }
+    .tag-borrowed {
+      background: var(--primary-container);
+      color: var(--on-primary-container);
+    }
+    .tag-pending {
+      background: var(--warning-container);
+      color: var(--warning);
+    }
+    .tag-danger {
+      background: var(--error-container);
+      color: var(--error);
+    }
+
+    /* Tabs */
+    .tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: var(--rule);
+      gap: var(--space-xs);
+    }
+
+    .tab-btn {
+      min-height: 44px;
+      padding: var(--space-sm) var(--space-md);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      color: var(--on-surface-variant);
+      font-weight: 400;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+    .tab-btn:hover { color: var(--on-surface); }
+    .tab-btn.is-active {
+      color: var(--on-surface);
+      font-weight: 600;
+      border-bottom: var(--indicator);
+    }
+
+    /* Pagination */
+    .pagination-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      padding-top: var(--space-sm);
+    }
+
+    .pagination-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    /* Shelf Grid */
+    .card-grid-wrap { container-type: inline-size; }
+
+    .shelf-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+
+    .shelf-card {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: var(--space-md);
+      border-left: 3px solid var(--primary);
+    }
+    .shelf-card.is-warning { border-left-color: var(--warning); }
+    .shelf-card.is-full { border-left-color: var(--error); }
+    .shelf-card.is-maintenance { border-left-color: var(--outline); }
+
+    .shelf-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-sm);
+    }
+
+    .shelf-code {
+      font-family: var(--font-label);
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--on-surface);
+    }
+
+    .shelf-meter-track {
+      width: 100%;
+      height: 8px;
+      background: var(--surface-container-high);
+      overflow: hidden;
+    }
+
+    .shelf-meter-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width var(--dur-short) var(--ease-out);
+    }
+    .shelf-meter-fill.is-warning { background: var(--warning); }
+    .shelf-meter-fill.is-full { background: var(--error); }
+    .shelf-meter-fill.is-maintenance { background: var(--outline); }
+
+    .shelf-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-xs);
+      border-top: var(--rule);
+      padding-top: var(--space-sm);
+    }
+
+    /* Notifications List */
+    .notif-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .notif-strip {
+      background: var(--surface-container);
+      padding: var(--space-md);
+      border-left: 3px solid var(--primary);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+    .notif-strip.is-read {
+      background: var(--background);
+      border: var(--rule);
+      border-left: 3px solid var(--outline);
+    }
+    .notif-strip.type-warn { border-left-color: var(--warning); }
+    .notif-strip.type-error { border-left-color: var(--error); }
+    .notif-strip.type-ok { border-left-color: var(--positive); }
+
+    .notif-main {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      flex: 1 1 320px;
+    }
+
+    .notif-title {
+      font-weight: 600;
+      color: var(--on-surface);
+    }
+
+    .notif-meta {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+    }
+
+    /* Compact List for Overview */
+    .simple-list > * + * {
+      border-top: var(--rule);
+      padding-top: var(--space-sm);
+      margin-top: var(--space-sm);
+    }
+
+    .list-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+    }
+
+    /* Empty state */
+    .empty-state {
+      background: var(--surface-container);
+      padding: var(--space-xl);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-sm);
+    }
+
+    /* Modals & Slide-over Drawers */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-md);
+    }
+    .modal-backdrop.is-open { display: flex; }
+
+    .modal-dialog {
+      background: var(--background);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-2);
+      border-top: 3px solid var(--primary);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop);
+      z-index: 100;
+      justify-content: flex-end;
+    }
+    .drawer-backdrop.is-open { display: flex; }
+
+    .drawer-panel {
+      background: var(--background);
+      width: 100%;
+      max-width: 520px;
+      height: 100%;
+      overflow-y: auto;
+      box-shadow: var(--shadow-2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .dialog-head {
+      padding: var(--space-md) var(--space-lg);
+      border-bottom: var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      background: var(--surface-container);
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: var(--subhead-size);
+      font-weight: 600;
+    }
+
+    .dialog-body {
+      padding: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+    }
+
+    .dialog-foot {
+      padding: var(--space-md) var(--space-lg);
+      border-top: var(--rule);
+      background: var(--surface-container);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: var(--space-sm);
+    }
+
+    .barcode-box {
+      background: var(--background);
+      border: var(--rule);
+      padding: var(--space-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-xs);
+    }
+
+    .detail-kv-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-md);
+      background: var(--surface-container);
+      padding: var(--space-md);
+    }
+
+    .view-panel { display: none; flex-direction: column; gap: var(--space-lg); }
+    .view-panel.is-active { display: flex; }
+
+    /* Mobile Drawer Overlay */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--backdrop);
+      z-index: 80;
+    }
+    .sidebar-overlay.is-open { display: block; }
+
+    /* Responsive Breakpoints */
+    @media (max-width: 1024px) {
+      .overview-charts, .overview-bottom {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        z-index: 90;
+        transform: translateX(-100%);
+        transition: transform var(--dur-short) var(--ease-out);
+      }
+      .sidebar.is-open {
+        transform: translateX(0);
+      }
+      .mobile-menu-btn {
+        display: inline-flex;
+      }
+      .workspace-header, .workspace-body {
+        padding-left: var(--space-md);
+        padding-right: var(--space-md);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid-2, .detail-kv-grid {
+        grid-template-columns: 1fr;
+      }
+      .workspace-header {
+        align-items: flex-start;
+      }
+      .header-actions {
+        width: 100%;
+      }
+      .quick-scan-wrap {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar(false)"></div>
+
+  <div class="app-shell">
+    <!-- Sidebar điều hướng -->
+    <aside class="sidebar" id="sidebar" aria-label="Điều hướng phân hệ thủ kho">
+      <div class="sidebar-top">
+        <div class="brand-block">
+          <div class="brand-kicker">HỆ THỐNG THƯ VIỆN · PHÂN HỆ THỦ KHO</div>
+          <h1 class="brand-title">Quản lý <strong>Kho Tài liệu</strong></h1>
+        </div>
+
+        <div class="operator-card">
+          <span class="label">Thủ kho trực ca</span>
+          <span class="operator-name">Nguyễn Minh Tuấn</span>
+          <span class="operator-meta">Mã NV: TK-04 · Ca sáng</span>
+        </div>
+
+        <nav class="side-nav" aria-label="Danh mục chức năng">
+          <div class="nav-group-label">Nghiệp vụ kho</div>
+
+          <button type="button" class="nav-btn is-active" id="nav-overview" onclick="switchView('overview')">
+            <span class="nav-btn-left">
+              <i data-lucide="layout-dashboard" width="18" height="18" aria-hidden="true"></i>
+              <span>Tổng quan kho</span>
+            </span>
+          </button>
+
+          <button type="button" class="nav-btn" id="nav-books" onclick="switchView('books')">
+            <span class="nav-btn-left">
+              <i data-lucide="book-copy" width="18" height="18" aria-hidden="true"></i>
+              <span>Bản sách vật lý</span>
+            </span>
+            <span class="nav-count" id="badge-books">0</span>
+          </button>
+
+          <button type="button" class="nav-btn" id="nav-triage" onclick="switchView('triage')">
+            <span class="nav-btn-left">
+              <i data-lucide="wrench" width="18" height="18" aria-hidden="true"></i>
+              <span>Bản sách cần xử lý</span>
+            </span>
+            <span class="nav-count is-warn" id="badge-triage">0</span>
+          </button>
+
+          <button type="button" class="nav-btn" id="nav-shelves" onclick="switchView('shelves')">
+            <span class="nav-btn-left">
+              <i data-lucide="library" width="18" height="18" aria-hidden="true"></i>
+              <span>Vị trí lưu trữ</span>
+            </span>
+            <span class="nav-count" id="badge-shelves">0</span>
+          </button>
+
+          <button type="button" class="nav-btn" id="nav-notifications" onclick="switchView('notifications')">
+            <span class="nav-btn-left">
+              <i data-lucide="bell" width="18" height="18" aria-hidden="true"></i>
+              <span>Thông báo</span>
+            </span>
+            <span class="nav-count is-alert" id="badge-notifications">0</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer">
+        <button type="button" class="btn btn-secondary btn-compact btn-full" onclick="exportInventoryCSV()">
+          <span>Xuất báo cáo kho (CSV)</span>
+          <i data-lucide="download" width="16" height="16" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn-ghost btn-compact btn-full" id="btn-reset-demo" onclick="handleResetDemo(this)">
+          <span>Khôi phục dữ liệu mẫu</span>
+          <i data-lucide="rotate-ccw" width="16" height="16" aria-hidden="true"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <header class="workspace-header">
+        <div class="header-left">
+          <button type="button" class="mobile-menu-btn" onclick="toggleMobileSidebar(true)" aria-label="Mở menu điều hướng">
+            <i data-lucide="menu" width="20" height="20" aria-hidden="true"></i>
+          </button>
+          <div>
+            <div class="label" id="page-kicker">PHÂN HỆ THỦ KHO · CẬP NHẬT THỜI GIAN THỰC</div>
+            <h2 class="headline" id="page-title">Tổng quan <strong>Kho sách</strong></h2>
+            <p class="header-subtitle" id="page-subtitle">Theo dõi tồn kho vật lý, tình trạng lưu hành và công suất lấp đầy kệ lưu trữ.</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <div class="quick-scan-wrap">
+            <label for="quick-barcode-input" class="field-label">Tra cứu nhanh Barcode</label>
+            <div style="display:flex; gap: var(--space-xs); align-items: end;">
+              <input type="text" id="quick-barcode-input" class="input-control" placeholder="VD: LIB-2026-00101" onkeydown="if(event.key==='Enter') quickScanBarcode()">
+              <button type="button" class="btn btn-secondary" onclick="quickScanBarcode()">
+                <span>Quét mã</span>
+                <i data-lucide="scan-barcode" width="16" height="16" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary" onclick="openBookModal()">
+            <span>Nhập bản sách mới</span>
+            <i data-lucide="plus" width="16" height="16" aria-hidden="true"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="workspace-body">
+        <!-- Inline Feedback Banner -->
+        <div class="feedback-strip" id="feedback-strip" role="status" aria-live="polite">
+          <div class="feedback-msg">
+            <i data-lucide="info" width="18" height="18" aria-hidden="true"></i>
+            <span id="feedback-text"></span>
+          </div>
+          <button type="button" class="btn btn-ghost btn-compact" onclick="hideFeedback()" aria-label="Đóng thông báo">
+            <span>Đóng</span>
+          </button>
+        </div>
+
+        <!-- VIEW 1: TỔNG QUAN KHO -->
+        <section class="view-panel is-active" id="view-overview" aria-labelledby="page-title">
+          <div class="kpi-grid-wrap">
+            <div class="kpi-grid" id="overview-kpis"></div>
+          </div>
+
+          <div class="overview-charts">
+            <div class="panel-card">
+              <div class="section-head">
+                <h3 class="section-title">Phân bố tình trạng bản sách</h3>
+                <span class="label">Tỷ trọng theo trạng thái</span>
+              </div>
+              <div class="chart-box">
+                <canvas id="chart-status" aria-label="Biểu đồ phân bố tình trạng bản sách"></canvas>
+              </div>
+            </div>
+
+            <div class="panel-card">
+              <div class="section-head">
+                <h3 class="section-title">Công suất lấp đầy theo khu vực kệ</h3>
+                <span class="label">Đang lưu trữ / Sức chứa tối đa</span>
+              </div>
+              <div class="chart-box">
+                <canvas id="chart-shelves" aria-label="Biểu đồ công suất lấp đầy theo khu vực kệ"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="overview-bottom">
+            <div class="panel-card">
+              <div class="section-head">
+                <h3 class="section-title">Bản sách cần xử lý ưu tiên</h3>
+                <button type="button" class="btn btn-ghost btn-compact" onclick="switchView('triage')">
+                  <span>Xem tất cả</span>
+                  <i data-lucide="arrow-right" width="14" height="14" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="overview-triage-list"></div>
+            </div>
+
+            <div class="panel-card">
+              <div class="section-head">
+                <h3 class="section-title">Cảnh báo kệ &amp; Nhật ký kho</h3>
+                <button type="button" class="btn btn-ghost btn-compact" onclick="switchView('shelves')">
+                  <span>Quản lý kệ</span>
+                  <i data-lucide="arrow-right" width="14" height="14" aria-hidden="true"></i>
+                </button>
+              </div>
+              <div id="overview-alerts-list" class="simple-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 2: BẢN SÁCH VẬT LÝ -->
+        <section class="view-panel" id="view-books" aria-labelledby="page-title">
+          <div class="filter-panel" aria-label="Bộ lọc nâng cao bản sách vật lý">
+            <div class="field-group">
+              <label for="filter-book-query" class="field-label">Barcode / Tên sách / ISBN / Tác giả</label>
+              <input type="text" id="filter-book-query" class="input-control" placeholder="Nhập mã vạch hoặc từ khóa..." oninput="applyBookFilters()">
+            </div>
+
+            <div class="field-group">
+              <label for="filter-book-status" class="field-label">Tình trạng lưu hành</label>
+              <select id="filter-book-status" class="select-control" onchange="applyBookFilters()">
+                <option value="">Tất cả tình trạng</option>
+                <option value="Sẵn sàng">Sẵn sàng</option>
+                <option value="Đang mượn">Đang mượn</option>
+                <option value="Chờ xếp kệ">Chờ xếp kệ</option>
+                <option value="Cần bảo trì">Cần bảo trì</option>
+                <option value="Mất / Thanh lý">Mất / Thanh lý</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="filter-book-shelf" class="field-label">Vị trí lưu trữ kệ sách</label>
+              <select id="filter-book-shelf" class="select-control" onchange="applyBookFilters()"></select>
+            </div>
+
+            <div class="field-group">
+              <label for="filter-book-condition" class="field-label">Tình trạng vật lý</label>
+              <select id="filter-book-condition" class="select-control" onchange="applyBookFilters()">
+                <option value="">Tất cả mức độ</option>
+                <option value="Mới 100%">Mới 100%</option>
+                <option value="Tốt">Tốt</option>
+                <option value="Khá">Khá</option>
+                <option value="Hư hỏng nhẹ">Hư hỏng nhẹ</option>
+                <option value="Xuống cấp">Xuống cấp</option>
+              </select>
+            </div>
+
+            <div class="filter-actions-row">
+              <button type="button" class="btn btn-secondary" onclick="resetBookFilters()">
+                <span>Đặt lại bộ lọc</span>
+                <i data-lucide="x" width="16" height="16" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="batch-bar" id="books-batch-bar">
+            <span class="mono" id="batch-count-label">Đã chọn 0 bản sách</span>
+            <div class="batch-actions">
+              <button type="button" class="btn btn-primary btn-compact" onclick="openBatchMoveModal()">
+                <span>Chuyển vị trí kệ hàng loạt</span>
+                <i data-lucide="arrow-right-left" width="14" height="14" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="btn btn-secondary btn-compact" onclick="batchMarkReady()">
+                <span>Đánh dấu Sẵn sàng</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-compact" onclick="clearBookSelection()">
+                <span>Bỏ chọn</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="section-head">
+            <span class="label" id="books-result-summary">Đang hiển thị 0 bản sách</span>
+            <div style="display:flex; gap: var(--space-sm); align-items:center;">
+              <button type="button" class="btn btn-secondary btn-compact" onclick="exportInventoryCSV()">
+                <span>Xuất danh sách lọc</span>
+                <i data-lucide="download" width="14" height="14" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="btn btn-primary btn-compact" onclick="openBookModal()">
+                <span>Thêm bản sách</span>
+                <i data-lucide="plus" width="14" height="14" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="books-table-container"></div>
+
+          <div class="pagination-bar" id="books-pagination"></div>
+        </section>
+
+        <!-- VIEW 3: BẢN SÁCH CẦN XỬ LÝ -->
+        <section class="view-panel" id="view-triage" aria-labelledby="page-title">
+          <div class="kpi-grid-wrap">
+            <div class="kpi-grid" id="triage-kpis"></div>
+          </div>
+
+          <div style="display:flex; flex-wrap:wrap; align-items:end; justify-content:space-between; gap: var(--space-md);">
+            <div class="tabs-bar" role="tablist" aria-label="Phân loại bản sách cần xử lý">
+              <button type="button" class="tab-btn is-active" id="triage-tab-all" onclick="setTriageTab('all')">Tất cả cần xử lý</button>
+              <button type="button" class="tab-btn" id="triage-tab-pending" onclick="setTriageTab('Chờ xếp kệ')">Chờ xếp kệ</button>
+              <button type="button" class="tab-btn" id="triage-tab-repair" onclick="setTriageTab('Cần bảo trì')">Cần bảo trì</button>
+              <button type="button" class="tab-btn" id="triage-tab-lost" onclick="setTriageTab('Mất / Thanh lý')">Mất / Thanh lý</button>
+            </div>
+
+            <div class="field-group" style="min-width: 240px;">
+              <label for="triage-search" class="field-label">Lọc nhanh theo Barcode hoặc Tên sách</label>
+              <input type="text" id="triage-search" class="input-control" placeholder="Tìm trong hàng chờ xử lý..." oninput="renderTriageView()">
+            </div>
+          </div>
+
+          <div id="triage-table-container"></div>
+        </section>
+
+        <!-- VIEW 4: VỊ TRÍ LƯU TRỮ -->
+        <section class="view-panel" id="view-shelves" aria-labelledby="page-title">
+          <div class="kpi-grid-wrap">
+            <div class="kpi-grid" id="shelves-kpis"></div>
+          </div>
+
+          <div class="filter-panel" aria-label="Bộ lọc vị trí lưu trữ">
+            <div class="field-group">
+              <label for="filter-shelf-query" class="field-label">Tìm Mã kệ / Tên kệ / Phân loại DDC</label>
+              <input type="text" id="filter-shelf-query" class="input-control" placeholder="VD: K-A01, Công nghệ..." oninput="renderShelvesView()">
+            </div>
+
+            <div class="field-group">
+              <label for="filter-shelf-zone" class="field-label">Khu vực kho</label>
+              <select id="filter-shelf-zone" class="select-control" onchange="renderShelvesView()">
+                <option value="">Tất cả khu vực</option>
+                <option value="Khu A">Khu A — Khoa học Tự nhiên</option>
+                <option value="Khu B">Khu B — Công nghệ &amp; Kỹ thuật</option>
+                <option value="Khu C">Khu C — Kinh tế &amp; Pháp luật</option>
+                <option value="Khu D">Khu D — Văn học &amp; Ngoại ngữ</option>
+                <option value="Kho Lưu trữ">Kho Bảo quản &amp; Đặc biệt</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="filter-shelf-load" class="field-label">Tình trạng sức chứa</label>
+              <select id="filter-shelf-load" class="select-control" onchange="renderShelvesView()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="available">Còn chỗ trống (&lt; 85%)</option>
+                <option value="near-full">Sắp đầy (≥ 85%)</option>
+                <option value="full">Đã đầy (100%)</option>
+                <option value="empty">Kệ trống (0 cuốn)</option>
+                <option value="maintenance">Đang bảo trì kệ</option>
+              </select>
+            </div>
+
+            <div class="filter-actions-row">
+              <button type="button" class="btn btn-secondary" onclick="resetShelfFilters()">
+                <span>Đặt lại</span>
+              </button>
+              <button type="button" class="btn btn-primary" onclick="openShelfModal()">
+                <span>Thêm vị trí kệ</span>
+                <i data-lucide="plus" width="16" height="16" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="section-head">
+            <span class="label" id="shelves-summary">Danh sách vị trí lưu trữ</span>
+            <div class="tabs-bar" style="border-bottom: none;">
+              <button type="button" class="tab-btn is-active" id="shelf-mode-grid" onclick="setShelfViewMode('grid')">Sơ đồ trực quan</button>
+              <button type="button" class="tab-btn" id="shelf-mode-table" onclick="setShelfViewMode('table')">Bảng chi tiết</button>
+            </div>
+          </div>
+
+          <div id="shelves-content-container"></div>
+        </section>
+
+        <!-- VIEW 5: THÔNG BÁO -->
+        <section class="view-panel" id="view-notifications" aria-labelledby="page-title">
+          <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap: var(--space-md);">
+            <div class="tabs-bar" role="tablist" aria-label="Bộ lọc thông báo">
+              <button type="button" class="tab-btn is-active" id="notif-tab-all" onclick="setNotifTab('all')">Tất cả</button>
+              <button type="button" class="tab-btn" id="notif-tab-unread" onclick="setNotifTab('unread')">Chưa đọc</button>
+              <button type="button" class="tab-btn" id="notif-tab-warn" onclick="setNotifTab('Cảnh báo kho')">Cảnh báo kho</button>
+              <button type="button" class="tab-btn" id="notif-tab-log" onclick="setNotifTab('Nhật ký thao tác')">Nhật ký thao tác</button>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap: var(--space-sm);">
+              <button type="button" class="btn btn-secondary btn-compact" onclick="markAllNotificationsRead()">
+                <span>Đánh dấu tất cả đã đọc</span>
+              </button>
+              <button type="button" class="btn btn-ghost btn-compact" onclick="clearReadNotifications()">
+                <span>Xóa thông báo đã đọc</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="notifications-list" class="notif-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: THÊM / SỬA BẢN SÁCH VẬT LÝ -->
+  <div class="modal-backdrop" id="book-modal" role="dialog" aria-modal="true" aria-labelledby="book-modal-title">
+    <div class="modal-dialog">
+      <div class="dialog-head">
+        <h3 class="dialog-title" id="book-modal-title">Nhập bản sách vật lý mới</h3>
+        <button type="button" class="btn btn-ghost btn-compact" onclick="closeBookModal()" aria-label="Đóng hộp thoại">
+          <i data-lucide="x" width="18" height="18" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <form id="book-form" class="dialog-body" onsubmit="saveBookForm(event)" novalidate>
+        <input type="hidden" id="book-edit-id">
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="book-barcode" class="field-label">Mã Barcode bản sách *</label>
+            <div style="display:flex; gap: var(--space-xs);">
+              <input type="text" id="book-barcode" class="input-control mono" placeholder="VD: LIB-2026-00125">
+              <button type="button" class="btn btn-secondary btn-compact" onclick="generateBarcodeValue()">Sinh mã</button>
+            </div>
+            <span class="field-error" id="err-book-barcode"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="book-isbn" class="field-label">Mã ISBN-13</label>
+            <input type="text" id="book-isbn" class="input-control mono" placeholder="VD: 978-604-0-12345-6">
+            <span class="field-error" id="err-book-isbn"></span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="book-title" class="field-label">Tên đầu sách *</label>
+          <input type="text" id="book-title" class="input-control" placeholder="Nhập tên đầy đủ của ấn phẩm...">
+          <span class="field-error" id="err-book-title"></span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="book-author" class="field-label">Tác giả *</label>
+            <input type="text" id="book-author" class="input-control" placeholder="VD: Nguyễn Đình Trí">
+            <span class="field-error" id="err-book-author"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="book-publisher" class="field-label">Nhà xuất bản &amp; Năm XB</label>
+            <div style="display:flex; gap: var(--space-xs);">
+              <input type="text" id="book-publisher" class="input-control" placeholder="NXB Giáo dục">
+              <input type="number" id="book-year" class="input-control mono" style="width: 100px;" min="1900" max="2030" value="2025" aria-label="Năm xuất bản">
+            </div>
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="book-shelf" class="field-label">Vị trí kệ lưu trữ</label>
+            <select id="book-shelf" class="select-control"></select>
+            <span class="field-error" id="err-book-shelf"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="book-tier" class="field-label">Tầng / Ngăn kệ chi tiết</label>
+            <input type="text" id="book-tier" class="input-control" placeholder="VD: Tầng 2 - Ngăn A">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="book-status" class="field-label">Tình trạng lưu hành *</label>
+            <select id="book-status" class="select-control">
+              <option value="Sẵn sàng">Sẵn sàng</option>
+              <option value="Chờ xếp kệ">Chờ xếp kệ</option>
+              <option value="Đang mượn">Đang mượn</option>
+              <option value="Cần bảo trì">Cần bảo trì</option>
+              <option value="Mất / Thanh lý">Mất / Thanh lý</option>
+            </select>
+            <span class="field-error"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="book-condition" class="field-label">Tình trạng vật lý *</label>
+            <select id="book-condition" class="select-control">
+              <option value="Mới 100%">Mới 100%</option>
+              <option value="Tốt">Tốt</option>
+              <option value="Khá">Khá</option>
+              <option value="Hư hỏng nhẹ">Hư hỏng nhẹ</option>
+              <option value="Xuống cấp">Xuống cấp</option>
+            </select>
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="book-price" class="field-label">Giá trị ghi sổ (VNĐ)</label>
+            <input type="number" id="book-price" class="input-control mono" min="0" step="1000" value="120000">
+          </div>
+          <div class="field-group">
+            <label for="book-added-date" class="field-label">Ngày nhập kho</label>
+            <input type="date" id="book-added-date" class="input-control mono">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="book-note" class="field-label">Ghi chú của thủ kho</label>
+          <textarea id="book-note" class="textarea-control" placeholder="Tình trạng bìa, tem từ, hoặc hướng dẫn bảo quản..."></textarea>
+        </div>
+
+        <div class="dialog-foot" style="margin: 0 calc(var(--space-lg) * -1) calc(var(--space-lg) * -1);">
+          <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Hủy bỏ</button>
+          <button type="submit" class="btn btn-primary" id="book-submit-btn">Lưu bản sách</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: THÊM / SỬA VỊ TRÍ KỆ -->
+  <div class="modal-backdrop" id="shelf-modal" role="dialog" aria-modal="true" aria-labelledby="shelf-modal-title">
+    <div class="modal-dialog">
+      <div class="dialog-head">
+        <h3 class="dialog-title" id="shelf-modal-title">Thêm vị trí lưu trữ kệ sách</h3>
+        <button type="button" class="btn btn-ghost btn-compact" onclick="closeShelfModal()" aria-label="Đóng hộp thoại">
+          <i data-lucide="x" width="18" height="18" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <form id="shelf-form" class="dialog-body" onsubmit="saveShelfForm(event)" novalidate>
+        <input type="hidden" id="shelf-edit-id">
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="shelf-code" class="field-label">Mã kệ lưu trữ *</label>
+            <input type="text" id="shelf-code" class="input-control mono" placeholder="VD: K-A03">
+            <span class="field-error" id="err-shelf-code"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="shelf-zone" class="field-label">Khu vực kho *</label>
+            <select id="shelf-zone" class="select-control">
+              <option value="Khu A">Khu A — Khoa học Tự nhiên</option>
+              <option value="Khu B">Khu B — Công nghệ &amp; Kỹ thuật</option>
+              <option value="Khu C">Khu C — Kinh tế &amp; Pháp luật</option>
+              <option value="Khu D">Khu D — Văn học &amp; Ngoại ngữ</option>
+              <option value="Kho Lưu trữ">Kho Bảo quản &amp; Đặc biệt</option>
+            </select>
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="shelf-name" class="field-label">Tên kệ / Chủ đề tài liệu *</label>
+          <input type="text" id="shelf-name" class="input-control" placeholder="VD: Khoang Toán học ứng dụng &amp; Xác suất">
+          <span class="field-error" id="err-shelf-name"></span>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="shelf-location" class="field-label">Tọa độ phòng / Dãy *</label>
+            <input type="text" id="shelf-location" class="input-control" placeholder="VD: Tầng 2 · Dãy A3">
+            <span class="field-error" id="err-shelf-location"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="shelf-ddc" class="field-label">Dải phân loại DDC</label>
+            <input type="text" id="shelf-ddc" class="input-control mono" placeholder="VD: 510–519">
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="shelf-capacity" class="field-label">Sức chứa tối đa (cuốn) *</label>
+            <input type="number" id="shelf-capacity" class="input-control mono" min="1" max="500" value="10">
+            <span class="field-error" id="err-shelf-capacity"></span>
+          </div>
+
+          <div class="field-group">
+            <label for="shelf-status" class="field-label">Trạng thái kệ *</label>
+            <select id="shelf-status" class="select-control">
+              <option value="Hoạt động">Hoạt động</option>
+              <option value="Bảo trì kệ">Bảo trì kệ</option>
+            </select>
+            <span class="field-error"></span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label for="shelf-note" class="field-label">Ghi chú kỹ thuật</label>
+          <textarea id="shelf-note" class="textarea-control" placeholder="Chiều cao tầng kệ, tải trọng hoặc lưu ý độ ẩm..."></textarea>
+        </div>
+
+        <div class="dialog-foot" style="margin: 0 calc(var(--space-lg) * -1) calc(var(--space-lg) * -1);">
+          <button type="button" class="btn btn-secondary" onclick="closeShelfModal()">Hủy bỏ</button>
+          <button type="submit" class="btn btn-primary" id="shelf-submit-btn">Lưu vị trí kệ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CHUYỂN VỊ TRÍ KỆ (ĐƠN LẺ / HÀNG LOẠT) -->
+  <div class="modal-backdrop" id="move-shelf-modal" role="dialog" aria-modal="true" aria-labelledby="move-modal-title">
+    <div class="modal-dialog" style="max-width: 500px;">
+      <div class="dialog-head">
+        <h3 class="dialog-title" id="move-modal-title">Chuyển vị trí kệ sách</h3>
+        <button type="button" class="btn btn-ghost btn-compact" onclick="closeMoveModal()" aria-label="Đóng hộp thoại">
+          <i data-lucide="x" width="18" height="18" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <form class="dialog-body" onsubmit="confirmMoveShelf(event)" novalidate>
+        <div class="layer" id="move-modal-summary"></div>
+
+        <div class="field-group">
+          <label for="move-target-shelf" class="field-label">Chọn kệ đích lưu trữ *</label>
+          <select id="move-target-shelf" class="select-control"></select>
+          <span class="field-error" id="err-move-shelf"></span>
+        </div>
+
+        <div class="field-group">
+          <label for="move-target-tier" class="field-label">Tầng / Ngăn đích (tùy chọn)</label>
+          <input type="text" id="move-target-tier" class="input-control" placeholder="VD: Tầng 1 - Ngăn C">
+        </div>
+
+        <div class="field-group">
+          <label for="move-note" class="field-label">Lý do điều chuyển</label>
+          <input type="text" id="move-note" class="input-control" placeholder="VD: Xếp kệ sau kiểm kê / Sắp xếp lại kho">
+        </div>
+
+        <div class="dialog-foot" style="margin: 0 calc(var(--space-lg) * -1) calc(var(--space-lg) * -1);">
+          <button type="button" class="btn btn-secondary" onclick="closeMoveModal()">Hủy bỏ</button>
+          <button type="submit" class="btn btn-primary">Xác nhận chuyển kệ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DRAWER: CHI TIẾT BẢN SÁCH VẬT LÝ -->
+  <div class="drawer-backdrop" id="book-detail-drawer" role="dialog" aria-modal="true" aria-labelledby="detail-drawer-title">
+    <div class="drawer-panel">
+      <div>
+        <div class="dialog-head">
+          <h3 class="dialog-title" id="detail-drawer-title">Hồ sơ bản sách vật lý</h3>
+          <button type="button" class="btn btn-ghost btn-compact" onclick="closeBookDetailDrawer()" aria-label="Đóng ngăn chi tiết">
+            <i data-lucide="x" width="18" height="18" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="dialog-body" id="book-detail-content"></div>
+      </div>
+      <div class="dialog-foot" id="book-detail-actions"></div>
+    </div>
+  </div>
+
+  <!-- DRAWER: DANH SÁCH SÁCH TRÊN KỆ -->
+  <div class="drawer-backdrop" id="shelf-books-drawer" role="dialog" aria-modal="true" aria-labelledby="shelf-drawer-title">
+    <div class="drawer-panel">
+      <div>
+        <div class="dialog-head">
+          <h3 class="dialog-title" id="shelf-drawer-title">Bản sách trên kệ</h3>
+          <button type="button" class="btn btn-ghost btn-compact" onclick="closeShelfBooksDrawer()" aria-label="Đóng ngăn chi tiết">
+            <i data-lucide="x" width="18" height="18" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="dialog-body" id="shelf-books-content"></div>
+      </div>
+      <div class="dialog-foot" id="shelf-books-actions"></div>
+    </div>
+  </div>
+
+  <api-shim></api-shim>
+  <script>
+    const DEFAULT_SHELVES = [
+      { id: `sh-a01`, code: `K-A01`, name: `Khoa học Tự nhiên · Toán & Vật lý`, zone: `Khu A`, location: `Tầng 2 · Dãy A1`, ddc: `500–539`, capacity: 5, status: `Hoạt động`, note: `Kệ thép 4 tầng, tải trọng chuẩn.` },
+      { id: `sh-a02`, code: `K-A02`, name: `Hóa học, Sinh học & Y dược`, zone: `Khu A`, location: `Tầng 2 · Dãy A2`, ddc: `540–619`, capacity: 6, status: `Hoạt động`, note: `Kiểm soát độ ẩm định kỳ.` },
+      { id: `sh-b01`, code: `K-B01`, name: `Khoa học Máy tính & Dữ liệu`, zone: `Khu B`, location: `Tầng 2 · Dãy B1`, ddc: `004–006`, capacity: 5, status: `Hoạt động`, note: `Khu vực tra cứu tần suất cao.` },
+      { id: `sh-b02`, code: `K-B02`, name: `Kỹ thuật Điện tử & Tự động hóa`, zone: `Khu B`, location: `Tầng 2 · Dãy B2`, ddc: `620–629`, capacity: 4, status: `Hoạt động`, note: `Đã lắp thanh chặn gáy sách lớn.` },
+      { id: `sh-c01`, code: `K-C01`, name: `Kinh tế học & Quản trị Kinh doanh`, zone: `Khu C`, location: `Tầng 3 · Dãy C1`, ddc: `330–339`, capacity: 6, status: `Hoạt động`, note: `Bố trí gần bàn đọc nhóm.` },
+      { id: `sh-c02`, code: `K-C02`, name: `Pháp luật & Hành chính Công`, zone: `Khu C`, location: `Tầng 3 · Dãy C2`, ddc: `340–359`, capacity: 5, status: `Hoạt động`, note: `Kệ trống dự phòng cho đợt nhập Quý IV.` },
+      { id: `sh-d01`, code: `K-D01`, name: `Văn học Việt Nam Hiện đại`, zone: `Khu D`, location: `Tầng 3 · Dãy D1`, ddc: `895.922`, capacity: 6, status: `Hoạt động`, note: `Ánh sáng trung tính, tránh nắng trực tiếp.` },
+      { id: `sh-d02`, code: `K-D02`, name: `Văn học Thế giới & Ngôn ngữ học`, zone: `Khu D`, location: `Tầng 3 · Dãy D2`, ddc: `800–829`, capacity: 6, status: `Hoạt động`, note: `Kệ gỗ ghép tiêu chuẩn.` },
+      { id: `sh-e01`, code: `K-E01`, name: `Kho Đệm Phân loại & Phục chế`, zone: `Kho Lưu trữ`, location: `Tầng 1 · Phòng Kỹ thuật`, ddc: `ĐỆM`, capacity: 8, status: `Hoạt động`, note: `Tiếp nhận sách mới nhập hoặc chờ đóng gáy.` },
+      { id: `sh-e02`, code: `K-E02`, name: `Kho Lưu trữ Tài liệu Quý hiếm`, zone: `Kho Lưu trữ`, location: `Tầng 1 · Phòng Kho kín`, ddc: `ĐẶC BIỆT`, capacity: 4, status: `Bảo trì kệ`, note: `Đang hiệu chỉnh hệ thống hút ẩm.` }
+    ];
+
+    const DEFAULT_BOOKS = [
+      {
+        id: `bk-101`, barcode: `LIB-2026-00101`, title: `Giải tích Tập 1 — Phép tính vi phân và tích phân`,
+        author: `Nguyễn Đình Trí`, isbn: `978-604-0-18231-9`, publisher: `NXB Giáo dục Việt Nam`, pubYear: 2024,
+        shelfId: `sh-a01`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-01-14`, price: 98000, note: `Đã dán nhãn gáy và gắn tem từ RFID.`,
+        history: [
+          { date: `2026-01-14`, action: `Nhập kho`, detail: `Tiếp nhận từ đợt bổ sung học kỳ II, xếp vào K-A01.`, actor: `Nguyễn Minh Tuấn` },
+          { date: `2026-09-02`, action: `Kiểm kê`, detail: `Khớp mã vạch trên kệ K-A01, tình trạng Tốt.`, actor: `Nguyễn Minh Tuấn` }
+        ]
+      },
+      {
+        id: `bk-102`, barcode: `LIB-2026-00102`, title: `Cơ sở Vật lý — Cơ học & Nhiệt động lực học`,
+        author: `David Halliday, Robert Resnick`, isbn: `978-604-0-21104-5`, publisher: `NXB Giáo dục Việt Nam`, pubYear: 2023,
+        shelfId: `sh-a01`, tier: `Tầng 1 - Ngăn B`, status: `Đang mượn`, condition: `Khá`,
+        addedDate: `2025-08-20`, price: 215000, note: `Bản dịch tiếng Việt, bìa cứng.`,
+        history: [
+          { date: `2025-08-20`, action: `Nhập kho`, detail: `Biên mục và xếp vào K-A01.`, actor: `Trần Thị Lan` },
+          { date: `2026-11-12`, action: `Xuất cho mượn`, detail: `Bạn đọc SV-221048 mượn 14 ngày.`, actor: `Quầy Lưu thông` }
+        ]
+      },
+      {
+        id: `bk-103`, barcode: `LIB-2026-00103`, title: `Đại số Tuyến tính và Ứng dụng`,
+        author: `Lê Tuấn Hoa`, isbn: `978-604-9-98412-0`, publisher: `NXB Khoa học Tự nhiên`, pubYear: 2025,
+        shelfId: `sh-a01`, tier: `Tầng 2 - Ngăn A`, status: `Sẵn sàng`, condition: `Mới 100%`,
+        addedDate: `2026-03-05`, price: 135000, note: `Bản in tái bản có bổ sung bài tập.`,
+        history: [{ date: `2026-03-05`, action: `Nhập kho`, detail: `Xếp lên kệ K-A01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-104`, barcode: `LIB-2026-00104`, title: `Phương pháp Tính trong Kỹ thuật`,
+        author: `Tạ Văn Đĩnh`, isbn: `978-604-6-70112-4`, publisher: `NXB Bách Khoa Hà Nội`, pubYear: 2022,
+        shelfId: `sh-a01`, tier: `Tầng 2 - Ngăn C`, status: `Cần bảo trì`, condition: `Hư hỏng nhẹ`,
+        addedDate: `2024-11-10`, price: 89000, note: `Bong keo gáy trang 120–145, cần ép keo nhiệt.`,
+        history: [
+          { date: `2024-11-10`, action: `Nhập kho`, detail: `Xếp lên kệ K-A01.`, actor: `Nguyễn Minh Tuấn` },
+          { date: `2026-11-15`, action: `Báo hỏng`, detail: `Phát hiện bung gáy khi thu hồi sách trả.`, actor: `Nguyễn Minh Tuấn` }
+        ]
+      },
+      {
+        id: `bk-105`, barcode: `LIB-2026-00105`, title: `Hóa học Đại cương — Cấu tạo chất`,
+        author: `Nguyễn Đình Soa`, isbn: `978-604-7-35001-2`, publisher: `NXB ĐHQG TP.HCM`, pubYear: 2024,
+        shelfId: `sh-a02`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-02-18`, price: 145000, note: `Có kèm phụ lục bảng tuần hoàn gấp.`,
+        history: [{ date: `2026-02-18`, action: `Nhập kho`, detail: `Xếp lên kệ K-A02.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-106`, barcode: `LIB-2026-00106`, title: `Sinh học Phân tử Tế bào`,
+        author: `Bruce Alberts`, isbn: `978-604-5-92014-7`, publisher: `NXB Y học`, pubYear: 2023,
+        shelfId: `sh-a02`, tier: `Tầng 2 - Ngăn B`, status: `Đang mượn`, condition: `Tốt`,
+        addedDate: `2025-10-03`, price: 320000, note: `Ấn phẩm khổ lớn, in màu.`,
+        history: [{ date: `2026-11-08`, action: `Xuất cho mượn`, detail: `Nghiên cứu sinh NCS-089 mượn.`, actor: `Quầy Lưu thông` }]
+      },
+      {
+        id: `bk-107`, barcode: `LIB-2026-00107`, title: `Cấu trúc Dữ liệu và Giải thuật`,
+        author: `Đỗ Xuân Lôi`, isbn: `978-604-0-04410-8`, publisher: `NXB Đại học Quốc gia`, pubYear: 2024,
+        shelfId: `sh-b01`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-01-22`, price: 128000, note: `Giáo trình bắt buộc Khoa CNTT.`,
+        history: [{ date: `2026-01-22`, action: `Nhập kho`, detail: `Xếp lên kệ K-B01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-108`, barcode: `LIB-2026-00108`, title: `Thiết kế Hệ thống Dữ liệu Lớn (DDIA)`,
+        author: `Martin Kleppmann`, isbn: `978-144-9-37332-0`, publisher: `NXB Khoa học & Kỹ thuật`, pubYear: 2025,
+        shelfId: `sh-b01`, tier: `Tầng 1 - Ngăn B`, status: `Sẵn sàng`, condition: `Mới 100%`,
+        addedDate: `2026-06-11`, price: 390000, note: `Bản dịch chuẩn, bọc màng bảo vệ.`,
+        history: [{ date: `2026-06-11`, action: `Nhập kho`, detail: `Xếp lên kệ K-B01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-109`, barcode: `LIB-2026-00109`, title: `Mạng Máy tính và Truyền thông Dữ liệu`,
+        author: `Andrew S. Tanenbaum`, isbn: `978-604-8-11290-3`, publisher: `NXB Thông tin & Truyền thông`, pubYear: 2023,
+        shelfId: `sh-b01`, tier: `Tầng 2 - Ngăn A`, status: `Đang mượn`, condition: `Khá`,
+        addedDate: `2025-04-09`, price: 245000, note: `Có vết bút chì nhẹ ở chương 4.`,
+        history: [{ date: `2026-11-10`, action: `Xuất cho mượn`, detail: `Sinh viên mượn theo phiếu #PM-4402.`, actor: `Quầy Lưu thông` }]
+      },
+      {
+        id: `bk-110`, barcode: `LIB-2026-00110`, title: `Trí tuệ Nhân tạo: Cách tiếp cận Hiện đại`,
+        author: `Stuart Russell, Peter Norvig`, isbn: `978-604-6-80022-1`, publisher: `NXB Khoa học & Kỹ thuật`, pubYear: 2024,
+        shelfId: `sh-b01`, tier: `Tầng 2 - Ngăn B`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-04-15`, price: 410000, note: `Sách tham khảo trọng điểm.`,
+        history: [{ date: `2026-04-15`, action: `Nhập kho`, detail: `Xếp lên kệ K-B01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-111`, barcode: `LIB-2026-00111`, title: `Kỹ thuật Lập trình Hệ thống Nhúng ARM`,
+        author: `Phạm Thượng Cát`, isbn: `978-604-9-22104-9`, publisher: `NXB Bách Khoa Hà Nội`, pubYear: 2024,
+        shelfId: `sh-b02`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-05-02`, price: 165000, note: `Kèm mã QR tải mã nguồn thực hành.`,
+        history: [{ date: `2026-05-02`, action: `Nhập kho`, detail: `Xếp lên kệ K-B02.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-112`, barcode: `LIB-2026-00112`, title: `Lý thuyết Điều khiển Tự động Tuyến tính`,
+        author: `Nguyễn Thị Phương Hà`, isbn: `978-604-7-10944-1`, publisher: `NXB ĐHQG TP.HCM`, pubYear: 2023,
+        shelfId: `sh-b02`, tier: `Tầng 1 - Ngăn B`, status: `Sẵn sàng`, condition: `Khá`,
+        addedDate: `2025-09-14`, price: 112000, note: `Đã bọc bìa nhựa dẻo.`,
+        history: [{ date: `2025-09-14`, action: `Nhập kho`, detail: `Xếp lên kệ K-B02.`, actor: `Trần Thị Lan` }]
+      },
+      {
+        id: `bk-113`, barcode: `LIB-2026-00113`, title: `Điện tử Công suất và Ứng dụng Công nghiệp`,
+        author: `Lê Văn Doanh`, isbn: `978-604-6-11903-2`, publisher: `NXB Khoa học & Kỹ thuật`, pubYear: 2021,
+        shelfId: `sh-b02`, tier: `Tầng 2 - Ngăn A`, status: `Cần bảo trì`, condition: `Xuống cấp`,
+        addedDate: `2023-07-19`, price: 105000, note: `Mất bìa sau, mép giấy quăn, chờ đóng bìa cứng mới.`,
+        history: [
+          { date: `2023-07-19`, action: `Nhập kho`, detail: `Xếp vào K-B02.`, actor: `Trần Thị Lan` },
+          { date: `2026-11-17`, action: `Kiểm tra kỹ thuật`, detail: `Chuyển trạng thái Cần bảo trì.`, actor: `Nguyễn Minh Tuấn` }
+        ]
+      },
+      {
+        id: `bk-114`, barcode: `LIB-2026-00114`, title: `Mạch Tích hợp Số CMOS`,
+        author: `Jan M. Rabaey`, isbn: `978-604-0-90122-8`, publisher: `NXB Giáo dục Việt Nam`, pubYear: 2022,
+        shelfId: `sh-b02`, tier: `Tầng 2 - Ngăn B`, status: `Đang mượn`, condition: `Tốt`,
+        addedDate: `2025-02-28`, price: 275000, note: `Kệ K-B02 hiện đã đạt 100% sức chứa.`,
+        history: [{ date: `2026-11-05`, action: `Xuất cho mượn`, detail: `Bạn đọc GV-118 mượn.`, actor: `Quầy Lưu thông` }]
+      },
+      {
+        id: `bk-115`, barcode: `LIB-2026-00115`, title: `Kinh tế học Vi mô — Nguyên lý & Chính sách`,
+        author: `N. Gregory Mankiw`, isbn: `978-604-3-41190-6`, publisher: `NXB Hồng Đức`, pubYear: 2025,
+        shelfId: `sh-c01`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Mới 100%`,
+        addedDate: `2026-07-04`, price: 260000, note: `Bản in năm 2025.`,
+        history: [{ date: `2026-07-04`, action: `Nhập kho`, detail: `Xếp lên kệ K-C01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-116`, barcode: `LIB-2026-00116`, title: `Quản trị Chuỗi cung ứng Toàn cầu`,
+        author: `Sunil Chopra`, isbn: `978-604-1-88401-3`, publisher: `NXB Kinh tế TP.HCM`, pubYear: 2024,
+        shelfId: `sh-c01`, tier: `Tầng 2 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-03-19`, price: 230000, note: `Đầy đủ phụ lục mô hình định lượng.`,
+        history: [{ date: `2026-03-19`, action: `Nhập kho`, detail: `Xếp lên kệ K-C01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-117`, barcode: `LIB-2026-00117`, title: `Tài chính Doanh nghiệp Hiện đại`,
+        author: `Trần Ngọc Thơ`, isbn: `978-604-9-50012-7`, publisher: `NXB Tài chính`, pubYear: 2020,
+        shelfId: `sh-c01`, tier: `Tầng 2 - Ngăn C`, status: `Mất / Thanh lý`, condition: `Xuống cấp`,
+        addedDate: `2022-05-12`, price: 155000, note: `Báo mất từ bạn đọc, đã lập biên bản bồi thường chờ thanh lý mã.`,
+        history: [
+          { date: `2022-05-12`, action: `Nhập kho`, detail: `Xếp lên kệ K-C01.`, actor: `Trần Thị Lan` },
+          { date: `2026-10-28`, action: `Xác nhận mất`, detail: `Quá hạn 60 ngày, chuyển hồ sơ thanh lý.`, actor: `Nguyễn Minh Tuấn` }
+        ]
+      },
+      {
+        id: `bk-118`, barcode: `LIB-2026-00118`, title: `Số Đỏ — Tiểu thuyết Trào phúng`,
+        author: `Vũ Trọng Phụng`, isbn: `978-604-2-19800-4`, publisher: `NXB Văn học`, pubYear: 2024,
+        shelfId: `sh-d01`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-04-01`, price: 78000, note: `Bản in kỷ niệm bìa mềm.`,
+        history: [{ date: `2026-04-01`, action: `Nhập kho`, detail: `Xếp lên kệ K-D01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-119`, barcode: `LIB-2026-00119`, title: `Đất Rừng Phương Nam`,
+        author: `Đoàn Giỏi`, isbn: `978-604-2-23110-1`, publisher: `NXB Kim Đồng`, pubYear: 2024,
+        shelfId: `sh-d01`, tier: `Tầng 1 - Ngăn B`, status: `Sẵn sàng`, condition: `Mới 100%`,
+        addedDate: `2026-08-11`, price: 95000, note: `Có minh họa màu.`,
+        history: [{ date: `2026-08-11`, action: `Nhập kho`, detail: `Xếp lên kệ K-D01.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-120`, barcode: `LIB-2026-00120`, title: `Trăm Năm Cô Đơn (Bản dịch mới)`,
+        author: `Gabriel García Márquez`, isbn: `978-604-5-67891-0`, publisher: `NXB Văn học`, pubYear: 2025,
+        shelfId: `sh-d02`, tier: `Tầng 1 - Ngăn A`, status: `Sẵn sàng`, condition: `Tốt`,
+        addedDate: `2026-09-14`, price: 185000, note: `Đã gắn tem chống trộm.`,
+        history: [{ date: `2026-09-14`, action: `Nhập kho`, detail: `Xếp lên kệ K-D02.`, actor: `Nguyễn Minh Tuấn` }]
+      },
+      {
+        id: `bk-121`, barcode: `LIB-2026-00121`, title: `Kiến trúc Hệ thống Phần mềm Phân tán`,
+        author: `Sam Newman`, isbn: `978-604-8-90011-2`, publisher: `NXB Trẻ`, pubYear: 2026,
+        shelfId: `sh-e01`, tier: `Xe đẩy phân loại #02`, status: `Chờ xếp kệ`, condition: `Mới 100%`,
+        addedDate: `2026-11-20`, price: 295000, note: `Mới biên mục xong, chờ thủ kho chuyển lên kệ K-B01 hoặc K-B02.`,
+        history: [{ date: `2026-11-20`, action: `Tiếp nhận biên mục`, detail: `Đưa vào Kho Đệm K-E01 chờ phân kệ.`, actor: `Bộ phận Biên mục` }]
+      },
+      {
+        id: `bk-122`, barcode: `LIB-2026-00122`, title: `Bình luận Khoa học Bộ luật Dân sự`,
+        author: `Nguyễn Minh Tuấn (Chủ biên)`, isbn: `978-604-3-77812-5`, publisher: `NXB Chính trị Quốc gia`, pubYear: 2026,
+        shelfId: `sh-e01`, tier: `Bàn tiếp nhận #01`, status: `Chờ xếp kệ`, condition: `Mới 100%`,
+        addedDate: `2026-11-21`, price: 240000, note: `Sách mới nhập sáng nay, đề xuất xếp vào K-C02 (hiện đang trống).`,
+        history: [{ date: `2026-11-21`, action: `Nhập kho mới`, detail: `Đã dán barcode, chờ xếp lên kệ K-C02.`, actor: `Nguyễn Minh Tuấn` }]
+      }
+    ];
+
+    const DEFAULT_NOTIFICATIONS = [
+      {
+        id: `nt-1`,
+        type: `Cảnh báo kho`,
+        severity: `error`,
+        title: `Kệ K-B02 (Kỹ thuật Điện tử) đã đạt 100% sức chứa`,
+        message: `Hiện đang lưu trữ 4/4 bản sách. Vui lòng điều chuyển bớt bản sách cần bảo trì sang K-E01 hoặc mở thêm kệ mới ở Khu B.`,
+        timestamp: `21/11/2026 · 08:45`,
+        read: false,
+        targetView: `shelves`,
+        targetId: `sh-b02`
+      },
+      {
+        id: `nt-2`,
+        type: `Cảnh báo kho`,
+        severity: `warn`,
+        title: `2 bản sách mới đang chờ xếp kệ tại Kho Đệm K-E01`,
+        message: `LIB-2026-00121 và LIB-2026-00122 đã hoàn tất dán mã vạch và cần phân bổ lên giá sách chính thức.`,
+        timestamp: `21/11/2026 · 08:15`,
+        read: false,
+        targetView: `triage`,
+        targetId: `bk-122`
+      },
+      {
+        id: `nt-3`,
+        type: `Cảnh báo kho`,
+        severity: `warn`,
+        title: `2 bản sách hư hỏng cần xử lý bảo trì`,
+        message: `LIB-2026-00104 (bong keo gáy) và LIB-2026-00113 (mất bìa sau) đang chờ gia cố vật lý.`,
+        timestamp: `20/11/2026 · 16:30`,
+        read: false,
+        targetView: `triage`,
+        targetId: `bk-104`
+      },
+      {
+        id: `nt-4`,
+        type: `Nhật ký thao tác`,
+        severity: `info`,
+        title: `Kệ K-E02 chuyển sang trạng thái Bảo trì kệ`,
+        message: `Phòng Kho kín đang hiệu chỉnh thiết bị kiểm soát độ ẩm; tạm khóa tiếp nhận sách mới.`,
+        timestamp: `19/11/2026 · 14:10`,
+        read: true,
+        targetView: `shelves`,
+        targetId: `sh-e02`
+      }
+    ];
+
+    let appState = {
+      activeView: `overview`,
+      books: [],
+      shelves: [],
+      notifications: [],
+      triageTab: `all`,
+      notifTab: `all`,
+      shelfViewMode: `grid`,
+      selectedBookIds: [],
+      bookFilters: { query: ``, status: ``, shelfId: ``, condition: `` },
+      bookSort: { key: `barcode`, dir: `asc` },
+      bookPage: 1,
+      bookPageSize: 10
+    };
+
+    let moveTargetBookIds = [];
+    let chartStatusInstance = null;
+    let chartShelvesInstance = null;
+    let activeDetailBookId = null;
+    let activeShelfDrawerId = null;
+
+    function cloneDefaults() {
+      return {
+        activeView: `overview`,
+        books: JSON.parse(JSON.stringify(DEFAULT_BOOKS)),
+        shelves: JSON.parse(JSON.stringify(DEFAULT_SHELVES)),
+        notifications: JSON.parse(JSON.stringify(DEFAULT_NOTIFICATIONS)),
+        triageTab: `all`,
+        notifTab: `all`,
+        shelfViewMode: `grid`,
+        selectedBookIds: [],
+        bookFilters: { query: ``, status: ``, shelfId: ``, condition: `` },
+        bookSort: { key: `barcode`, dir: `asc` },
+        bookPage: 1,
+        bookPageSize: 10
+      };
+    }
+
+    function getToken(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return ``;
+      return String(str)
+        .replace(/&/g, `&amp;`)
+        .replace(/</g, `&lt;`)
+        .replace(/>/g, `&gt;`)
+        .replace(/"/g, `&quot;`)
+        .replace(/'/g, `&#39;`);
+    }
+
+    function formatCurrency(val) {
+      const n = Number(val) || 0;
+      return n.toLocaleString(`vi-VN`) + ` ₫`;
+    }
+
+    function nowFormatted() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, `0`);
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} · ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const pad = (n) => String(n).padStart(2, `0`);
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    }
+
+    function getShelfById(shelfId) {
+      return appState.shelves.find((s) => s.id === shelfId) || null;
+    }
+
+    function getShelfOccupancy(shelfId) {
+      return appState.books.filter((b) => b.shelfId === shelfId && b.status !== `Mất / Thanh lý`).length;
+    }
+
+    function getShelfTotalAssigned(shelfId) {
+      return appState.books.filter((b) => b.shelfId === shelfId).length;
+    }
+
+    function getStatusTagClass(status) {
+      if (status === `Sẵn sàng`) return `tag-ready`;
+      if (status === `Đang mượn`) return `tag-borrowed`;
+      if (status === `Chờ xếp kệ`) return `tag-pending`;
+      if (status === `Cần bảo trì` || status === `Mất / Thanh lý`) return `tag-danger`;
+      return ``;
+    }
+
+    async function persistState() {
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+          await window.notebookAppApi.setAppState({
+            activeView: appState.activeView,
+            books: appState.books,
+            shelves: appState.shelves,
+            notifications: appState.notifications,
+            shelfViewMode: appState.shelfViewMode
+          });
+        }
+      } catch (err) {
+        // Non-fatal in preview environments
+      }
+    }
+
+    function addNotification(type, severity, title, message, targetView, targetId) {
+      appState.notifications.unshift({
+        id: `nt-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        type,
+        severity,
+        title,
+        message,
+        timestamp: nowFormatted(),
+        read: false,
+        targetView: targetView || `overview`,
+        targetId: targetId || ``
+      });
+      if (appState.notifications.length > 60) {
+        appState.notifications = appState.notifications.slice(0, 60);
+      }
+    }
+
+    function showFeedback(message, type) {
+      const strip = document.getElementById(`feedback-strip`);
+      const text = document.getElementById(`feedback-text`);
+      if (!strip || !text) return;
+      strip.className = `feedback-strip is-visible`;
+      if (type === `success`) strip.classList.add(`is-success`);
+      else if (type === `error`) strip.classList.add(`is-error`);
+      else if (type === `warning`) strip.classList.add(`is-warning`);
+      text.textContent = message;
+    }
+
+    function hideFeedback() {
+      const strip = document.getElementById(`feedback-strip`);
+      if (strip) strip.classList.remove(`is-visible`);
+    }
+
+    function toggleMobileSidebar(open) {
+      const sb = document.getElementById(`sidebar`);
+      const ov = document.getElementById(`sidebar-overlay`);
+      if (!sb || !ov) return;
+      if (open) {
+        sb.classList.add(`is-open`);
+        ov.classList.add(`is-open`);
+      } else {
+        sb.classList.remove(`is-open`);
+        ov.classList.remove(`is-open`);
+      }
+    }
+
+    function updateSidebarBadges() {
+      const bBooks = document.getElementById(`badge-books`);
+      const bTriage = document.getElementById(`badge-triage`);
+      const bShelves = document.getElementById(`badge-shelves`);
+      const bNotif = document.getElementById(`badge-notifications`);
+
+      const triageCount = appState.books.filter((b) =>
+        b.status === `Chờ xếp kệ` || b.status === `Cần bảo trì` || b.status === `Mất / Thanh lý`
+      ).length;
+      const unreadCount = appState.notifications.filter((n) => !n.read).length;
+
+      if (bBooks) bBooks.textContent = appState.books.length;
+      if (bTriage) bTriage.textContent = triageCount;
+      if (bShelves) bShelves.textContent = appState.shelves.length;
+      if (bNotif) {
+        bNotif.textContent = unreadCount;
+        bNotif.style.display = unreadCount > 0 ? `inline-flex` : `none`;
+      }
+    }
+
+    function switchView(viewName) {
+      appState.activeView = viewName;
+      toggleMobileSidebar(false);
+
+      const views = [`overview`, `books`, `triage`, `shelves`, `notifications`];
+      views.forEach((v) => {
+        const panel = document.getElementById(`view-${v}`);
+        const nav = document.getElementById(`nav-${v}`);
+        if (panel) panel.classList.toggle(`is-active`, v === viewName);
+        if (nav) nav.classList.toggle(`is-active`, v === viewName);
+      });
+
+      const titles = {
+        overview: {
+          kicker: `PHÂN HỆ THỦ KHO · TỔNG HỢP VẬN HÀNH`,
+          title: `Tổng quan <strong>Kho tài liệu</strong>`,
+          sub: `Theo dõi tồn kho vật lý, tình trạng lưu hành và công suất lấp đầy kệ lưu trữ.`
+        },
+        books: {
+          kicker: `DANH MỤC TÀI SẢN VẬT LÝ · CRUD ĐẦY ĐỦ`,
+          title: `Quản lý <strong>Bản sách vật lý</strong>`,
+          sub: `Tra cứu theo mã Barcode, lọc nâng cao theo tình trạng và điều chuyển vị trí kệ.`
+        },
+        triage: {
+          kicker: `HÀNG CHỜ NGHIỆP VỤ THỦ KHO`,
+          title: `Bản sách <strong>Cần xử lý</strong>`,
+          sub: `Phân kệ sách mới nhập, theo dõi bảo trì vật lý và xử lý hồ sơ thanh lý.`
+        },
+        shelves: {
+          kicker: `SƠ ĐỒ KHÔNG GIAN & SỨC CHỨA`,
+          title: `Quản lý <strong>Vị trí lưu trữ</strong>`,
+          sub: `Giám sát mật độ lấp đầy từng khoang kệ và điều phối không gian lưu trữ.`
+        },
+        notifications: {
+          kicker: `NHẬT KÝ HOẠT ĐỘNG & CẢNH BÁO TỰ ĐỘNG`,
+          title: `Trung tâm <strong>Thông báo</strong>`,
+          sub: `Cảnh báo kệ sắp đầy, bản sách cần bảo trì và lịch sử thao tác của thủ kho.`
+        }
+      };
+
+      const info = titles[viewName] || titles.overview;
+      const kickerEl = document.getElementById(`page-kicker`);
+      const titleEl = document.getElementById(`page-title`);
+      const subEl = document.getElementById(`page-subtitle`);
+      if (kickerEl) kickerEl.textContent = info.kicker;
+      if (titleEl) titleEl.innerHTML = info.title;
+      if (subEl) subEl.textContent = info.sub;
+
+      renderActiveView();
+      persistState();
+    }
+
+    function renderActiveView() {
+      updateSidebarBadges();
+      populateShelfFilterOptions();
+      if (appState.activeView === `overview`) renderOverview();
+      else if (appState.activeView === `books`) renderBooksView();
+      else if (appState.activeView === `triage`) renderTriageView();
+      else if (appState.activeView === `shelves`) renderShelvesView();
+      else if (appState.activeView === `notifications`) renderNotificationsView();
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    /* ================= VIEW 1: OVERVIEW ================= */
+    function renderOverview() {
+      const totalBooks = appState.books.length;
+      const readyCount = appState.books.filter((b) => b.status === `Sẵn sàng`).length;
+      const borrowedCount = appState.books.filter((b) => b.status === `Đang mượn`).length;
+      const triageCount = appState.books.filter((b) =>
+        b.status === `Chờ xếp kệ` || b.status === `Cần bảo trì` || b.status === `Mất / Thanh lý`
+      ).length;
+
+      const totalCapacity = appState.shelves.reduce((acc, s) => acc + Number(s.capacity || 0), 0);
+      const totalOccupied = appState.shelves.reduce((acc, s) => acc + getShelfOccupancy(s.id), 0);
+      const fillRate = totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0;
+
+      const kpiEl = document.getElementById(`overview-kpis`);
+      if (kpiEl) {
+        kpiEl.innerHTML = `
+          <div class="kpi-tile is-primary">
+            <span class="label">Tổng bản sách vật lý</span>
+            <div class="key-value">${totalBooks}</div>
+            <div class="kpi-caption">Quản lý trên ${appState.shelves.length} khoang kệ</div>
+          </div>
+          <div class="kpi-tile is-positive">
+            <span class="label">Sẵn sàng trên kệ</span>
+            <div class="key-value">${readyCount}</div>
+            <div class="kpi-caption">${totalBooks ? Math.round((readyCount / totalBooks) * 100) : 0}% tổng tồn kho</div>
+          </div>
+          <div class="kpi-tile">
+            <span class="label">Đang lưu hành mượn</span>
+            <div class="key-value">${borrowedCount}</div>
+            <div class="kpi-caption">Ngoài kho tại quầy bạn đọc</div>
+          </div>
+          <div class="kpi-tile ${triageCount > 0 ? `is-warning` : ``}">
+            <span class="label">Bản sách cần xử lý</span>
+            <div class="key-value">${triageCount}</div>
+            <div class="kpi-caption">Chờ xếp kệ, bảo trì &amp; thanh lý</div>
+          </div>
+          <div class="kpi-tile">
+            <span class="label">Tỷ lệ lấp đầy kệ</span>
+            <div class="key-value">${fillRate}%</div>
+            <div class="kpi-caption">${totalOccupied} / ${totalCapacity} vị trí đang dùng</div>
+          </div>
+        `;
+      }
+
+      renderOverviewCharts();
+      renderOverviewLists();
+    }
+
+    function renderOverviewCharts() {
+      if (typeof Chart === `undefined`) return;
+
+      const statusOrder = [`Sẵn sàng`, `Đang mượn`, `Chờ xếp kệ`, `Cần bảo trì`, `Mất / Thanh lý`];
+      const statusCounts = statusOrder.map((st) => appState.books.filter((b) => b.status === st).length);
+
+      const cPrimary = getToken(`--data-1`);
+      const cPurple = getToken(`--data-2`);
+      const cTeal = getToken(`--data-3`);
+      const cMagenta = getToken(`--data-4`);
+      const cPositive = getToken(`--positive`);
+      const cWarn = getToken(`--warning`);
+      const cError = getToken(`--error`);
+      const cContext = getToken(`--data-context`);
+      const cOutline = getToken(`--outline-variant`);
+      const cText = getToken(`--on-surface-variant`);
+      const fLabel = getToken(`--font-label`);
+
+      const statusCanvas = document.getElementById(`chart-status`);
+      if (statusCanvas) {
+        if (chartStatusInstance) chartStatusInstance.destroy();
+        chartStatusInstance = new Chart(statusCanvas, {
+          type: `bar`,
+          data: {
+            labels: statusOrder,
+            datasets: [{
+              label: `Số bản sách`,
+              data: statusCounts,
+              backgroundColor: [cPositive, cPrimary, cWarn, cMagenta, cContext],
+              borderWidth: 0,
+              barThickness: 24
+            }]
+          },
+          options: {
+            indexAxis: `y`,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              x: {
+                beginAtZero: true,
+                ticks: { stepSize: 1, color: cText, font: { family: fLabel, size: 11 } },
+                grid: { color: cOutline }
+              },
+              y: {
+                ticks: { color: cText, font: { family: fLabel, size: 11 } },
+                grid: { display: false }
+              }
+            }
+          }
+        });
+      }
+
+      const zones = [`Khu A`, `Khu B`, `Khu C`, `Khu D`, `Kho Lưu trữ`];
+      const zoneUsed = zones.map((z) =>
+        appState.shelves.filter((s) => s.zone === z).reduce((sum, s) => sum + getShelfOccupancy(s.id), 0)
+      );
+      const zoneFree = zones.map((z, idx) => {
+        const cap = appState.shelves.filter((s) => s.zone === z).reduce((sum, s) => sum + Number(s.capacity || 0), 0);
+        return Math.max(0, cap - zoneUsed[idx]);
+      });
+
+      const shelvesCanvas = document.getElementById(`chart-shelves`);
+      if (shelvesCanvas) {
+        if (chartShelvesInstance) chartShelvesInstance.destroy();
+        chartShelvesInstance = new Chart(shelvesCanvas, {
+          type: `bar`,
+          data: {
+            labels: zones,
+            datasets: [
+              {
+                label: `Đang lưu trữ`,
+                data: zoneUsed,
+                backgroundColor: cPrimary,
+                borderWidth: 0
+              },
+              {
+                label: `Chỗ trống còn lại`,
+                data: zoneFree,
+                backgroundColor: cOutline,
+                borderWidth: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: `top`,
+                align: `start`,
+                labels: { boxWidth: 12, color: cText, font: { family: fLabel, size: 11 } }
+              }
+            },
+            scales: {
+              x: {
+                stacked: true,
+                ticks: { color: cText, font: { family: fLabel, size: 11 } },
+                grid: { display: false }
+              },
+              y: {
+                stacked: true,
+                beginAtZero: true,
+                ticks: { stepSize: 2, color: cText, font: { family: fLabel, size: 11 } },
+                grid: { color: cOutline }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    function renderOverviewLists() {
+      const triageContainer = document.getElementById(`overview-triage-list`);
+      const pendingBooks = appState.books.filter((b) =>
+        b.status === `Chờ xếp kệ` || b.status === `Cần bảo trì` || b.status === `Mất / Thanh lý`
+      ).slice(0, 5);
+
+      if (triageContainer) {
+        if (pendingBooks.length === 0) {
+          triageContainer.innerHTML = `
+            <div class="empty-state">
+              <strong>Không còn bản sách tồn đọng</strong>
+              <span class="book-meta-sub">Toàn bộ bản sách trong kho đều đã được phân kệ và ở trạng thái ổn định.</span>
+            </div>
+          `;
+        } else {
+          triageContainer.innerHTML = `
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Barcode</th>
+                    <th>Tên đầu sách</th>
+                    <th>Tình trạng</th>
+                    <th style="text-align:right;">Xử lý</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pendingBooks.map((b) => `
+                    <tr>
+                      <td class="mono">${escapeHTML(b.barcode)}</td>
+                      <td>
+                        <div class="book-title-cell">${escapeHTML(b.title)}</div>
+                        <div class="book-meta-sub">${escapeHTML(b.note || b.condition)}</div>
+                      </td>
+                      <td><span class="tag ${getStatusTagClass(b.status)}">${escapeHTML(b.status)}</span></td>
+                      <td class="td-actions">
+                        ${b.status === `Chờ xếp kệ`
+                          ? `<button type="button" class="btn btn-primary btn-compact" onclick="openSingleMoveModal('${escapeHTML(b.id)}')">Xếp kệ</button>`
+                          : b.status === `Cần bảo trì`
+                          ? `<button type="button" class="btn btn-secondary btn-compact" onclick="completeBookRepair('${escapeHTML(b.id)}')">Hoàn tất sửa</button>`
+                          : `<button type="button" class="btn btn-ghost btn-compact" onclick="openBookDetailDrawer('${escapeHTML(b.id)}')">Chi tiết</button>`
+                        }
+                      </td>
+                    </tr>
+                  `).join(``)}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+      }
+
+      const alertsContainer = document.getElementById(`overview-alerts-list`);
+      if (alertsContainer) {
+        const hotShelves = appState.shelves
+          .map((s) => ({
+            shelf: s,
+            used: getShelfOccupancy(s.id),
+            pct: s.capacity > 0 ? Math.round((getShelfOccupancy(s.id) / s.capacity) * 100) : 0
+          }))
+          .filter((item) => item.pct >= 80 || item.shelf.status === `Bảo trì kệ`)
+          .slice(0, 3);
+
+        const recentNotifs = appState.notifications.slice(0, 3);
+        const rows = [];
+
+        hotShelves.forEach((item) => {
+          rows.push(`
+            <div class="list-row">
+              <div>
+                <div class="book-title-cell mono">${escapeHTML(item.shelf.code)} · ${escapeHTML(item.shelf.name)}</div>
+                <div class="book-meta-sub">${item.shelf.status === `Bảo trì kệ` ? `Đang tạm khóa bảo trì kệ` : `Đã sử dụng ${item.used}/${item.shelf.capacity} cuốn (${item.pct}%)`}</div>
+              </div>
+              <span class="tag ${item.pct >= 100 ? `tag-danger` : `tag-pending`}">${item.shelf.status === `Bảo trì kệ` ? `Bảo trì` : `${item.pct}%`}</span>
+            </div>
+          `);
+        });
+
+        recentNotifs.forEach((n) => {
+          rows.push(`
+            <div class="list-row">
+              <div>
+                <div class="book-title-cell">${escapeHTML(n.title)}</div>
+                <div class="book-meta-sub mono">${escapeHTML(n.timestamp)}</div>
+              </div>
+              <button type="button" class="btn btn-ghost btn-compact" onclick="switchView('notifications')">Xem</button>
+            </div>
+          `);
+        });
+
+        alertsContainer.innerHTML = rows.length ? rows.join(``) : `<div class="book-meta-sub">Chưa có cảnh báo mới.</div>`;
+      }
+    }
+
+    /* ================= VIEW 2: BẢN SÁCH VẬT LÝ ================= */
+    function populateShelfFilterOptions() {
+      const filterSelect = document.getElementById(`filter-book-shelf`);
+      if (filterSelect) {
+        const currentVal = appState.bookFilters.shelfId;
+        filterSelect.innerHTML = `<option value="">Tất cả vị trí kệ</option>` +
+          appState.shelves.map((s) => `<option value="${escapeHTML(s.id)}">${escapeHTML(s.code)} — ${escapeHTML(s.name)}</option>`).join(``);
+        filterSelect.value = currentVal;
+      }
+    }
+
+    function getFilteredSortedBooks() {
+      const f = appState.bookFilters;
+      const q = (f.query || ``).trim().toLowerCase();
+
+      const filtered = appState.books.filter((b) => {
+        if (q) {
+          const hay = `${b.barcode} ${b.title} ${b.isbn} ${b.author}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        if (f.status && b.status !== f.status) return false;
+        if (f.shelfId && b.shelfId !== f.shelfId) return false;
+        if (f.condition && b.condition !== f.condition) return false;
+        return true;
+      });
+
+      const sortKey = appState.bookSort.key;
+      const dir = appState.bookSort.dir === `asc` ? 1 : -1;
+
+      filtered.sort((a, b) => {
+        let va = a[sortKey] || ``;
+        let vb = b[sortKey] || ``;
+        if (sortKey === `shelfId`) {
+          const sa = getShelfById(a.shelfId);
+          const sb = getShelfById(b.shelfId);
+          va = sa ? sa.code : `ZZZ`;
+          vb = sb ? sb.code : `ZZZ`;
+        }
+        return String(va).localeCompare(String(vb), `vi`) * dir;
+      });
+
+      return filtered;
+    }
+
+    function applyBookFilters() {
+      const qEl = document.getElementById(`filter-book-query`);
+      const stEl = document.getElementById(`filter-book-status`);
+      const shEl = document.getElementById(`filter-book-shelf`);
+      const cdEl = document.getElementById(`filter-book-condition`);
+      appState.bookFilters = {
+        query: qEl ? qEl.value : ``,
+        status: stEl ? stEl.value : ``,
+        shelfId: shEl ? shEl.value : ``,
+        condition: cdEl ? cdEl.value : ``
+      };
+      appState.bookPage = 1;
+      renderBooksView();
+    }
+
+    function resetBookFilters() {
+      appState.bookFilters = { query: ``, status: ``, shelfId: ``, condition: `` };
+      const qEl = document.getElementById(`filter-book-query`);
+      const stEl = document.getElementById(`filter-book-status`);
+      const shEl = document.getElementById(`filter-book-shelf`);
+      const cdEl = document.getElementById(`filter-book-condition`);
+      if (qEl) qEl.value = ``;
+      if (stEl) stEl.value = ``;
+      if (shEl) shEl.value = ``;
+      if (cdEl) cdEl.value = ``;
+      appState.bookPage = 1;
+      renderBooksView();
+    }
+
+    function sortBooksBy(key) {
+      if (appState.bookSort.key === key) {
+        appState.bookSort.dir = appState.bookSort.dir === `asc` ? `desc` : `asc`;
+      } else {
+        appState.bookSort.key = key;
+        appState.bookSort.dir = `asc`;
+      }
+      renderBooksView();
+    }
+
+    function toggleSelectBook(bookId, checked) {
+      if (checked) {
+        if (!appState.selectedBookIds.includes(bookId)) appState.selectedBookIds.push(bookId);
+      } else {
+        appState.selectedBookIds = appState.selectedBookIds.filter((id) => id !== bookId);
+      }
+      renderBooksView();
+    }
+
+    function toggleSelectAllVisible(checked) {
+      const visible = getPagedBooks().items;
+      if (checked) {
+        visible.forEach((b) => {
+          if (!appState.selectedBookIds.includes(b.id)) appState.selectedBookIds.push(b.id);
+        });
+      } else {
+        const visibleIds = new Set(visible.map((b) => b.id));
+        appState.selectedBookIds = appState.selectedBookIds.filter((id) => !visibleIds.has(id));
+      }
+      renderBooksView();
+    }
+
+    function clearBookSelection() {
+      appState.selectedBookIds = [];
+      renderBooksView();
+    }
+
+    function getPagedBooks() {
+      const all = getFilteredSortedBooks();
+      const total = all.length;
+      const pageSize = appState.bookPageSize;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      if (appState.bookPage > totalPages) appState.bookPage = totalPages;
+      const start = (appState.bookPage - 1) * pageSize;
+      return {
+        all,
+        items: all.slice(start, start + pageSize),
+        total,
+        totalPages,
+        start
+      };
+    }
+
+    function changeBookPage(delta) {
+      appState.bookPage += delta;
+      renderBooksView();
+    }
+
+    function changeBookPageSize(val) {
+      appState.bookPageSize = Number(val) || 10;
+      appState.bookPage = 1;
+      renderBooksView();
+    }
+
+    function renderBooksView() {
+      const paged = getPagedBooks();
+      const summaryEl = document.getElementById(`books-result-summary`);
+      if (summaryEl) {
+        summaryEl.textContent = `HIỂN THỊ ${paged.total} / ${appState.books.length} BẢN SÁCH VẬT LÝ`;
+      }
+
+      const batchBar = document.getElementById(`books-batch-bar`);
+      const batchLabel = document.getElementById(`batch-count-label`);
+      if (batchBar && batchLabel) {
+        const selCount = appState.selectedBookIds.length;
+        batchBar.classList.toggle(`is-visible`, selCount > 0);
+        batchLabel.textContent = `Đã chọn ${selCount} bản sách`;
+      }
+
+      const container = document.getElementById(`books-table-container`);
+      if (!container) return;
+
+      if (paged.items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>Không tìm thấy bản sách vật lý phù hợp</strong>
+            <span class="book-meta-sub">Không có bản ghi nào khớp với tiêu chí Barcode, tình trạng hoặc vị trí kệ đang lọc.</span>
+            <button type="button" class="btn btn-secondary" onclick="resetBookFilters()">Đặt lại bộ lọc</button>
+          </div>
+        `;
+      } else {
+        const allVisibleSelected = paged.items.every((b) => appState.selectedBookIds.includes(b.id));
+        const sortIcon = (k) => {
+          if (appState.bookSort.key !== k) return `↕`;
+          return appState.bookSort.dir === `asc` ? `↑` : `↓`;
+        };
+
+        container.innerHTML = `
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;">
+                    <input type="checkbox" aria-label="Chọn tất cả trang này" ${allVisibleSelected ? `checked` : ``} onchange="toggleSelectAllVisible(this.checked)">
+                  </th>
+                  <th><button type="button" class="sort-btn" onclick="sortBooksBy('barcode')">Barcode ${sortIcon(`barcode`)}</button></th>
+                  <th><button type="button" class="sort-btn" onclick="sortBooksBy('title')">Tên đầu sách &amp; ISBN ${sortIcon(`title`)}</button></th>
+                  <th><button type="button" class="sort-btn" onclick="sortBooksBy('shelfId')">Vị trí kệ ${sortIcon(`shelfId`)}</button></th>
+                  <th><button type="button" class="sort-btn" onclick="sortBooksBy('status')">Lưu hành ${sortIcon(`status`)}</button></th>
+                  <th>Vật lý</th>
+                  <th><button type="button" class="sort-btn" onclick="sortBooksBy('addedDate')">Ngày nhập ${sortIcon(`addedDate`)}</button></th>
+                  <th style="text-align:right;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${paged.items.map((b) => {
+                  const shelf = getShelfById(b.shelfId);
+                  const isSel = appState.selectedBookIds.includes(b.id);
+                  return `
+                    <tr class="${isSel ? `is-selected` : ``}">
+                      <td>
+                        <input type="checkbox" aria-label="Chọn ${escapeHTML(b.barcode)}" ${isSel ? `checked` : ``} onchange="toggleSelectBook('${escapeHTML(b.id)}', this.checked)">
+                      </td>
+                      <td class="mono" style="font-weight:500;">
+                        <button type="button" class="btn btn-ghost btn-compact mono" style="padding:0; min-height:28px;" onclick="openBookDetailDrawer('${escapeHTML(b.id)}')">${escapeHTML(b.barcode)}</button>
+                      </td>
+                      <td>
+                        <div class="book-title-cell">${escapeHTML(b.title)}</div>
+                        <div class="book-meta-sub">${escapeHTML(b.author)} · ISBN: <span class="mono">${escapeHTML(b.isbn || `Chưa có`)}</span></div>
+                      </td>
+                      <td>
+                        ${shelf
+                          ? `<div class="mono" style="font-weight:600;">${escapeHTML(shelf.code)}</div><div class="book-meta-sub">${escapeHTML(b.tier || shelf.location)}</div>`
+                          : `<span class="book-meta-sub">Chưa phân kệ</span>`
+                        }
+                      </td>
+                      <td><span class="tag ${getStatusTagClass(b.status)}">${escapeHTML(b.status)}</span></td>
+                      <td>${escapeHTML(b.condition)}</td>
+                      <td class="mono">${escapeHTML(b.addedDate)}</td>
+                      <td>
+                        <div class="td-actions">
+                          <button type="button" class="btn btn-ghost btn-compact" onclick="openBookDetailDrawer('${escapeHTML(b.id)}')" title="Xem chi tiết &amp; mã vạch">Chi tiết</button>
+                          <button type="button" class="btn btn-ghost btn-compact" onclick="openSingleMoveModal('${escapeHTML(b.id)}')" title="Chuyển kệ">Chuyển kệ</button>
+                          <button type="button" class="btn btn-ghost btn-compact" onclick="openBookModal('${escapeHTML(b.id)}')" title="Chỉnh sửa">Sửa</button>
+                          <button type="button" class="btn btn-danger-ghost btn-compact" onclick="deleteBookInline('${escapeHTML(b.id)}', this)">Xóa</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join(``)}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      const pagEl = document.getElementById(`books-pagination`);
+      if (pagEl) {
+        pagEl.innerHTML = `
+          <div style="display:flex; align-items:center; gap: var(--space-sm);">
+            <label for="page-size-select" class="field-label" style="margin:0;">Số dòng/trang:</label>
+            <select id="page-size-select" class="select-control" style="width:90px; height:36px;" onchange="changeBookPageSize(this.value)">
+              <option value="10" ${appState.bookPageSize === 10 ? `selected` : ``}>10</option>
+              <option value="20" ${appState.bookPageSize === 20 ? `selected` : ``}>20</option>
+              <option value="50" ${appState.bookPageSize === 50 ? `selected` : ``}>50</option>
+            </select>
+          </div>
+          <div class="pagination-controls">
+            <span class="mono" style="font-size:0.8125rem;">Trang ${appState.bookPage} / ${paged.totalPages}</span>
+            <button type="button" class="btn btn-secondary btn-compact" ${appState.bookPage <= 1 ? `disabled` : ``} onclick="changeBookPage(-1)">Trước</button>
+            <button type="button" class="btn btn-secondary btn-compact" ${appState.bookPage >= paged.totalPages ? `disabled` : ``} onclick="changeBookPage(1)">Sau</button>
+          </div>
+        `;
+      }
+    }
+
+    /* ================= VIEW 3: BẢN SÁCH CẦN XỬ LÝ ================= */
+    function setTriageTab(tab) {
+      appState.triageTab = tab;
+      const map = {
+        all: `triage-tab-all`,
+        'Chờ xếp kệ': `triage-tab-pending`,
+        'Cần bảo trì': `triage-tab-repair`,
+        'Mất / Thanh lý': `triage-tab-lost`
+      };
+      Object.keys(map).forEach((k) => {
+        const btn = document.getElementById(map[k]);
+        if (btn) btn.classList.toggle(`is-active`, k === tab);
+      });
+      renderTriageView();
+    }
+
+    function renderTriageView() {
+      const pending = appState.books.filter((b) => b.status === `Chờ xếp kệ`).length;
+      const repair = appState.books.filter((b) => b.status === `Cần bảo trì`).length;
+      const lost = appState.books.filter((b) => b.status === `Mất / Thanh lý`).length;
+
+      const kpiEl = document.getElementById(`triage-kpis`);
+      if (kpiEl) {
+        kpiEl.innerHTML = `
+          <div class="kpi-tile is-primary">
+            <span class="label">Chờ xếp lên kệ</span>
+            <div class="key-value">${pending}</div>
+            <div class="kpi-caption">Sách mới nhập hoặc vừa thu hồi</div>
+          </div>
+          <div class="kpi-tile is-warning">
+            <span class="label">Cần bảo trì / Đóng gáy</span>
+            <div class="key-value">${repair}</div>
+            <div class="kpi-caption">Đang chờ gia cố vật lý</div>
+          </div>
+          <div class="kpi-tile">
+            <span class="label">Hồ sơ Mất / Thanh lý</span>
+            <div class="key-value">${lost}</div>
+            <div class="kpi-caption">Chờ quyết định hủy mã tài sản</div>
+          </div>
+        `;
+      }
+
+      const searchEl = document.getElementById(`triage-search`);
+      const q = searchEl ? searchEl.value.trim().toLowerCase() : ``;
+
+      const list = appState.books.filter((b) => {
+        const isTriage = b.status === `Chờ xếp kệ` || b.status === `Cần bảo trì` || b.status === `Mất / Thanh lý`;
+        if (!isTriage) return false;
+        if (appState.triageTab !== `all` && b.status !== appState.triageTab) return false;
+        if (q) {
+          const hay = `${b.barcode} ${b.title} ${b.note}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      const container = document.getElementById(`triage-table-container`);
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>Hàng chờ xử lý đang trống</strong>
+            <span class="book-meta-sub">Không có bản sách nào trong phân mục này cần thủ kho thao tác ngay.</span>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Barcode</th>
+                <th>Tên đầu sách</th>
+                <th>Vị trí tạm / Hiện tại</th>
+                <th>Trạng thái xử lý</th>
+                <th>Ghi chú kỹ thuật</th>
+                <th style="text-align:right;">Hành động nhanh</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map((b) => {
+                const shelf = getShelfById(b.shelfId);
+                return `
+                  <tr>
+                    <td class="mono">
+                      <button type="button" class="btn btn-ghost btn-compact mono" style="padding:0; min-height:28px;" onclick="openBookDetailDrawer('${escapeHTML(b.id)}')">${escapeHTML(b.barcode)}</button>
+                    </td>
+                    <td>
+                      <div class="book-title-cell">${escapeHTML(b.title)}</div>
+                      <div class="book-meta-sub">Vật lý: ${escapeHTML(b.condition)}</div>
+                    </td>
+                    <td>${shelf ? `<span class="mono">${escapeHTML(shelf.code)}</span> · ${escapeHTML(b.tier || shelf.location)}` : `Chưa gán`}</td>
+                    <td><span class="tag ${getStatusTagClass(b.status)}">${escapeHTML(b.status)}</span></td>
+                    <td>${escapeHTML(b.note || `Không có ghi chú`)}</td>
+                    <td>
+                      <div class="td-actions">
+                        ${b.status === `Chờ xếp kệ` ? `
+                          <button type="button" class="btn btn-primary btn-compact" onclick="openSingleMoveModal('${escapeHTML(b.id)}')">Phân kệ &amp; Sẵn sàng</button>
+                        ` : ``}
+                        ${b.status === `Cần bảo trì` ? `
+                          <button type="button" class="btn btn-primary btn-compact" onclick="completeBookRepair('${escapeHTML(b.id)}')">Hoàn tất bảo trì</button>
+                          <button type="button" class="btn btn-secondary btn-compact" onclick="markBookLost('${escapeHTML(b.id)}')">Chuyển thanh lý</button>
+                        ` : ``}
+                        ${b.status === `Mất / Thanh lý` ? `
+                          <button type="button" class="btn btn-secondary btn-compact" onclick="restoreBookToReady('${escapeHTML(b.id)}')">Tìm thấy / Khôi phục</button>
+                          <button type="button" class="btn btn-danger-ghost btn-compact" onclick="deleteBookInline('${escapeHTML(b.id)}', this)">Xóa hồ sơ</button>
+                        ` : ``}
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }).join(``)}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function completeBookRepair(bookId) {
+      const book = appState.books.find((b) => b.id === bookId);
+      if (!book) return;
+      book.status = `Sẵn sàng`;
+      book.condition = `Khá`;
+      book.note = `Đã hoàn tất gia cố / đóng gáy (${todayISO()}).`;
+      book.history.unshift({
+        date: todayISO(),
+        action: `Hoàn tất bảo trì`,
+        detail: `Đưa bản sách trở lại trạng thái Sẵn sàng phục vụ.`,
+        actor: `Nguyễn Minh Tuấn`
+      });
+      addNotification(`Nhật ký thao tác`, `ok`, `Hoàn tất bảo trì ${book.barcode}`, `Bản sách "${book.title}" đã sẵn sàng trên kệ.`, `books`, book.id);
+      showFeedback(`Đã cập nhật ${book.barcode} sang trạng thái Sẵn sàng.`, `success`);
+      persistState();
+      renderActiveView();
+    }
+
+    function markBookLost(bookId) {
+      const book = appState.books.find((b) => b.id === bookId);
+      if (!book) return;
+      book.status = `Mất / Thanh lý`;
+      book.condition = `Xuống cấp`;
+      book.note = `Đề xuất thanh lý do hư hỏng không thể phục chế (${todayISO()}).`;
+      book.history.unshift({
+        date: todayISO(),
+        action: `Chuyển thanh lý`,
+        detail: `Giải phóng sức chứa trên kệ lưu trữ.`,
+        actor: `Nguyễn Minh Tuấn`
+      });
+      addNotification(`Cảnh báo kho`, `warn`, `Chuyển hồ sơ thanh lý ${book.barcode}`, `Đã đánh dấu Mất / Thanh lý cho "${book.title}".`, `triage`, book.id);
+      showFeedback(`Đã chuyển ${book.barcode} sang danh sách Mất / Thanh lý.`, `warning`);
+      persistState();
+      renderActiveView();
+    }
+
+    function restoreBookToReady(bookId) {
+      const book = appState.books.find((b) => b.id === bookId);
+      if (!book) return;
+      const shelf = getShelfById(book.shelfId);
+      if (shelf && getShelfOccupancy(shelf.id) >= shelf.capacity) {
+        openSingleMoveModal(book.id);
+        showFeedback(`Kệ cũ ${shelf.code} đã đầy, vui lòng chọn kệ mới để khôi phục bản sách.`, `warning`);
+        return;
+      }
+      book.status = `Sẵn sàng`;
+      book.note = `Đã tìm thấy / khôi phục vào kho (${todayISO()}).`;
+      book.history.unshift({
+        date: todayISO(),
+        action: `Khôi phục tồn kho`,
+        detail: `Chuyển lại trạng thái Sẵn sàng.`,
+        actor: `Nguyễn Minh Tuấn`
+      });
+      addNotification(`Nhật ký thao tác`, `ok`, `Khôi phục bản sách ${book.barcode}`, `"${book.title}" đã được đưa lại vào lưu hành.`, `books`, book.id);
+      showFeedback(`Đã khôi phục ${book.barcode} về trạng thái Sẵn sàng.`, `success`);
+      persistState();
+      renderActiveView();
+    }
+
+    /* ================= VIEW 4: VỊ TRÍ LƯU TRỮ ================= */
+    function setShelfViewMode(mode) {
+      appState.shelfViewMode = mode;
+      const gBtn = document.getElementById(`shelf-mode-grid`);
+      const tBtn = document.getElementById(`shelf-mode-table`);
+      if (gBtn) gBtn.classList.toggle(`is-active`, mode === `grid`);
+      if (tBtn) tBtn.classList.toggle(`is-active`, mode === `table`);
+      renderShelvesView();
+      persistState();
+    }
+
+    function resetShelfFilters() {
+      const q = document.getElementById(`filter-shelf-query`);
+      const z = document.getElementById(`filter-shelf-zone`);
+      const l = document.getElementById(`filter-shelf-load`);
+      if (q) q.value = ``;
+      if (z) z.value = ``;
+      if (l) l.value = ``;
+      renderShelvesView();
+    }
+
+    function getFilteredShelves() {
+      const q = (document.getElementById(`filter-shelf-query`)?.value || ``).trim().toLowerCase();
+      const zone = document.getElementById(`filter-shelf-zone`)?.value || ``;
+      const load = document.getElementById(`filter-shelf-load`)?.value || ``;
+
+      return appState.shelves.filter((s) => {
+        if (q) {
+          const hay = `${s.code} ${s.name} ${s.ddc} ${s.location}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        if (zone && s.zone !== zone) return false;
+        const used = getShelfOccupancy(s.id);
+        const pct = s.capacity > 0 ? (used / s.capacity) * 100 : 0;
+        if (load === `available` && (s.status === `Bảo trì kệ` || pct >= 85)) return false;
+        if (load === `near-full` && (s.status === `Bảo trì kệ` || pct < 85 || pct >= 100)) return false;
+        if (load === `full` && pct < 100) return false;
+        if (load === `empty` && getShelfTotalAssigned(s.id) !== 0) return false;
+        if (load === `maintenance` && s.status !== `Bảo trì kệ`) return false;
+        return true;
+      });
+    }
+
+    function renderShelvesView() {
+      const totalCap = appState.shelves.reduce((acc, s) => acc + Number(s.capacity || 0), 0);
+      const totalUsed = appState.shelves.reduce((acc, s) => acc + getShelfOccupancy(s.id), 0);
+      const freeSlots = Math.max(0, totalCap - totalUsed);
+      const hotCount = appState.shelves.filter((s) => s.capacity > 0 && (getShelfOccupancy(s.id) / s.capacity) >= 0.85).length;
+
+      const kpiEl = document.getElementById(`shelves-kpis`);
+      if (kpiEl) {
+        kpiEl.innerHTML = `
+          <div class="kpi-tile is-primary">
+            <span class="label">Tổng số khoang kệ</span>
+            <div class="key-value">${appState.shelves.length}</div>
+            <div class="kpi-caption">Phân bố tại 5 khu vực kho</div>
+          </div>
+          <div class="kpi-tile">
+            <span class="label">Tổng sức chứa thiết kế</span>
+            <div class="key-value">${totalCap}</div>
+            <div class="kpi-caption">Đơn vị tính: bản sách vật lý</div>
+          </div>
+          <div class="kpi-tile is-positive">
+            <span class="label">Đang lưu trữ</span>
+            <div class="key-value">${totalUsed}</div>
+            <div class="kpi-caption">${totalCap ? Math.round((totalUsed / totalCap) * 100) : 0}% công suất toàn kho</div>
+          </div>
+          <div class="kpi-tile">
+            <span class="label">Chỗ trống khả dụng</span>
+            <div class="key-value">${freeSlots}</div>
+            <div class="kpi-caption">Sẵn sàng tiếp nhận nhập mới</div>
+          </div>
+          <div class="kpi-tile ${hotCount > 0 ? `is-warning` : ``}">
+            <span class="label">Kệ sắp đầy / Đầy</span>
+            <div class="key-value">${hotCount}</div>
+            <div class="kpi-caption">Mức lấp đầy ≥ 85% sức chứa</div>
+          </div>
+        `;
+      }
+
+      const list = getFilteredShelves();
+      const summaryEl = document.getElementById(`shelves-summary`);
+      if (summaryEl) summaryEl.textContent = `HIỂN THỊ ${list.length} / ${appState.shelves.length} VỊ TRÍ LƯU TRỮ`;
+
+      const container = document.getElementById(`shelves-content-container`);
+      if (!container) return;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>Không có vị trí kệ nào khớp bộ lọc</strong>
+            <span class="book-meta-sub">Hãy xóa điều kiện lọc hoặc tạo một khoang kệ lưu trữ mới.</span>
+            <button type="button" class="btn btn-secondary" onclick="resetShelfFilters()">Đặt lại bộ lọc</button>
+          </div>
+        `;
+        return;
+      }
+
+      if (appState.shelfViewMode === `grid`) {
+        container.innerHTML = `
+          <div class="card-grid-wrap">
+            <div class="shelf-grid">
+              ${list.map((s) => {
+                const used = getShelfOccupancy(s.id);
+                const pct = s.capacity > 0 ? Math.min(100, Math.round((used / s.capacity) * 100)) : 0;
+                const isMaint = s.status === `Bảo trì kệ`;
+                const isFull = !isMaint && pct >= 100;
+                const isWarn = !isMaint && !isFull && pct >= 85;
+                const cardClass = isMaint ? `is-maintenance` : (isFull ? `is-full` : (isWarn ? `is-warning` : ``));
+                const fillClass = isMaint ? `is-maintenance` : (isFull ? `is-full` : (isWarn ? `is-warning` : ``));
+                const tagClass = isMaint ? `` : (isFull ? `tag-danger` : (isWarn ? `tag-pending` : `tag-ready`));
+                const tagText = isMaint ? `Bảo trì kệ` : (isFull ? `Đã đầy` : (isWarn ? `Sắp đầy` : `Hoạt động`));
+
+                return `
+                  <article class="shelf-card ${cardClass}">
+                    <div>
+                      <div class="shelf-card-head">
+                        <div>
+                          <div class="shelf-code">${escapeHTML(s.code)}</div>
+                          <div class="book-meta-sub">${escapeHTML(s.zone)} · ${escapeHTML(s.location)}</div>
+                        </div>
+                        <span class="tag ${tagClass}">${tagText}</span>
+                      </div>
+                      <div style="margin-top: var(--space-sm); font-weight:600;">${escapeHTML(s.name)}</div>
+                      <div class="book-meta-sub mono" style="margin-top: var(--space-xs);">DDC: ${escapeHTML(s.ddc || `Chung`)}</div>
+                    </div>
+
+                    <div>
+                      <div style="display:flex; justify-content:space-between; margin-bottom: var(--space-xs); font-size:0.8125rem;">
+                        <span class="mono">Đã chứa: <strong>${used}/${s.capacity}</strong> cuốn</span>
+                        <span class="mono">${pct}%</span>
+                      </div>
+                      <div class="shelf-meter-track" aria-hidden="true">
+                        <div class="shelf-meter-fill ${fillClass}" style="width: ${pct}%;"></div>
+                      </div>
+                    </div>
+
+                    <div class="shelf-card-actions">
+                      <button type="button" class="btn btn-secondary btn-compact" onclick="openShelfBooksDrawer('${escapeHTML(s.id)}')">
+                        <span>Xem sách (${getShelfTotalAssigned(s.id)})</span>
+                      </button>
+                      <div style="display:flex; gap: var(--space-xs);">
+                        <button type="button" class="btn btn-ghost btn-compact" onclick="openShelfModal('${escapeHTML(s.id)}')">Sửa</button>
+                        <button type="button" class="btn btn-danger-ghost btn-compact" onclick="deleteShelfInline('${escapeHTML(s.id)}', this)">Xóa</button>
+                      </div>
+                    </div>
+                  </article>
+                `;
+              }).join(``)}
+            </div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Mã kệ</th>
+                  <th>Tên vị trí &amp; Khu vực</th>
+                  <th>Tọa độ</th>
+                  <th>Dải DDC</th>
+                  <th style="text-align:right;">Đang chứa</th>
+                  <th style="text-align:right;">Sức chứa</th>
+                  <th style="text-align:right;">Tỷ lệ</th>
+                  <th>Trạng thái</th>
+                  <th style="text-align:right;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${list.map((s) => {
+                  const used = getShelfOccupancy(s.id);
+                  const pct = s.capacity > 0 ? Math.min(100, Math.round((used / s.capacity) * 100)) : 0;
+                  const isMaint = s.status === `Bảo trì kệ`;
+                  const tagClass = isMaint ? `` : (pct >= 100 ? `tag-danger` : (pct >= 85 ? `tag-pending` : `tag-ready`));
+                  const tagText = isMaint ? `Bảo trì kệ` : (pct >= 100 ? `Đã đầy` : (pct >= 85 ? `Sắp đầy` : `Hoạt động`));
+                  return `
+                    <tr>
+                      <td class="mono" style="font-weight:600;">${escapeHTML(s.code)}</td>
+                      <td>
+                        <div class="book-title-cell">${escapeHTML(s.name)}</div>
+                        <div class="book-meta-sub">${escapeHTML(s.zone)}</div>
+                      </td>
+                      <td>${escapeHTML(s.location)}</td>
+                      <td class="mono">${escapeHTML(s.ddc || `—`)}</td>
+                      <td class="td-num">${used}</td>
+                      <td class="td-num">${s.capacity}</td>
+                      <td class="td-num">${pct}%</td>
+                      <td><span class="tag ${tagClass}">${tagText}</span></td>
+                      <td>
+                        <div class="td-actions">
+                          <button type="button" class="btn btn-ghost btn-compact" onclick="openShelfBooksDrawer('${escapeHTML(s.id)}')">Xem sách</button>
+                          <button type="button" class="btn btn-ghost btn-compact" onclick="openShelfModal('${escapeHTML(s.id)}')">Sửa</button>
+                          <button type="button" class="btn btn-danger-ghost btn-compact" onclick="deleteShelfInline('${escapeHTML(s.id)}', this)">Xóa</button>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join(``)}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    /* ================= VIEW 5: THÔNG BÁO ================= */
+    function setNotifTab(tab) {
+      appState.notifTab = tab;
+      const map = {
+        all: `notif-tab-all`,
+        unread: `notif-tab-unread`,
+        'Cảnh báo kho': `notif-tab-warn`,
+        'Nhật ký thao tác': `notif-tab-log`
+      };
+      Object.keys(map).forEach((k) => {
+        const btn = document.getElementById(map[k]);
+        if (btn) btn.classList.toggle(`is-active`, k === tab);
+      });
+      renderNotificationsView();
+    }
+
+    function renderNotificationsView() {
+      const container = document.getElementById(`notifications-list`);
+      if (!container) return;
+
+      const filtered = appState.notifications.filter((n) => {
+        if (appState.notifTab === `unread`) return !n.read;
+        if (appState.notifTab === `Cảnh báo kho` || appState.notifTab === `Nhật ký thao tác`) {
+          return n.type === appState.notifTab;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>Không có thông báo nào trong mục này</strong>
+            <span class="book-meta-sub">Mọi cảnh báo vận hành và nhật ký kiểm kê mới sẽ hiển thị tại đây.</span>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map((n) => {
+        const sevClass = n.severity === `error` ? `type-error` : (n.severity === `warn` ? `type-warn` : (n.severity === `ok` ? `type-ok` : ``));
+        return `
+          <div class="notif-strip ${n.read ? `is-read` : ``} ${sevClass}">
+            <div class="notif-main">
+              <div style="display:flex; flex-wrap:wrap; align-items:center; gap: var(--space-sm);">
+                <span class="tag">${escapeHTML(n.type)}</span>
+                <span class="notif-meta">${escapeHTML(n.timestamp)}</span>
+                ${!n.read ? `<span class="tag tag-borrowed">Mới</span>` : ``}
+              </div>
+              <div class="notif-title">${escapeHTML(n.title)}</div>
+              <div class="book-meta-sub">${escapeHTML(n.message)}</div>
+            </div>
+            <div style="display:flex; flex-wrap:wrap; gap: var(--space-xs); align-items:center;">
+              <button type="button" class="btn btn-secondary btn-compact" onclick="jumpFromNotification('${escapeHTML(n.id)}')">Mở mục liên quan</button>
+              <button type="button" class="btn btn-ghost btn-compact" onclick="toggleNotifRead('${escapeHTML(n.id)}')">${n.read ? `Đánh dấu chưa đọc` : `Đã đọc`}</button>
+            </div>
+          </div>
+        `;
+      }).join(``);
+    }
+
+    function toggleNotifRead(notifId) {
+      const n = appState.notifications.find((item) => item.id === notifId);
+      if (!n) return;
+      n.read = !n.read;
+      persistState();
+      renderActiveView();
+    }
+
+    function markAllNotificationsRead() {
+      appState.notifications.forEach((n) => { n.read = true; });
+      showFeedback(`Đã đánh dấu toàn bộ thông báo là đã đọc.`, `success`);
+      persistState();
+      renderActiveView();
+    }
+
+    function clearReadNotifications() {
+      const before = appState.notifications.length;
+      appState.notifications = appState.notifications.filter((n) => !n.read);
+      const removed = before - appState.notifications.length;
+      showFeedback(`Đã dọn dẹp ${removed} thông báo đã đọc.`, `info`);
+      persistState();
+      renderActiveView();
+    }
+
+    function jumpFromNotification(notifId) {
+      const n = appState.notifications.find((item) => item.id === notifId);
+      if (!n) return;
+      n.read = true;
+      persistState();
+      switchView(n.targetView || `overview`);
+      if (n.targetId && n.targetId.startsWith(`bk-`)) {
+        const exists = appState.books.find((b) => b.id === n.targetId);
+        if (exists) openBookDetailDrawer(exists.id);
+      } else if (n.targetId && n.targetId.startsWith(`sh-`)) {
+        const exists = appState.shelves.find((s) => s.id === n.targetId);
+        if (exists) openShelfBooksDrawer(exists.id);
+      }
+    }
+
+    /* ================= CRUD: BẢN SÁCH VẬT LÝ ================= */
+    function populateBookModalShelfSelect(currentShelfId) {
+      const sel = document.getElementById(`book-shelf`);
+      if (!sel) return;
+      sel.innerHTML = `<option value="">— Chưa gán kệ (Kho đệm) —</option>` +
+        appState.shelves.map((s) => {
+          const used = getShelfOccupancy(s.id);
+          const free = Math.max(0, s.capacity - used);
+          const isCurrent = s.id === currentShelfId;
+          const disabled = (s.status === `Bảo trì kệ` || (free === 0 && !isCurrent)) ? `disabled` : ``;
+          const statusTxt = s.status === `Bảo trì kệ` ? `Đang bảo trì` : `Còn trống: ${free}/${s.capacity}`;
+          return `<option value="${escapeHTML(s.id)}" ${disabled}>${escapeHTML(s.code)} — ${escapeHTML(s.name)} (${statusTxt})</option>`;
+        }).join(``);
+      sel.value = currentShelfId || ``;
+    }
+
+    function generateBarcodeValue() {
+      const el = document.getElementById(`book-barcode`);
+      if (!el) return;
+      let maxNum = 122;
+      appState.books.forEach((b) => {
+        const m = String(b.barcode).match(/(\d+)$/);
+        if (m) maxNum = Math.max(maxNum, parseInt(m[1], 10));
+      });
+      el.value = `LIB-2026-${String(maxNum + 1).padStart(5, `0`)}`;
+    }
+
+    function clearBookFormErrors() {
+      [`err-book-barcode`, `err-book-title`, `err-book-author`, `err-book-shelf`].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = ``;
+      });
+      [`book-barcode`, `book-title`, `book-author`, `book-shelf`].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove(`is-invalid`);
+      });
+    }
+
+    function openBookModal(bookId, presetShelfId) {
+      clearBookFormErrors();
+      const modal = document.getElementById(`book-modal`);
+      const titleEl = document.getElementById(`book-modal-title`);
+      const editIdEl = document.getElementById(`book-edit-id`);
+
+      const existing = bookId ? appState.books.find((b) => b.id === bookId) : null;
+      if (existing) {
+        if (titleEl) titleEl.textContent = `Cập nhật bản sách: ${existing.barcode}`;
+        if (editIdEl) editIdEl.value = existing.id;
+        document.getElementById(`book-barcode`).value = existing.barcode;
+        document.getElementById(`book-isbn`).value = existing.isbn || ``;
+        document.getElementById(`book-title`).value = existing.title;
+        document.getElementById(`book-author`).value = existing.author;
+        document.getElementById(`book-publisher`).value = existing.publisher || ``;
+        document.getElementById(`book-year`).value = existing.pubYear || 2025;
+        populateBookModalShelfSelect(existing.shelfId);
+        document.getElementById(`book-tier`).value = existing.tier || ``;
+        document.getElementById(`book-status`).value = existing.status;
+        document.getElementById(`book-condition`).value = existing.condition;
+        document.getElementById(`book-price`).value = existing.price || 0;
+        document.getElementById(`book-added-date`).value = existing.addedDate || todayISO();
+        document.getElementById(`book-note`).value = existing.note || ``;
+      } else {
+        if (titleEl) titleEl.textContent = `Nhập bản sách vật lý mới`;
+        if (editIdEl) editIdEl.value = ``;
+        document.getElementById(`book-form`).reset();
+        generateBarcodeValue();
+        populateBookModalShelfSelect(presetShelfId || ``);
+        document.getElementById(`book-year`).value = 2026;
+        document.getElementById(`book-price`).value = 150000;
+        document.getElementById(`book-added-date`).value = todayISO();
+        if (presetShelfId) {
+          document.getElementById(`book-status`).value = `Sẵn sàng`;
+        }
+      }
+
+      if (modal) modal.classList.add(`is-open`);
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closeBookModal() {
+      const modal = document.getElementById(`book-modal`);
+      if (modal) modal.classList.remove(`is-open`);
+    }
+
+    function saveBookForm(event) {
+      event.preventDefault();
+      clearBookFormErrors();
+
+      const editId = document.getElementById(`book-edit-id`).value;
+      const barcode = document.getElementById(`book-barcode`).value.trim();
+      const isbn = document.getElementById(`book-isbn`).value.trim();
+      const title = document.getElementById(`book-title`).value.trim();
+      const author = document.getElementById(`book-author`).value.trim();
+      const publisher = document.getElementById(`book-publisher`).value.trim();
+      const pubYear = Number(document.getElementById(`book-year`).value) || 2026;
+      const shelfId = document.getElementById(`book-shelf`).value || null;
+      const tier = document.getElementById(`book-tier`).value.trim();
+      const status = document.getElementById(`book-status`).value;
+      const condition = document.getElementById(`book-condition`).value;
+      const price = Number(document.getElementById(`book-price`).value) || 0;
+      const addedDate = document.getElementById(`book-added-date`).value || todayISO();
+      const note = document.getElementById(`book-note`).value.trim();
+
+      let valid = true;
+      if (!barcode) {
+        document.getElementById(`err-book-barcode`).textContent = `Vui lòng nhập hoặc sinh mã Barcode.`;
+        document.getElementById(`book-barcode`).classList.add(`is-invalid`);
+        valid = false;
+      } else {
+        const dup = appState.books.find((b) => b.barcode.toLowerCase() === barcode.toLowerCase() && b.id !== editId);
+        if (dup) {
+          document.getElementById(`err-book-barcode`).textContent = `Mã Barcode này đã tồn tại trên hệ thống.`;
+          document.getElementById(`book-barcode`).classList.add(`is-invalid`);
+          valid = false;
+        }
+      }
+
+      if (!title) {
+        document.getElementById(`err-book-title`).textContent = `Vui lòng nhập tên đầu sách.`;
+        document.getElementById(`book-title`).classList.add(`is-invalid`);
+        valid = false;
+      }
+
+      if (!author) {
+        document.getElementById(`err-book-author`).textContent = `Vui lòng nhập tên tác giả.`;
+        document.getElementById(`book-author`).classList.add(`is-invalid`);
+        valid = false;
+      }
+
+      if (shelfId && status !== `Mất / Thanh lý`) {
+        const targetShelf = getShelfById(shelfId);
+        const existingBook = editId ? appState.books.find((b) => b.id === editId) : null;
+        const alreadyOnThisShelf = existingBook && existingBook.shelfId === shelfId && existingBook.status !== `Mất / Thanh lý`;
+        if (targetShelf && !alreadyOnThisShelf && getShelfOccupancy(shelfId) >= targetShelf.capacity) {
+          document.getElementById(`err-book-shelf`).textContent = `Kệ ${targetShelf.code} đã đạt sức chứa tối đa. Vui lòng chọn kệ khác.`;
+          document.getElementById(`book-shelf`).classList.add(`is-invalid`);
+          valid = false;
+        }
+      }
+
+      if (!valid) return;
+
+      const shelfObj = getShelfById(shelfId);
+
+      if (editId) {
+        const idx = appState.books.findIndex((b) => b.id === editId);
+        if (idx === -1) return;
+        const prev = appState.books[idx];
+        const changes = [];
+        if (prev.shelfId !== shelfId) {
+          const oldCode = getShelfById(prev.shelfId)?.code || `Chưa gán`;
+          const newCode = shelfObj ? shelfObj.code : `Chưa gán`;
+          changes.push(`Chuyển kệ ${oldCode} → ${newCode}`);
+        }
+        if (prev.status !== status) changes.push(`Trạng thái: ${prev.status} → ${status}`);
+
+        const newHistory = Array.isArray(prev.history) ? [...prev.history] : [];
+        newHistory.unshift({
+          date: todayISO(),
+          action: `Cập nhật hồ sơ`,
+          detail: changes.length ? changes.join(`; `) : `Chỉnh sửa thông tin biên mục / ghi chú.`,
+          actor: `Nguyễn Minh Tuấn`
+        });
+
+        appState.books[idx] = {
+          ...prev,
+          barcode, isbn, title, author, publisher, pubYear,
+          shelfId, tier, status, condition, price, addedDate, note,
+          history: newHistory
+        };
+
+        addNotification(`Nhật ký thao tác`, `info`, `Cập nhật bản sách ${barcode}`, `Đã lưu thay đổi cho "${title}".`, `books`, editId);
+        showFeedback(`Đã cập nhật thông tin bản sách ${barcode}.`, `success`);
+      } else {
+        const newId = `bk-${Date.now()}`;
+        const newBook = {
+          id: newId,
+          barcode, isbn, title, author, publisher, pubYear,
+          shelfId, tier, status, condition, price, addedDate, note,
+          history: [{
+            date: todayISO(),
+            action: `Nhập kho mới`,
+            detail: shelfObj ? `Tiếp nhận và xếp vào kệ ${shelfObj.code}.` : `Nhập kho, chờ phân bổ kệ.`,
+            actor: `Nguyễn Minh Tuấn`
+          }]
+        };
+        appState.books.unshift(newBook);
+        addNotification(`Nhật ký thao tác`, `ok`, `Nhập bản sách mới ${barcode}`, `Đã thêm "${title}"${shelfObj ? ` vào kệ ${shelfObj.code}` : ``}.`, `books`, newId);
+        showFeedback(`Đã thêm bản sách mới ${barcode} vào kho.`, `success`);
+      }
+
+      if (shelfObj && getShelfOccupancy(shelfObj.id) >= shelfObj.capacity) {
+        addNotification(`Cảnh báo kho`, `error`, `Kệ ${shelfObj.code} đã đạt 100% sức chứa`, `Kệ ${shelfObj.code} (${shelfObj.name}) hiện đã đầy (${shelfObj.capacity}/${shelfObj.capacity} cuốn).`, `shelves`, shelfObj.id);
+      }
+
+      closeBookModal();
+      persistState();
+      renderActiveView();
+      if (activeShelfDrawerId) openShelfBooksDrawer(activeShelfDrawerId);
+      if (activeDetailBookId && activeDetailBookId === editId) openBookDetailDrawer(editId);
+    }
+
+    function deleteBookInline(bookId, btn) {
+      if (!btn) return;
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `Xác nhận xóa?`;
+        btn.classList.remove(`btn-danger-ghost`);
+        btn.classList.add(`btn-danger`);
+        setTimeout(() => {
+          if (btn && btn.dataset.armed === `true`) {
+            btn.dataset.armed = `false`;
+            btn.textContent = `Xóa`;
+            btn.classList.remove(`btn-danger`);
+            btn.classList.add(`btn-danger-ghost`);
+          }
+        }, 3500);
+        return;
+      }
+
+      const book = appState.books.find((b) => b.id === bookId);
+      if (!book) return;
+      appState.books = appState.books.filter((b) => b.id !== bookId);
+      appState.selectedBookIds = appState.selectedBookIds.filter((id) => id !== bookId);
+      addNotification(`Nhật ký thao tác`, `warn`, `Đã xóa bản sách ${book.barcode}`, `Xóa hồ sơ "${book.title}" khỏi dữ liệu kho.`, `books`, ``);
+      showFeedback(`Đã xóa bản sách ${book.barcode} khỏi danh mục kho.`, `info`);
+      if (activeDetailBookId === bookId) closeBookDetailDrawer();
+      persistState();
+      renderActiveView();
+      if (activeShelfDrawerId) openShelfBooksDrawer(activeShelfDrawerId);
+    }
+
+    /* ================= MOVE SHELF (SINGLE & BATCH) ================= */
+    function openSingleMoveModal(bookId) {
+      moveTargetBookIds = [bookId];
+      openMoveModalUI();
+    }
+
+    function openBatchMoveModal() {
+      if (appState.selectedBookIds.length === 0) return;
+      moveTargetBookIds = [...appState.selectedBookIds];
+      openMoveModalUI();
+    }
+
+    function openMoveModalUI() {
+      const modal = document.getElementById(`move-shelf-modal`);
+      const summary = document.getElementById(`move-modal-summary`);
+      const select = document.getElementById(`move-target-shelf`);
+      const err = document.getElementById(`err-move-shelf`);
+      if (err) err.textContent = ``;
+
+      const count = moveTargetBookIds.length;
+      if (summary) {
+        if (count === 1) {
+          const b = appState.books.find((item) => item.id === moveTargetBookIds[0]);
+          const curShelf = b ? getShelfById(b.shelfId) : null;
+          summary.innerHTML = `
+            <div class="label">Bản sách điều chuyển</div>
+            <div style="font-weight:600; margin-top: var(--space-xs);">${escapeHTML(b ? b.title : ``)}</div>
+            <div class="book-meta-sub mono">Barcode: ${escapeHTML(b ? b.barcode : ``)} · Vị trí hiện tại: ${curShelf ? escapeHTML(curShelf.code) : `Chưa gán`}</div>
+          `;
+        } else {
+          summary.innerHTML = `
+            <div class="label">Điều chuyển hàng loạt</div>
+            <div style="font-weight:600; margin-top: var(--space-xs);">Đã chọn ${count} bản sách vật lý</div>
+            <div class="book-meta-sub">Hệ thống sẽ kiểm tra sức chứa còn trống của kệ đích trước khi xác nhận.</div>
+          `;
+        }
+      }
+
+      if (select) {
+        select.innerHTML = `<option value="">— Chọn kệ lưu trữ đích —</option>` +
+          appState.shelves.map((s) => {
+            const used = getShelfOccupancy(s.id);
+            const free = Math.max(0, s.capacity - used);
+            const disabled = (s.status === `Bảo trì kệ` || free === 0) ? `disabled` : ``;
+            const info = s.status === `Bảo trì kệ` ? `Đang bảo trì` : `Còn trống ${free}/${s.capacity} chỗ`;
+            return `<option value="${escapeHTML(s.id)}" ${disabled}>${escapeHTML(s.code)} — ${escapeHTML(s.name)} (${info})</option>`;
+          }).join(``);
+      }
+
+      document.getElementById(`move-target-tier`).value = ``;
+      document.getElementById(`move-note`).value = ``;
+      if (modal) modal.classList.add(`is-open`);
+    }
+
+    function closeMoveModal() {
+      const modal = document.getElementById(`move-shelf-modal`);
+      if (modal) modal.classList.remove(`is-open`);
+    }
+
+    function confirmMoveShelf(event) {
+      event.preventDefault();
+      const err = document.getElementById(`err-move-shelf`);
+      if (err) err.textContent = ``;
+
+      const targetShelfId = document.getElementById(`move-target-shelf`).value;
+      const tier = document.getElementById(`move-target-tier`).value.trim();
+      const reason = document.getElementById(`move-note`).value.trim() || `Điều chuyển vị trí kệ`;
+
+      if (!targetShelfId) {
+        if (err) err.textContent = `Vui lòng chọn kệ đích lưu trữ.`;
+        return;
+      }
+
+      const targetShelf = getShelfById(targetShelfId);
+      if (!targetShelf) return;
+
+      const movingInCount = moveTargetBookIds.filter((id) => {
+        const b = appState.books.find((item) => item.id === id);
+        return b && b.shelfId !== targetShelfId && b.status !== `Mất / Thanh lý`;
+      }).length;
+
+      const freeSlots = Math.max(0, targetShelf.capacity - getShelfOccupancy(targetShelfId));
+      if (movingInCount > freeSlots) {
+        if (err) err.textContent = `Kệ ${targetShelf.code} chỉ còn ${freeSlots} chỗ trống, không đủ chứa ${movingInCount} bản sách đang chuyển vào.`;
+        return;
+      }
+
+      moveTargetBookIds.forEach((id) => {
+        const b = appState.books.find((item) => item.id === id);
+        if (!b) return;
+        const oldShelf = getShelfById(b.shelfId);
+        b.shelfId = targetShelfId;
+        if (tier) b.tier = tier;
+        if (b.status === `Chờ xếp kệ`) b.status = `Sẵn sàng`;
+        b.history.unshift({
+          date: todayISO(),
+          action: `Chuyển vị trí kệ`,
+          detail: `${oldShelf ? oldShelf.code : `Kho đệm`} → ${targetShelf.code} (${reason}).`,
+          actor: `Nguyễn Minh Tuấn`
+        });
+      });
+
+      addNotification(`Nhật ký thao tác`, `ok`, `Điều chuyển ${moveTargetBookIds.length} bản sách sang kệ ${targetShelf.code}`, `${reason}.`, `shelves`, targetShelf.id);
+      if (getShelfOccupancy(targetShelf.id) >= targetShelf.capacity) {
+        addNotification(`Cảnh báo kho`, `error`, `Kệ ${targetShelf.code} đã đầy`, `Kệ ${targetShelf.code} vừa đạt 100% sức chứa.`, `shelves`, targetShelf.id);
+      }
+
+      showFeedback(`Đã chuyển ${moveTargetBookIds.length} bản sách đến kệ ${targetShelf.code}.`, `success`);
+      appState.selectedBookIds = [];
+      closeMoveModal();
+      persistState();
+      renderActiveView();
+      if (activeShelfDrawerId) openShelfBooksDrawer(activeShelfDrawerId);
+      if (activeDetailBookId && moveTargetBookIds.includes(activeDetailBookId)) openBookDetailDrawer(activeDetailBookId);
+    }
+
+    function batchMarkReady() {
+      let updated = 0;
+      appState.selectedBookIds.forEach((id) => {
+        const b = appState.books.find((item) => item.id === id);
+        if (b && b.status !== `Sẵn sàng`) {
+          b.status = `Sẵn sàng`;
+          b.history.unshift({ date: todayISO(), action: `Cập nhật hàng loạt`, detail: `Chuyển trạng thái sang Sẵn sàng.`, actor: `Nguyễn Minh Tuấn` });
+          updated++;
+        }
+      });
+      appState.selectedBookIds = [];
+      showFeedback(`Đã chuyển ${updated} bản sách sang trạng thái Sẵn sàng.`, `success`);
+      persistState();
+      renderActiveView();
+    }
+
+    /* ================= CRUD: VỊ TRÍ LƯU TRỮ (SHELVES) ================= */
+    function clearShelfFormErrors() {
+      [`err-shelf-code`, `err-shelf-name`, `err-shelf-location`, `err-shelf-capacity`].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = ``;
+      });
+      [`shelf-code`, `shelf-name`, `shelf-location`, `shelf-capacity`].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove(`is-invalid`);
+      });
+    }
+
+    function openShelfModal(shelfId) {
+      clearShelfFormErrors();
+      const modal = document.getElementById(`shelf-modal`);
+      const titleEl = document.getElementById(`shelf-modal-title`);
+      const editEl = document.getElementById(`shelf-edit-id`);
+
+      const existing = shelfId ? getShelfById(shelfId) : null;
+      if (existing) {
+        if (titleEl) titleEl.textContent = `Cập nhật vị trí kệ: ${existing.code}`;
+        if (editEl) editEl.value = existing.id;
+        document.getElementById(`shelf-code`).value = existing.code;
+        document.getElementById(`shelf-zone`).value = existing.zone;
+        document.getElementById(`shelf-name`).value = existing.name;
+        document.getElementById(`shelf-location`).value = existing.location;
+        document.getElementById(`shelf-ddc`).value = existing.ddc || ``;
+        document.getElementById(`shelf-capacity`).value = existing.capacity;
+        document.getElementById(`shelf-status`).value = existing.status;
+        document.getElementById(`shelf-note`).value = existing.note || ``;
+      } else {
+        if (titleEl) titleEl.textContent = `Thêm vị trí lưu trữ kệ sách mới`;
+        if (editEl) editEl.value = ``;
+        document.getElementById(`shelf-form`).reset();
+        document.getElementById(`shelf-capacity`).value = 10;
+      }
+
+      if (modal) modal.classList.add(`is-open`);
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closeShelfModal() {
+      const modal = document.getElementById(`shelf-modal`);
+      if (modal) modal.classList.remove(`is-open`);
+    }
+
+    function saveShelfForm(event) {
+      event.preventDefault();
+      clearShelfFormErrors();
+
+      const editId = document.getElementById(`shelf-edit-id`).value;
+      const code = document.getElementById(`shelf-code`).value.trim().toUpperCase();
+      const zone = document.getElementById(`shelf-zone`).value;
+      const name = document.getElementById(`shelf-name`).value.trim();
+      const location = document.getElementById(`shelf-location`).value.trim();
+      const ddc = document.getElementById(`shelf-ddc`).value.trim();
+      const capacity = Number(document.getElementById(`shelf-capacity`).value);
+      const status = document.getElementById(`shelf-status`).value;
+      const note = document.getElementById(`shelf-note`).value.trim();
+
+      let valid = true;
+      if (!code) {
+        document.getElementById(`err-shelf-code`).textContent = `Vui lòng nhập mã kệ (VD: K-A03).`;
+        document.getElementById(`shelf-code`).classList.add(`is-invalid`);
+        valid = false;
+      } else {
+        const dup = appState.shelves.find((s) => s.code.toUpperCase() === code && s.id !== editId);
+        if (dup) {
+          document.getElementById(`err-shelf-code`).textContent = `Mã kệ này đã tồn tại.`;
+          document.getElementById(`shelf-code`).classList.add(`is-invalid`);
+          valid = false;
+        }
+      }
+
+      if (!name) {
+        document.getElementById(`err-shelf-name`).textContent = `Vui lòng nhập tên kệ hoặc chủ đề lưu trữ.`;
+        document.getElementById(`shelf-name`).classList.add(`is-invalid`);
+        valid = false;
+      }
+
+      if (!location) {
+        document.getElementById(`err-shelf-location`).textContent = `Vui lòng nhập tọa độ tầng / dãy.`;
+        document.getElementById(`shelf-location`).classList.add(`is-invalid`);
+        valid = false;
+      }
+
+      const currentUsed = editId ? getShelfOccupancy(editId) : 0;
+      if (!capacity || capacity < 1) {
+        document.getElementById(`err-shelf-capacity`).textContent = `Sức chứa phải lớn hơn 0.`;
+        document.getElementById(`shelf-capacity`).classList.add(`is-invalid`);
+        valid = false;
+      } else if (editId && capacity < currentUsed) {
+        document.getElementById(`err-shelf-capacity`).textContent = `Không thể đặt sức chứa nhỏ hơn số sách đang có trên kệ (${currentUsed} cuốn).`;
+        document.getElementById(`shelf-capacity`).classList.add(`is-invalid`);
+        valid = false;
+      }
+
+      if (!valid) return;
+
+      if (editId) {
+        const idx = appState.shelves.findIndex((s) => s.id === editId);
+        if (idx === -1) return;
+        appState.shelves[idx] = { ...appState.shelves[idx], code, zone, name, location, ddc, capacity, status, note };
+        addNotification(`Nhật ký thao tác`, `info`, `Cập nhật vị trí kệ ${code}`, `Đã điều chỉnh thông tin kệ "${name}" (${zone}).`, `shelves`, editId);
+        showFeedback(`Đã cập nhật vị trí kệ ${code}.`, `success`);
+      } else {
+        const newId = `sh-${Date.now()}`;
+        appState.shelves.push({ id: newId, code, zone, name, location, ddc, capacity, status, note });
+        addNotification(`Nhật ký thao tác`, `ok`, `Tạo vị trí kệ mới ${code}`, `Đã mở khoang kệ "${name}" với sức chứa ${capacity} cuốn.`, `shelves`, newId);
+        showFeedback(`Đã thêm vị trí lưu trữ mới ${code}.`, `success`);
+      }
+
+      closeShelfModal();
+      persistState();
+      renderActiveView();
+    }
+
+    function deleteShelfInline(shelfId, btn) {
+      const shelf = getShelfById(shelfId);
+      if (!shelf || !btn) return;
+
+      const assignedCount = getShelfTotalAssigned(shelfId);
+      if (assignedCount > 0) {
+        showFeedback(`Không thể xóa kệ ${shelf.code}: đang có ${assignedCount} bản sách gắn với kệ này. Hãy chuyển sách sang kệ khác trước.`, `error`);
+        return;
+      }
+
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `Xác nhận xóa?`;
+        btn.classList.remove(`btn-danger-ghost`);
+        btn.classList.add(`btn-danger`);
+        setTimeout(() => {
+          if (btn && btn.dataset.armed === `true`) {
+            btn.dataset.armed = `false`;
+            btn.textContent = `Xóa`;
+            btn.classList.remove(`btn-danger`);
+            btn.classList.add(`btn-danger-ghost`);
+          }
+        }, 3500);
+        return;
+      }
+
+      appState.shelves = appState.shelves.filter((s) => s.id !== shelfId);
+      addNotification(`Nhật ký thao tác`, `warn`, `Đã xóa vị trí kệ ${shelf.code}`, `Kệ trống "${shelf.name}" đã được gỡ khỏi sơ đồ kho.`, `shelves`, ``);
+      showFeedback(`Đã xóa vị trí kệ ${shelf.code}.`, `info`);
+      if (activeShelfDrawerId === shelfId) closeShelfBooksDrawer();
+      persistState();
+      renderActiveView();
+    }
+
+    /* ================= DRAWERS & BARCODE SVG ================= */
+    function buildBarcodeSVG(code) {
+      const str = String(code || `LIB-0000`);
+      const bars = [];
+      let x = 10;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str.charCodeAt(i);
+        const w1 = (ch % 3) + 1;
+        const g1 = ((ch >> 2) % 2) + 1;
+        const w2 = ((ch >> 3) % 2) + 1;
+        bars.push(`<rect x="${x}" y="8" width="${w1}" height="44" fill="currentColor"></rect>`);
+        x += w1 + g1 + 1;
+        bars.push(`<rect x="${x}" y="8" width="${w2}" height="44" fill="currentColor"></rect>`);
+        x += w2 + 2;
+      }
+      const totalW = Math.max(220, x + 10);
+      return `
+        <svg viewBox="0 0 ${totalW} 60" width="100%" height="56" style="max-width:260px; color: var(--on-surface);" aria-hidden="true">
+          ${bars.join(``)}
+        </svg>
+      `;
+    }
+
+    function openBookDetailDrawer(bookId) {
+      const b = appState.books.find((item) => item.id === bookId);
+      if (!b) return;
+      activeDetailBookId = bookId;
+      const shelf = getShelfById(b.shelfId);
+
+      const content = document.getElementById(`book-detail-content`);
+      const actions = document.getElementById(`book-detail-actions`);
+      const drawer = document.getElementById(`book-detail-drawer`);
+
+      if (content) {
+        content.innerHTML = `
+          <div class="barcode-box">
+            ${buildBarcodeSVG(b.barcode)}
+            <div class="mono" style="font-weight:600; letter-spacing:0.12em;">${escapeHTML(b.barcode)}</div>
+          </div>
+
+          <div>
+            <span class="tag ${getStatusTagClass(b.status)}">${escapeHTML(b.status)}</span>
+            <h4 style="margin: var(--space-sm) 0 var(--space-xs); font-size:1.125rem;">${escapeHTML(b.title)}</h4>
+            <div class="book-meta-sub">${escapeHTML(b.author)} · ${escapeHTML(b.publisher || `NXB`)} (${escapeHTML(b.pubYear)})</div>
+          </div>
+
+          <div class="detail-kv-grid">
+            <div>
+              <div class="label">Vị trí kệ</div>
+              <div style="font-weight:600; margin-top: var(--space-xs);">${shelf ? `${escapeHTML(shelf.code)} · ${escapeHTML(shelf.zone)}` : `Chưa gán kệ`}</div>
+              <div class="book-meta-sub">${escapeHTML(b.tier || (shelf ? shelf.location : `—`))}</div>
+            </div>
+            <div>
+              <div class="label">Tình trạng vật lý</div>
+              <div style="font-weight:600; margin-top: var(--space-xs);">${escapeHTML(b.condition)}</div>
+              <div class="book-meta-sub">Ngày nhập: <span class="mono">${escapeHTML(b.addedDate)}</span></div>
+            </div>
+            <div>
+              <div class="label">Mã ISBN-13</div>
+              <div class="mono" style="margin-top: var(--space-xs);">${escapeHTML(b.isbn || `—`)}</div>
+            </div>
+            <div>
+              <div class="label">Giá trị ghi sổ</div>
+              <div class="mono" style="margin-top: var(--space-xs);">${formatCurrency(b.price)}</div>
+            </div>
+          </div>
+
+          <div class="layer">
+            <div class="label">Ghi chú thủ kho</div>
+            <p style="margin: var(--space-xs) 0 0; font-size:0.875rem;">${escapeHTML(b.note || `Không có ghi chú đặc biệt.`)}</p>
+          </div>
+
+          <div>
+            <div class="section-head">
+              <span class="label">Lịch sử thao tác &amp; luân chuyển</span>
+            </div>
+            <div class="simple-list">
+              ${(b.history || []).map((h) => `
+                <div>
+                  <div style="display:flex; justify-content:space-between; font-size:0.8125rem;">
+                    <strong>${escapeHTML(h.action)}</strong>
+                    <span class="mono" style="color: var(--on-surface-variant);">${escapeHTML(h.date)}</span>
+                  </div>
+                  <div class="book-meta-sub">${escapeHTML(h.detail)} (${escapeHTML(h.actor)})</div>
+                </div>
+              `).join(``)}
+            </div>
+          </div>
+        `;
+      }
+
+      if (actions) {
+        actions.innerHTML = `
+          <button type="button" class="btn btn-secondary" onclick="openSingleMoveModal('${escapeHTML(b.id)}')">Chuyển vị trí kệ</button>
+          <button type="button" class="btn btn-primary" onclick="closeBookDetailDrawer(); openBookModal('${escapeHTML(b.id)}')">Chỉnh sửa hồ sơ</button>
+        `;
+      }
+
+      if (drawer) drawer.classList.add(`is-open`);
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closeBookDetailDrawer() {
+      activeDetailBookId = null;
+      const drawer = document.getElementById(`book-detail-drawer`);
+      if (drawer) drawer.classList.remove(`is-open`);
+    }
+
+    function openShelfBooksDrawer(shelfId) {
+      const shelf = getShelfById(shelfId);
+      if (!shelf) return;
+      activeShelfDrawerId = shelfId;
+      const booksOnShelf = appState.books.filter((b) => b.shelfId === shelfId);
+      const used = getShelfOccupancy(shelfId);
+
+      const titleEl = document.getElementById(`shelf-drawer-title`);
+      const contentEl = document.getElementById(`shelf-books-content`);
+      const actionsEl = document.getElementById(`shelf-books-actions`);
+      const drawer = document.getElementById(`shelf-books-drawer`);
+
+      if (titleEl) titleEl.textContent = `Kệ ${shelf.code} — Danh sách lưu trữ`;
+
+      if (contentEl) {
+        contentEl.innerHTML = `
+          <div class="layer">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong class="mono">${escapeHTML(shelf.code)} · ${escapeHTML(shelf.zone)}</strong>
+              <span class="mono">${used} / ${shelf.capacity} cuốn</span>
+            </div>
+            <div style="margin-top: var(--space-xs); font-weight:600;">${escapeHTML(shelf.name)}</div>
+            <div class="book-meta-sub">${escapeHTML(shelf.location)} · DDC: ${escapeHTML(shelf.ddc || `Chung`)}</div>
+          </div>
+
+          ${booksOnShelf.length === 0 ? `
+            <div class="empty-state">
+              <strong>Kệ này hiện đang trống</strong>
+              <span class="book-meta-sub">Bạn có thể nhập bản sách mới trực tiếp vào kệ này hoặc chuyển sách từ kệ khác sang.</span>
+            </div>
+          ` : `
+            <div class="simple-list">
+              ${booksOnShelf.map((b) => `
+                <div class="list-row">
+                  <div>
+                    <div class="mono" style="font-size:0.8125rem; font-weight:600;">${escapeHTML(b.barcode)}</div>
+                    <div class="book-title-cell">${escapeHTML(b.title)}</div>
+                    <div class="book-meta-sub">${escapeHTML(b.tier || `Chưa rõ ngăn`)} · <span class="tag ${getStatusTagClass(b.status)}">${escapeHTML(b.status)}</span></div>
+                  </div>
+                  <div style="display:flex; gap: var(--space-xs);">
+                    <button type="button" class="btn btn-ghost btn-compact" onclick="openBookDetailDrawer('${escapeHTML(b.id)}')">Xem</button>
+                    <button type="button" class="btn btn-secondary btn-compact" onclick="openSingleMoveModal('${escapeHTML(b.id)}')">Chuyển</button>
+                  </div>
+                </div>
+              `).join(``)}
+            </div>
+          `}
+        `;
+      }
+
+      if (actionsEl) {
+        const canAdd = shelf.status !== `Bảo trì kệ` && used < shelf.capacity;
+        actionsEl.innerHTML = `
+          <button type="button" class="btn btn-secondary" onclick="openShelfModal('${escapeHTML(shelf.id)}')">Sửa thông tin kệ</button>
+          ${canAdd ? `<button type="button" class="btn btn-primary" onclick="openBookModal(null, '${escapeHTML(shelf.id)}')">Nhập sách vào kệ này</button>` : ``}
+        `;
+      }
+
+      if (drawer) drawer.classList.add(`is-open`);
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function closeShelfBooksDrawer() {
+      activeShelfDrawerId = null;
+      const drawer = document.getElementById(`shelf-books-drawer`);
+      if (drawer) drawer.classList.remove(`is-open`);
+    }
+
+    /* ================= QUICK BARCODE SCAN, EXPORT & RESET ================= */
+    function quickScanBarcode() {
+      const input = document.getElementById(`quick-barcode-input`);
+      if (!input) return;
+      const code = input.value.trim().toLowerCase();
+      if (!code) {
+        showFeedback(`Vui lòng nhập hoặc quét mã Barcode cần tra cứu.`, `warning`);
+        return;
+      }
+      const match = appState.books.find((b) => b.barcode.toLowerCase() === code || b.barcode.toLowerCase().includes(code));
+      if (match) {
+        openBookDetailDrawer(match.id);
+        showFeedback(`Đã tìm thấy bản sách ${match.barcode}: "${match.title}".`, `success`);
+      } else {
+        showFeedback(`Không tìm thấy bản sách nào khớp mã "${input.value.trim()}".`, `error`);
+      }
+    }
+
+    function exportInventoryCSV() {
+      const rows = [[`Barcode`, `Tên đầu sách`, `Tác giả`, `ISBN`, `Mã kệ`, `Ngăn/Tầng`, `Tình trạng lưu hành`, `Tình trạng vật lý`, `Ngày nhập`, `Giá trị (VND)`]];
+      const list = appState.activeView === `books` ? getFilteredSortedBooks() : appState.books;
+      list.forEach((b) => {
+        const s = getShelfById(b.shelfId);
+        rows.push([
+          b.barcode,
+          b.title,
+          b.author,
+          b.isbn || ``,
+          s ? s.code : `Chưa gán`,
+          b.tier || ``,
+          b.status,
+          b.condition,
+          b.addedDate,
+          b.price || 0
+        ]);
+      });
+
+      const csv = `\uFEFF` + rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, `""`)}"`).join(`,`)).join(`\n`);
+      const filename = `kho-thu-vien-${todayISO()}.csv`;
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: csv,
+          contentType: `text/csv`,
+          encoding: `UTF-8`,
+          filename
+        });
+        showFeedback(`Đã xuất ${list.length} bản ghi ra tệp ${filename}.`, `success`);
+      } else {
+        const blob = new Blob([csv], { type: `text/csv;charset=utf-8;` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement(`a`);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showFeedback(`Đã tải xuống tệp ${filename}.`, `success`);
+      }
+    }
+
+    function handleResetDemo(btn) {
+      if (!btn) return;
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        const span = btn.querySelector(`span`);
+        if (span) span.textContent = `Nhấn lần nữa để xác nhận`;
+        setTimeout(() => {
+          if (btn && btn.dataset.armed === `true`) {
+            btn.dataset.armed = `false`;
+            const s = btn.querySelector(`span`);
+            if (s) s.textContent = `Khôi phục dữ liệu mẫu`;
+          }
+        }, 3500);
+        return;
+      }
+
+      btn.dataset.armed = `false`;
+      const span = btn.querySelector(`span`);
+      if (span) span.textContent = `Khôi phục dữ liệu mẫu`;
+
+      appState = cloneDefaults();
+      persistState();
+      switchView(`overview`);
+      showFeedback(`Đã khôi phục toàn bộ dữ liệu kho thư viện về trạng thái ban đầu.`, `info`);
+    }
+
+    /* ================= INITIALIZATION ================= */
+    async function initApp() {
+      const defaults = cloneDefaults();
+      appState = defaults;
+
+      try {
+        if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved && Array.isArray(saved.books) && Array.isArray(saved.shelves)) {
+            appState.books = saved.books;
+            appState.shelves = saved.shelves;
+            appState.notifications = Array.isArray(saved.notifications) ? saved.notifications : defaults.notifications;
+            appState.activeView = saved.activeView || `overview`;
+            appState.shelfViewMode = saved.shelfViewMode || `grid`;
+          }
+        }
+      } catch (err) {
+        // Fallback cleanly to defaults
+      }
+
+      const gBtn = document.getElementById(`shelf-mode-grid`);
+      const tBtn = document.getElementById(`shelf-mode-table`);
+      if (gBtn) gBtn.classList.toggle(`is-active`, appState.shelfViewMode === `grid`);
+      if (tBtn) tBtn.classList.toggle(`is-active`, appState.shelfViewMode === `table`);
+
+      switchView(appState.activeView);
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener(`DOMContentLoaded`, () => {
+      initApp();
+    });
+  </script>
+</body>
+</html>
